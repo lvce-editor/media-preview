@@ -1,3 +1,6 @@
+import * as WebViewProvider from '../WebViewProvider/WebViewProvider.ts'
+
 export const activate = () => {
-  console.log('hello world')
+  // @ts-ignore
+  vscode.registerWebViewProvider(WebViewProvider.webViewProvider)
 }
