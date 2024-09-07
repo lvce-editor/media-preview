@@ -5,6 +5,7 @@ const initialize = (remoteUrl) => {
   app.className = 'App'
 
   const image = document.createElement('img')
+  image.className = 'Image'
   image.src = remoteUrl
   image.alt = ''
   app.append(image)
