@@ -1,10 +1,13 @@
+import * as MediaPreviewWorker from '../MediaPreviewWorker/MediaPreviewWorker.ts'
+
 export const webViewProvider = {
   id: 'builtin.media-preview',
   async create(webView, uri) {
+    console.log({ uri })
     // TODO if can use remote uri, use remote uri, else read file
     // @ts-ignore
-    const content = await vscode.readFile(uri)
-    await webView.invoke('initialize', content)
+    const remoteUrl = await MediaPreviewWorker.invoke('MediaPreview.getUrl', uri)
+    await webView.invoke('initialize', remoteUrl)
     // @ts-ignore
     this.webView = webView
   },
