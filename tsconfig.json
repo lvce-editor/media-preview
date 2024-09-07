@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "./packages/extension" },
+    { "path": "./packages/e2e" },
+    { "path": "./packages/media-preview-worker" },
+    { "path": "./packages/build" }
+  ]
+}
