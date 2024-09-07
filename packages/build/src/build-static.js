@@ -16,20 +16,13 @@ const { commitHash } = await exportStatic({
   root,
 })
 
-await cp(
-  path.join(root, 'dist2'),
-  path.join(
-    root,
-    'dist',
-    commitHash,
-    'extensions',
-    'builtin.heap-snapshot-viewer',
-  ),
-  { recursive: true, force: true },
-)
+await cp(path.join(root, 'dist2'), path.join(root, 'dist', commitHash, 'extensions', 'builtin.media-preview'), {
+  recursive: true,
+  force: true,
+})
 
 await replace({
   path: path.join(root, 'dist', commitHash, 'config', 'webExtensions.json'),
-  occurrence: 'src/heapSnapshotViewerMain.ts',
-  replacement: 'dist/heapSnapshotViewerMain.js',
+  occurrence: 'src/mediaPreviewMain.ts',
+  replacement: 'dist/mediaPreviewMain.js',
 })

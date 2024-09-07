@@ -1,5 +1,5 @@
 {
-  "name": "heap-snapshot-worker",
+  "name": "media-preview-worker",
   "version": "0.0.0-dev",
   "description": "",
   "main": "src/heapSnapshotWorkerMain.ts",

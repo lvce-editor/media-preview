@@ -1,4 +1,4 @@
-export const name = 'heap-snapshot-viewer'
+export const name = 'media-preview'
 
 export const skip = true
 

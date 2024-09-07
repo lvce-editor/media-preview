@@ -1,14 +1,14 @@
-# heap-snapshot-viewer
+# media preview
 
 ## Contributing
 
 ```sh
-git clone git@github.com:lvce-editor/heap-snapshot-viewer.git &&
-cd heap-snapshot-viewer &&
+git clone git@github.com:lvce-editor/media-preview.git &&
+cd media-preview &&
 npm ci &&
 npm test
 ```
 
 ## Gitpod
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/lvce-editor/heap-snapshot-viewer)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/lvce-editor/media-preview)
