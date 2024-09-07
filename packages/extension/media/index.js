@@ -1,13 +1,13 @@
 // TODO use virtual dom in  worker
 
-const initialize = (content) => {
+const initialize = (remoteUrl) => {
   const app = document.createElement('div')
   app.className = 'App'
 
-  const heading = document.createElement('h1')
-  heading.textContent = 'hello from media preview'
-
-  app.append(heading)
+  const image = document.createElement('img')
+  image.src = remoteUrl
+  image.alt = ''
+  app.append(image)
 
   document.body.append(app)
 }
