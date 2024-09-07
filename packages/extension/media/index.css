@@ -1,0 +1,56 @@
+:root {
+  --TableRowHoverBackground: rgb(224, 224, 224);
+  --FontFamily: sans-serif;
+}
+
+.HeapSnapshotView {
+  contain: strict;
+  width: 200px;
+  height: 200px;
+}
+
+.Table {
+  contain: content;
+  font-family: var(--FontFamily);
+  cursor: default;
+  margin-top: 10px;
+}
+
+.TableHeader {
+  contain: content;
+}
+
+.TableHeaderRow {
+  contain: content;
+}
+
+.TableHeaderCell {
+  text-align: left;
+}
+
+.TableBodyRow:where(:hover) {
+  background: var(--TableRowHoverBackground);
+}
+
+.TableBodyRow {
+  contain: content;
+}
+
+.TableCell {
+  contain: content;
+}
+
+.CountLabel {
+  font-size: 15px;
+  margin-left: 10px;
+}
+
+.Timings {
+  position: absolute;
+  contain: content;
+  top: 0;
+  right: 0;
+  list-style: none;
+  padding: 20px;
+  z-index: 1;
+}
