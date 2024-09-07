@@ -28,7 +28,7 @@ fs.cpSync(join(extension, 'media'), join(root, 'dist', 'media'), {
   recursive: true,
 })
 
-fs.cpSync(join(mediaPreviewWorker, 'src'), join(root, 'dist', 'heap-snapshot-worker', 'src'), {
+fs.cpSync(join(mediaPreviewWorker, 'src'), join(root, 'dist', 'media-preview-worker', 'src'), {
   recursive: true,
 })
 
