@@ -57,7 +57,7 @@ await bundleJs(
   join(root, 'dist', 'media-preview-worker', 'dist', 'mediaPreviewWorkerMain.js'),
 )
 
-await bundleJs(join(root, 'dist', 'src', 'mediaPreviewWorkerMain.ts'), join(root, 'dist', 'dist', 'mediaPreviewWorkerMain.js'))
+await bundleJs(join(root, 'dist', 'src', 'mediaPreviewMain.ts'), join(root, 'dist', 'dist', 'mediaPreviewMain.js'))
 
 await packageExtension({
   highestCompression: true,
