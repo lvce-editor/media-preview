@@ -4,7 +4,7 @@ import path, { join } from 'node:path'
 import { root } from './root.js'
 
 const extension = path.join(root, 'packages', 'extension')
-const heapSnapshotWorker = path.join(root, 'packages', 'heap-snapshot-worker')
+const mediaPreviewWorker = path.join(root, 'packages', 'media-preview-worker')
 
 fs.rmSync(join(root, 'dist'), { recursive: true, force: true })
 
@@ -28,15 +28,15 @@ fs.cpSync(join(extension, 'media'), join(root, 'dist', 'media'), {
   recursive: true,
 })
 
-fs.cpSync(join(heapSnapshotWorker, 'src'), join(root, 'dist', 'heap-snapshot-worker', 'src'), {
+fs.cpSync(join(mediaPreviewWorker, 'src'), join(root, 'dist', 'heap-snapshot-worker', 'src'), {
   recursive: true,
 })
 
-const workerUrlFilePath = path.join(root, 'dist', 'src', 'parts', 'HeapSnapshotWorkerUrl', 'HeapSnapshotWorkerUrl.ts')
+const workerUrlFilePath = path.join(root, 'dist', 'src', 'parts', 'MediaPreviewWorkerUrl', 'MediaPreviewWorkerUrl.ts')
 await replace({
   path: workerUrlFilePath,
-  occurrence: 'src/heapSnapshotWorkerMain.ts',
-  replacement: 'dist/heapSnapshotWorkerMain.js',
+  occurrence: 'src/mediaPreviewWorkerMain.ts',
+  replacement: 'dist/mediaPreviewWorkerMain.js',
 })
 
 const assetDirPath = path.join(root, 'dist', 'src', 'parts', 'AssetDir', 'AssetDir.ts')
@@ -48,16 +48,16 @@ await replace({
 
 await replace({
   path: join(root, 'dist', 'extension.json'),
-  occurrence: 'src/heapSnapshotViewerMain.ts',
-  replacement: 'dist/heapSnapshotViewerMain.js',
+  occurrence: 'src/mediaPreviewMain.ts',
+  replacement: 'dist/mediaPreviewMain.js',
 })
 
 await bundleJs(
-  join(root, 'dist', 'heap-snapshot-worker', 'src', 'heapSnapshotWorkerMain.ts'),
-  join(root, 'dist', 'heap-snapshot-worker', 'dist', 'heapSnapshotWorkerMain.js'),
+  join(root, 'dist', 'media-preview-worker', 'src', 'mediaPreviewWorkerMain.ts'),
+  join(root, 'dist', 'media-preview-worker', 'dist', 'mediaPreviewWorkerMain.js'),
 )
 
-await bundleJs(join(root, 'dist', 'src', 'heapSnapshotViewerMain.ts'), join(root, 'dist', 'dist', 'heapSnapshotViewerMain.js'))
+await bundleJs(join(root, 'dist', 'src', 'mediaPreviewWorkerMain.ts'), join(root, 'dist', 'dist', 'mediaPreviewWorkerMain.js'))
 
 await packageExtension({
   highestCompression: true,
