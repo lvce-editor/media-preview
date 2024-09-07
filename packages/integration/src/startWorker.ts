@@ -5,7 +5,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const root = `${__dirname}/../../..`
 
-const workerPath = join(root, 'packages', 'heap-snapshot-worker', 'src', 'heapSnapshotWorkerMain.ts')
+const workerPath = join(root, 'packages', 'media-preview-worker', 'src', 'mediaPreviewWorkerMain.ts')
 
 export const startWorker = async (rpc) => {
   const workerUrl = pathToFileURL(workerPath).toString()
