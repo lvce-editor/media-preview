@@ -2,7 +2,7 @@
   "name": "media-preview-worker",
   "version": "0.0.0-dev",
   "description": "",
-  "main": "src/heapSnapshotWorkerMain.ts",
+  "main": "src/mediaPreviewWorkerMain.ts",
   "type": "module",
   "scripts": {
     "#test": "node --unhandled-rejections=warn --experimental-vm-modules ../../node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
