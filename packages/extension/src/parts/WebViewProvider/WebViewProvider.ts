@@ -1,5 +1,7 @@
 import * as MediaPreviewWorker from '../MediaPreviewWorker/MediaPreviewWorker.ts'
 
+const previewId = 1
+
 export const webViewProvider = {
   id: 'builtin.media-preview',
   async create(webView, uri) {
@@ -10,29 +12,25 @@ export const webViewProvider = {
     await webView.invoke('initialize', remoteUrl)
     // @ts-ignore
     webViewProvider.webView = webView
-    // @ts-ignore
-    webViewProvider.state = {
-      x: 0,
-      y: 0,
-    }
+    await MediaPreviewWorker.invoke('MediaPreview.create', previewId)
   },
   async open(uri, webView) {},
   commands: {
     // TODO support zoom
     // TODO support drag via mouse move
-    async update(x, y) {
+    async update(newState) {
       // @ts-ignore
-      webViewProvider.state.x = x
-      // @ts-ignore
-      webViewProvider.state.y = y
-      // @ts-ignore
-      await webViewProvider.webView.invoke('update', webViewProvider.state.x, webViewProvider.state.y)
+      await webViewProvider.webView.invoke('update', newState.x, newState.y)
     },
     async handlePointerDown(x, y) {
-      return webViewProvider.commands.update(x, y)
+      // @ts-ignore
+      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerDown', previewId, x, y)
+      return webViewProvider.commands.update(newState)
     },
-    handlePointerMove(x, y) {
-      return webViewProvider.commands.update(x, y)
+    async handlePointerMove(x, y) {
+      // @ts-ignore
+      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerMove', previewId, x, y)
+      return webViewProvider.commands.update(newState)
     },
   },
 }
