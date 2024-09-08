@@ -10,7 +10,7 @@
       "id": "builtin.media-preview",
       "rpc": true,
       "path": "media/index.html",
-      "selector": [".png", ".jpg", ".jpeg", ".mp4", ".webm", ".mp3", ".ogg", ".opus", ".avif", ".svg", ".gif", ".ico", ".mkv"]
+      "selector": [".png", ".jpg", ".jpeg", ".avif", ".svg", ".gif", ".ico"]
     }
   ]
 }
