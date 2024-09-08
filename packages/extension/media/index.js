@@ -19,7 +19,7 @@ const initialize = (remoteUrl) => {
   const app = document.createElement('div')
   app.className = 'App'
   app.addEventListener('pointerdown', handlePointerDown)
-  app.addEventListener('pointercapturelos', handlePointerUp)
+  app.addEventListener('pointercapturelost', handlePointerUp)
 
   const image = document.createElement('img')
   image.className = 'Image'
