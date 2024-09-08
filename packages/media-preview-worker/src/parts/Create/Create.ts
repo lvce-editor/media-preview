@@ -6,6 +6,8 @@ export const create = (id: number) => {
     x: 0,
     y: 0,
     domMatrix: DomMatrix.create(),
+    pointerOffsetX: 0,
+    pointerOffsetY: 0,
   }
   PreviewState.set(id, preview)
 }
