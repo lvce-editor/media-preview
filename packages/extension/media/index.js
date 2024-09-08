@@ -2,6 +2,7 @@
 
 const handlePointerDown = async (event) => {
   const { target, clientX, clientY, pointerId } = event
+  event.preventDefault()
   target.setPointerCapture(pointerId)
   target.addEventListener('pointermove', handlePointerMove)
   await rpc.invoke('handlePointerDown', clientX, clientY)
@@ -29,11 +30,13 @@ const initialize = (remoteUrl) => {
   document.body.append(app)
 }
 
-const update = (x, y) => {
+const update = (state) => {
+  const { domMatrix } = state
   const app = document.querySelector('.App')
-  const el = document.createElement('div')
-  el.textContent = `x${x}, y:${y}`
-  app?.append(el)
+  // @ts-ignore
+  const image = app.querySelector('.Image')
+  // @ts-ignore
+  image.style.transform = `${domMatrix}`
 }
 
 const rpc = globalThis.lvceRpc({

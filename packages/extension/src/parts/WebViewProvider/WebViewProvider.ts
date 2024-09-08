@@ -20,7 +20,7 @@ export const webViewProvider = {
     // TODO support drag via mouse move
     async update(newState) {
       // @ts-ignore
-      await webViewProvider.webView.invoke('update', newState.x, newState.y)
+      await webViewProvider.webView.invoke('update', newState)
     },
     async handlePointerDown(x, y) {
       // @ts-ignore
