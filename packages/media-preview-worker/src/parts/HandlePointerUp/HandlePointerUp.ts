@@ -1,10 +1,12 @@
-import * as PreviewState from '../PreviewStates/PreviewStates.ts'
+import type { PreviewState } from '../PreviewState/PreviewState.ts'
+import * as PreviewStates from '../PreviewStates/PreviewStates.ts'
 
-export const handlePointerUp = (id: number, x: number, y: number) => {
-  const state = PreviewState.get(id)
-  return {
+export const handlePointerUp = (id: number, x: number, y: number): PreviewState => {
+  const state = PreviewStates.get(id)
+  const newState: PreviewState = {
     ...state,
-    x,
-    y,
+    pointerDown: false,
   }
+  PreviewStates.set(id, newState)
+  return newState
 }

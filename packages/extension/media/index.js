@@ -8,18 +8,22 @@ const handlePointerDown = async (event) => {
   await rpc.invoke('handlePointerDown', clientX, clientY)
 }
 
-const handlePointerUp = () => {}
+const handlePointerUp = async (event) => {
+  const { target } = event
+  target.removeEventListener('pointermove', handlePointerMove)
+  await rpc.invoke('handlePointerUp')
+}
 
 const handlePointerMove = async (event) => {
   const { clientX, clientY } = event
-  await rpc.invoke('handlePointerDown', clientX, clientY)
+  await rpc.invoke('handlePointerMove', clientX, clientY)
 }
 
 const initialize = (remoteUrl) => {
   const app = document.createElement('div')
   app.className = 'App'
   app.addEventListener('pointerdown', handlePointerDown)
-  app.addEventListener('pointercapturelost', handlePointerUp)
+  app.addEventListener('pointerup', handlePointerUp)
 
   const image = document.createElement('img')
   image.className = 'Image'
