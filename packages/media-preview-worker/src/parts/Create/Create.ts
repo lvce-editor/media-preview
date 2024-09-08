@@ -1,4 +1,4 @@
-import * as PreviewState from '../PreviewState/PreviewState.ts'
+import * as PreviewState from '../PreviewStates/PreviewStates.ts'
 import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
 
 export const create = (id: number) => {

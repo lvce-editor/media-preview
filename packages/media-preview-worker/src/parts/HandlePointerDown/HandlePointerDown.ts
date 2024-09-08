@@ -1,4 +1,4 @@
-import * as PreviewState from '../PreviewState/PreviewState.ts'
+import * as PreviewState from '../PreviewStates/PreviewStates.ts'
 
 export const handlePointerDown = (id: number, x: number, y: number) => {
   const state = PreviewState.get(id)
