@@ -1,4 +1,5 @@
 import { replace } from '@lvce-editor/package-extension'
+// @ts-ignore
 import { exportStatic } from '../../extension/node_modules/@lvce-editor/shared-process'
 import { cp } from 'node:fs/promises'
 import path from 'node:path'
