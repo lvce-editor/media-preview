@@ -40,8 +40,10 @@ const initialize = (remoteUrl) => {
 }
 
 const update = (state) => {
-  const { domMatrix } = state
+  const { domMatrix, pointerDown } = state
   const app = document.querySelector('.App')
+  // @ts-ignore
+  app.classList.toggle('Dragging', pointerDown)
   // @ts-ignore
   const imageContent = app.querySelector('.ImageContent')
   // @ts-ignore

@@ -32,5 +32,10 @@ export const webViewProvider = {
       const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerMove', previewId, x, y)
       return webViewProvider.commands.update(newState)
     },
+    async handlePointerUp(x, y) {
+      // @ts-ignore
+      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerUp', previewId, x, y)
+      return webViewProvider.commands.update(newState)
+    },
   },
 }
