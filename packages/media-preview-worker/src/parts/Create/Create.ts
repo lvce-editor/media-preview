@@ -1,13 +1,12 @@
-import * as PreviewState from '../PreviewStates/PreviewStates.ts'
+import * as PreviewStates from '../PreviewStates/PreviewStates.ts'
 import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
+import type { PreviewState } from '../PreviewState/PreviewState.ts'
 
 export const create = (id: number) => {
-  const preview = {
-    x: 0,
-    y: 0,
+  const preview: PreviewState = {
     domMatrix: DomMatrix.create(),
     pointerOffsetX: 0,
     pointerOffsetY: 0,
   }
-  PreviewState.set(id, preview)
+  PreviewStates.set(id, preview)
 }

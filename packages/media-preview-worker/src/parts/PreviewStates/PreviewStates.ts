@@ -1,9 +1,11 @@
-export const previews = Object.create(null)
+import type { PreviewState } from '../PreviewState/PreviewState.ts'
 
-export const set = (id, preview) => {
+const previews = Object.create(null)
+
+export const set = (id: number, preview: PreviewState) => {
   previews[id] = preview
 }
 
-export const get = (id: number) => {
+export const get = (id: number): PreviewState => {
   return previews[id]
 }
