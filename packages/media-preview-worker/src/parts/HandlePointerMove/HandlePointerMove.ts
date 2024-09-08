@@ -11,7 +11,7 @@ export const handlePointerMove = (id: number, x: number, y: number): PreviewStat
   const newState: PreviewState = {
     ...state,
     pointerOffsetX: x,
-    pointerOffsetY,
+    pointerOffsetY: y,
     domMatrix: newDomMatrix,
   }
   PreviewStates.set(id, newState)

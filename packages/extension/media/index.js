@@ -25,11 +25,16 @@ const initialize = (remoteUrl) => {
   app.addEventListener('pointerdown', handlePointerDown)
   app.addEventListener('pointerup', handlePointerUp)
 
+  const imageContent = document.createElement('div')
+  imageContent.className = 'ImageContent'
+
   const image = document.createElement('img')
-  image.className = 'Image'
+  image.className = 'ImageElement'
   image.src = remoteUrl
   image.alt = ''
-  app.append(image)
+
+  imageContent.append(image)
+  app.append(imageContent)
 
   document.body.append(app)
 }
@@ -38,9 +43,9 @@ const update = (state) => {
   const { domMatrix } = state
   const app = document.querySelector('.App')
   // @ts-ignore
-  const image = app.querySelector('.Image')
+  const imageContent = app.querySelector('.ImageContent')
   // @ts-ignore
-  image.style.transform = `${domMatrix}`
+  imageContent.style.transform = `${domMatrix}`
 }
 
 const rpc = globalThis.lvceRpc({
