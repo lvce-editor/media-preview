@@ -7,7 +7,6 @@ export const handlePointerMove = (id: number, x: number, y: number): PreviewStat
   const { pointerOffsetX, pointerOffsetY, domMatrix } = state
   const deltaX = x - pointerOffsetX
   const deltaY = y - pointerOffsetY
-  console.log({ deltaX, deltaY })
   const newDomMatrix = DomMatrix.move(domMatrix, deltaX, deltaY)
   const newState: PreviewState = {
     ...state,
