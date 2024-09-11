@@ -18,7 +18,11 @@
   "license": "MIT",
   "devDependencies": {
     "@lerna/legacy-package-management": "^8.1.8",
+<<<<<<< HEAD
     "@types/node": "^22.5.4",
+=======
+    "@lvce-editor/server": "^0.33.11",
+>>>>>>> origin/main
     "jest": "^29.7.0",
     "lerna": "^8.1.8",
     "prettier": "^3.3.3",
