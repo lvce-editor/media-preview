@@ -10,7 +10,22 @@
       "id": "builtin.media-preview",
       "rpc": true,
       "path": "media/index.html",
-      "selector": [".png", ".jpg", ".jpeg", ".avif", ".svg", ".gif", ".ico"]
+      "selector": [".png", ".jpg", ".jpeg", ".avif", ".svg", ".gif", ".ico"],
+      "contentSecurityPolicy": ["default-src 'none'", "script-src 'self'", "style-src 'self'", "img-src 'self'"],
+      "elements": [
+        {
+          "type": "title",
+          "value": "Heapsnapshot Viewer"
+        },
+        {
+          "type": "script",
+          "path": "media/index.js"
+        },
+        {
+          "type": "css",
+          "path": "media/index.css"
+        }
+      ]
     }
   ]
 }
