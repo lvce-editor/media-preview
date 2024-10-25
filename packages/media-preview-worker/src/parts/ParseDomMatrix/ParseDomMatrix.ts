@@ -1,12 +1,27 @@
 import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
 
+const prefix = 'matrix('
+const postfix = ')'
+
+const parseDomMatrixInner = (innerString: string): DOMMatrixReadOnly => {
+  const parts = innerString.split(', ')
+  if (parts.length !== 6) {
+    return DomMatrix.create()
+  }
+  const [aString, bString, cString, dString, eString, fString] = parts
+  const a = parseFloat(aString)
+  const b = parseFloat(bString)
+  const c = parseFloat(cString)
+  const d = parseFloat(dString)
+  const e = parseFloat(eString)
+  const f = parseFloat(fString)
+  return new DOMMatrixReadOnly([a, b, c, d, e, f])
+}
+
 export const parseDomMatrix = (domMatrixString: string): DOMMatrixReadOnly => {
-  const a = 1
-  const b = 0
-  const c = 0
-  const d = 1
-  const e = 154
-  const f = 160
-  const domMatrix = DomMatrix.create([a, b, c, d, e, f])
-  return domMatrix
+  if (!domMatrixString || !domMatrixString.startsWith(prefix) || !domMatrixString.endsWith(postfix)) {
+    return DomMatrix.create()
+  }
+  const inner = domMatrixString.slice(prefix.length, -postfix.length)
+  return parseDomMatrixInner(inner)
 }
