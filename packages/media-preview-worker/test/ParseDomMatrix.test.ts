@@ -77,6 +77,39 @@ beforeAll(() => {
   }
 })
 
+test('parseDomMatrix - prefix mismatch', () => {
+  const domMatrixString = ' matrix(1, 0, 0, 1, 154, 160)'
+  const parsed = ParseDomMatrix.parseDomMatrix(domMatrixString)
+  expect(parsed.a).toBe(1)
+  expect(parsed.b).toBe(0)
+  expect(parsed.c).toBe(0)
+  expect(parsed.d).toBe(1)
+  expect(parsed.e).toBe(0)
+  expect(parsed.f).toBe(0)
+})
+
+test('parseDomMatrix - postfix mismatch', () => {
+  const domMatrixString = 'matrix(1, 0, 0, 1, 154, 160) '
+  const parsed = ParseDomMatrix.parseDomMatrix(domMatrixString)
+  expect(parsed.a).toBe(1)
+  expect(parsed.b).toBe(0)
+  expect(parsed.c).toBe(0)
+  expect(parsed.d).toBe(1)
+  expect(parsed.e).toBe(0)
+  expect(parsed.f).toBe(0)
+})
+
+test('parseDomMatrix - inner number count mismatch', () => {
+  const domMatrixString = 'matrix(1, 0, 0, 1, 154)'
+  const parsed = ParseDomMatrix.parseDomMatrix(domMatrixString)
+  expect(parsed.a).toBe(1)
+  expect(parsed.b).toBe(0)
+  expect(parsed.c).toBe(0)
+  expect(parsed.d).toBe(1)
+  expect(parsed.e).toBe(0)
+  expect(parsed.f).toBe(0)
+})
+
 test('parseDomMatrix', () => {
   const domMatrixString = 'matrix(1, 0, 0, 1, 154, 160)'
   const parsed = ParseDomMatrix.parseDomMatrix(domMatrixString)
