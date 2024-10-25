@@ -1,9 +1,9 @@
-import type { PreviewState } from '../PreviewState/PreviewState.ts'
-import * as PreviewStates from '../PreviewStates/PreviewStates.ts'
+import type { WebView } from '../WebView/WebView.ts'
+import * as PreviewStates from '../WebViewStates/WebViewStates.ts'
 
-export const handlePointerDown = (id: number, x: number, y: number): PreviewState => {
+export const handlePointerDown = (id: number, x: number, y: number): WebView => {
   const state = PreviewStates.get(id)
-  const newState: PreviewState = {
+  const newState: WebView = {
     ...state,
     pointerOffsetX: x,
     pointerOffsetY: y,
