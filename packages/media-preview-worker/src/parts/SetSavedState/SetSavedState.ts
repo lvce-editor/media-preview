@@ -1,12 +1,11 @@
 import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
+import * as ParseDomMatrix from '../ParseDomMatrix/ParseDomMatrix.ts'
 import type { WebView } from '../WebView/WebView.ts'
 import * as WebViewStates from '../WebViewStates/WebViewStates.ts'
 
 const getSavedDomMatrix = (savedState: any): DOMMatrixReadOnly => {
   if (savedState && savedState.domMatrix && typeof savedState.domMatrix === 'string') {
-    const maybe = new DOMMatrixReadOnly(savedState.domMatrix)
-    // TODO how to verify that dom matrix is valid?
-    return maybe
+    return ParseDomMatrix.parseDomMatrix(savedState.domMatrix)
   }
   return DomMatrix.create()
 }
