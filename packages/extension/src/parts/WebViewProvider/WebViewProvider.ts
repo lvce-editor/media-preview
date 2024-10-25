@@ -1,20 +1,24 @@
 import * as MediaPreviewWorker from '../MediaPreviewWorker/MediaPreviewWorker.ts'
 
-const previewId = 1
+const id = 1
 
 export const webViewProvider = {
   id: 'builtin.media-preview',
-  async create(webView, uri) {
-    console.log({ uri })
+  async create(webView, uri, savedState) {
     // TODO if can use remote uri, use remote uri, else read file
     // @ts-ignore
     const remoteUrl = await MediaPreviewWorker.invoke('MediaPreview.getUrl', uri)
+    await MediaPreviewWorker.invoke('MediaPreview.create', id)
+    await MediaPreviewWorker.invoke('MediaPreview.setSavedState', savedState)
     await webView.invoke('initialize', remoteUrl)
     // @ts-ignore
     webViewProvider.webView = webView
-    await MediaPreviewWorker.invoke('MediaPreview.create', previewId)
   },
   async open(uri, webView) {},
+  async saveState() {
+    const state = await MediaPreviewWorker.invoke('MediaPreview.saveState', id)
+    return state
+  },
   commands: {
     // TODO support zoom
     // TODO support drag via mouse move
@@ -24,17 +28,17 @@ export const webViewProvider = {
     },
     async handlePointerDown(x, y) {
       // @ts-ignore
-      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerDown', previewId, x, y)
+      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerDown', id, x, y)
       return webViewProvider.commands.update(newState)
     },
     async handlePointerMove(x, y) {
       // @ts-ignore
-      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerMove', previewId, x, y)
+      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerMove', id, x, y)
       return webViewProvider.commands.update(newState)
     },
     async handlePointerUp(x, y) {
       // @ts-ignore
-      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerUp', previewId, x, y)
+      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerUp', id, x, y)
       return webViewProvider.commands.update(newState)
     },
   },
