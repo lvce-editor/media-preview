@@ -1,13 +1,13 @@
-import * as PreviewStates from '../PreviewStates/PreviewStates.ts'
+import * as PreviewStates from '../WebViewStates/WebViewStates.ts'
 import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
-import type { PreviewState } from '../PreviewState/PreviewState.ts'
+import type { WebView } from '../WebView/WebView.ts'
 
-export const create = (id: number): PreviewState => {
-  const preview: PreviewState = {
+export const create = (id: number): WebView => {
+  const preview: WebView = {
     domMatrix: DomMatrix.create(),
     pointerOffsetX: 0,
     pointerOffsetY: 0,
-    pointerDown:false
+    pointerDown: false,
   }
   PreviewStates.set(id, preview)
   return preview

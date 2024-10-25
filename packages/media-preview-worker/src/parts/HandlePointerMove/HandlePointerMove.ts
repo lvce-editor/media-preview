@@ -1,14 +1,14 @@
 import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
-import type { PreviewState } from '../PreviewState/PreviewState.ts'
-import * as PreviewStates from '../PreviewStates/PreviewStates.ts'
+import type { WebView } from '../WebView/WebView.ts'
+import * as PreviewStates from '../WebViewStates/WebViewStates.ts'
 
-export const handlePointerMove = (id: number, x: number, y: number): PreviewState => {
+export const handlePointerMove = (id: number, x: number, y: number): WebView => {
   const state = PreviewStates.get(id)
   const { pointerOffsetX, pointerOffsetY, domMatrix } = state
   const deltaX = x - pointerOffsetX
   const deltaY = y - pointerOffsetY
   const newDomMatrix = DomMatrix.move(domMatrix, deltaX, deltaY)
-  const newState: PreviewState = {
+  const newState: WebView = {
     ...state,
     pointerOffsetX: x,
     pointerOffsetY: y,

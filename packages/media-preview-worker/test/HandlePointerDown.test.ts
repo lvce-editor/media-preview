@@ -1,7 +1,7 @@
 import { beforeAll, expect, test } from '@jest/globals'
 import * as Create from '../src/parts/Create/Create.js'
 import * as HandlePointerDown from '../src/parts/HandlePointerDown/HandlePointerDown.js'
-import * as PreviewStates from '../src/parts/PreviewStates/PreviewStates.js'
+import * as PreviewStates from '../src/parts/WebViewStates/WebViewStates.ts'
 
 beforeAll(() => {
   // workaround for jsdom not supporting DOMMatrixReadonly
