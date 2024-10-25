@@ -1,4 +1,4 @@
-export interface PreviewState {
+export interface WebView {
   readonly pointerOffsetX: number
   readonly pointerOffsetY: number
   readonly domMatrix: DOMMatrixReadOnly
