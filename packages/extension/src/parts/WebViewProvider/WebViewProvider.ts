@@ -9,13 +9,12 @@ export const webViewProvider = {
     // @ts-ignore
     const remoteUrl = await MediaPreviewWorker.invoke('MediaPreview.getUrl', uri)
     await MediaPreviewWorker.invoke('MediaPreview.create', id)
-    await MediaPreviewWorker.invoke('MediaPreview.setSavedState', savedState)
+    await MediaPreviewWorker.invoke('MediaPreview.setSavedState', id, savedState)
     await webView.invoke('initialize', remoteUrl)
     // @ts-ignore
     webViewProvider.webView = webView
     const newState = await MediaPreviewWorker.invoke('MediaPreview.getState', id)
     await webViewProvider.commands.update(newState)
-    console.log({ savedState, newState })
   },
   async open(uri, webView) {},
   async saveState() {
