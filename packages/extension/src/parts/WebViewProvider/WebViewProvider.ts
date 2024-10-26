@@ -28,15 +28,18 @@ export const webViewProvider = {
       await webViewProvider.webView.invoke('update', newState)
     },
     async handlePointerDown(x, y) {
-      const newState = await MediaPreview.handlePointerDown(id, x, y)
+      await MediaPreview.handlePointerDown(id, x, y)
+      const newState = await MediaPreview.getState(id)
       return webViewProvider.commands.update(newState)
     },
     async handlePointerMove(x, y) {
-      const newState = await MediaPreview.handlePointerMove(id, x, y)
+      await MediaPreview.handlePointerMove(id, x, y)
+      const newState = await MediaPreview.getState(id)
       return webViewProvider.commands.update(newState)
     },
     async handlePointerUp(x, y) {
-      const newState = await MediaPreview.handlePointerUp(id, x, y)
+      await MediaPreview.handlePointerUp(id, x, y)
+      const newState = await MediaPreview.getState(id)
       return webViewProvider.commands.update(newState)
     },
     async handleWheel(eventX, eventY, deltaX, deltaY) {
