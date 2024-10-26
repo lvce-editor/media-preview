@@ -1,4 +1,4 @@
-import * as MediaPreviewWorker from '../MediaPreviewWorker/MediaPreviewWorker.ts'
+import * as MediaPreview from '../MediaPreview/MediaPreview.ts'
 
 const id = 1
 
@@ -7,18 +7,18 @@ export const webViewProvider = {
   async create(webView, uri, savedState) {
     // TODO if can use remote uri, use remote uri, else read file
     // @ts-ignore
-    const remoteUrl = await MediaPreviewWorker.invoke('MediaPreview.getUrl', uri)
-    await MediaPreviewWorker.invoke('MediaPreview.create', id)
-    await MediaPreviewWorker.invoke('MediaPreview.setSavedState', id, savedState)
+    const remoteUrl = await MediaPreview.getUrl(uri)
+    await MediaPreview.create(id)
+    await MediaPreview.setSavedState(id, savedState)
     await webView.invoke('initialize', remoteUrl)
     // @ts-ignore
     webViewProvider.webView = webView
-    const newState = await MediaPreviewWorker.invoke('MediaPreview.getState', id)
+    const newState = await MediaPreview.getState(id)
     await webViewProvider.commands.update(newState)
   },
   async open(uri, webView) {},
   async saveState() {
-    const state = await MediaPreviewWorker.invoke('MediaPreview.saveState', id)
+    const state = await MediaPreview.saveState(id)
     return state
   },
   commands: {
@@ -30,17 +30,17 @@ export const webViewProvider = {
     },
     async handlePointerDown(x, y) {
       // @ts-ignore
-      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerDown', id, x, y)
+      const newState = await MediaPreview.handlePointerDown(id, x, y)
       return webViewProvider.commands.update(newState)
     },
     async handlePointerMove(x, y) {
       // @ts-ignore
-      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerMove', id, x, y)
+      const newState = await MediaPreview.handlePointerMove(id, x, y)
       return webViewProvider.commands.update(newState)
     },
     async handlePointerUp(x, y) {
       // @ts-ignore
-      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerUp', id, x, y)
+      const newState = await MediaPreview.handlePointerUp(id, x, y)
       return webViewProvider.commands.update(newState)
     },
   },
