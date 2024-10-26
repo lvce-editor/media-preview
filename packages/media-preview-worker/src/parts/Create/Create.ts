@@ -8,6 +8,10 @@ export const create = (id: number): WebView => {
     pointerOffsetX: 0,
     pointerOffsetY: 0,
     pointerDown: false,
+    minZoom: 0.1,
+    maxZoom: 2 ** 15, // max value that doesn't result in degradation
+    zoomFactor: 200,
+    eventCache: [],
   }
   PreviewStates.set(id, preview)
   return preview
