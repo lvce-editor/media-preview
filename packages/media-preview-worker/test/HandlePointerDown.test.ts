@@ -88,7 +88,7 @@ beforeAll(() => {
   }
 })
 
-test('handlePointerDown', async () => {
+test('handlePointerDown', () => {
   const id = 1
   const x = 10
   const y = 20

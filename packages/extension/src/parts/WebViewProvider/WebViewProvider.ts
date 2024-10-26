@@ -30,17 +30,20 @@ export const webViewProvider = {
     },
     async handlePointerDown(x, y) {
       // @ts-ignore
-      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerDown', id, x, y)
+      await MediaPreviewWorker.invoke('MediaPreview.handlePointerDown', id, x, y)
+      const newState = await MediaPreviewWorker.invoke('MediaPreview.getState', id)
       return webViewProvider.commands.update(newState)
     },
     async handlePointerMove(x, y) {
       // @ts-ignore
-      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerMove', id, x, y)
+      await MediaPreviewWorker.invoke('MediaPreview.handlePointerMove', id, x, y)
+      const newState = await MediaPreviewWorker.invoke('MediaPreview.getState', id)
       return webViewProvider.commands.update(newState)
     },
     async handlePointerUp(x, y) {
       // @ts-ignore
-      const newState = await MediaPreviewWorker.invoke('MediaPreview.handlePointerUp', id, x, y)
+      await MediaPreviewWorker.invoke('MediaPreview.handlePointerUp', id, x, y)
+      const newState = await MediaPreviewWorker.invoke('MediaPreview.getState', id)
       return webViewProvider.commands.update(newState)
     },
   },

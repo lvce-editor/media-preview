@@ -1,7 +1,7 @@
 import type { WebView } from '../WebView/WebView.ts'
 import * as WebViewStates from '../WebViewStates/WebViewStates.ts'
 
-export const handlePointerDown = (id: number, x: number, y: number): WebView => {
+export const handlePointerDown = (id: number, x: number, y: number): void => {
   const state = WebViewStates.get(id)
   const newState: WebView = {
     ...state,
@@ -10,5 +10,4 @@ export const handlePointerDown = (id: number, x: number, y: number): WebView => 
     pointerDown: true,
   }
   WebViewStates.set(id, newState)
-  return newState
 }
