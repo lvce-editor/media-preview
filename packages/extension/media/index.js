@@ -19,11 +19,17 @@ const handlePointerMove = async (event) => {
   await rpc.invoke('handlePointerMove', clientX, clientY)
 }
 
+const handleWheel = async (event) => {
+  const { clientX, clientY, deltaX, deltaY } = event
+  await rpc.invoke('handleWheel', clientX, clientY, deltaX, deltaY)
+}
+
 const initialize = (remoteUrl) => {
   const app = document.createElement('div')
   app.className = 'App'
   app.addEventListener('pointerdown', handlePointerDown)
   app.addEventListener('pointerup', handlePointerUp)
+  app.addEventListener('wheel', handleWheel, { passive: true })
 
   const imageContent = document.createElement('div')
   imageContent.className = 'ImageContent'
