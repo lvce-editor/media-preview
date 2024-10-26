@@ -7,7 +7,9 @@ export const webViewProvider = {
   async create(webView, uri, savedState) {
     // TODO if can use remote uri, use remote uri, else read file
     // @ts-ignore
-    const remoteUrl = await vscode.getRemoteUrl(uri)
+    const remoteUrl = await vscode.getRemoteUrl(uri, {
+      webViewId: webViewProvider.id,
+    })
     await MediaPreview.create(id)
     await MediaPreview.setSavedState(id, savedState)
     await webView.invoke('initialize', remoteUrl)
