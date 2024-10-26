@@ -33,5 +33,5 @@ export const handlePointerUp = (id: number, x: number, y: number) => {
 }
 
 export const handleWheel = (id: number, eventX: number, eventY: number, deltaX: number, deltaY: number) => {
-  return MediaPreviewWorker.invoke('MediaPreview.handleWheel', id, eventX, eventY)
+  return MediaPreviewWorker.invoke('MediaPreview.handleWheel', id, eventX, eventY, deltaX, deltaY)
 }
