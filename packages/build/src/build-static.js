@@ -1,6 +1,6 @@
 import { replace } from '@lvce-editor/package-extension'
 import { exportStatic } from '@lvce-editor/shared-process'
-import { cp, readdir, rm, writeFile } from 'node:fs/promises'
+import { cp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path, { join } from 'node:path'
 import { root } from './root.js'
 
@@ -26,6 +26,15 @@ await replace({
   occurrence: 'src/mediaPreviewMain.ts',
   replacement: 'dist/mediaPreviewMain.js',
 })
+
+const pathPrefix = '/media-preview'
+const webViewsPath = join(root, 'dist', commitHash, 'config', 'webViews.json')
+const extensionJsonPath = join(root, 'dist', commitHash, 'extensions', 'builtin.media-preview', 'extension.json')
+const extensionJsonContent = await readFile(extensionJsonPath, 'utf8')
+const extensionJson = JSON.parse(extensionJsonContent)
+extensionJson.webViews[0].path = `${commitHash}/extensions/${extensionJson.id}/${extensionJson.webViews[0].path}`
+extensionJson.webViews[0].remotePath = `${pathPrefix}/${commitHash}/extensions/${extensionJson.id}`
+await writeFile(webViewsPath, JSON.stringify(extensionJson.webViews, null, 2) + '\n')
 
 await rm(join(root, 'dist', commitHash, 'playground'), { recursive: true, force: true })
 await cp(join(root, 'packages', 'sample-files', 'files'), join(root, 'dist', commitHash, 'playground'), {
