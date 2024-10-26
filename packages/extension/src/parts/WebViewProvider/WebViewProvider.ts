@@ -6,7 +6,6 @@ export const webViewProvider = {
   id: 'builtin.media-preview',
   async create(webView, uri, savedState) {
     // TODO if can use remote uri, use remote uri, else read file
-    // @ts-ignore
     const remoteUrl = await MediaPreview.getUrl(uri)
     await MediaPreview.create(id)
     await MediaPreview.setSavedState(id, savedState)
@@ -29,18 +28,19 @@ export const webViewProvider = {
       await webViewProvider.webView.invoke('update', newState)
     },
     async handlePointerDown(x, y) {
-      // @ts-ignore
       const newState = await MediaPreview.handlePointerDown(id, x, y)
       return webViewProvider.commands.update(newState)
     },
     async handlePointerMove(x, y) {
-      // @ts-ignore
       const newState = await MediaPreview.handlePointerMove(id, x, y)
       return webViewProvider.commands.update(newState)
     },
     async handlePointerUp(x, y) {
-      // @ts-ignore
       const newState = await MediaPreview.handlePointerUp(id, x, y)
+      return webViewProvider.commands.update(newState)
+    },
+    async handleWheel(eventX, eventY, deltaX, deltaY) {
+      const newState = await MediaPreview.handleWheel(id, eventX, eventY, deltaX, deltaY)
       return webViewProvider.commands.update(newState)
     },
   },

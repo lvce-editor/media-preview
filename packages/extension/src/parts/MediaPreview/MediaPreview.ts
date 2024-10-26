@@ -31,3 +31,7 @@ export const handlePointerMove = (id: number, x: number, y: number) => {
 export const handlePointerUp = (id: number, x: number, y: number) => {
   return MediaPreviewWorker.invoke('MediaPreview.handlePointerUp', id, x, y)
 }
+
+export const handleWheel = (id: number, eventX: number, eventY: number, deltaX: number, deltaY: number) => {
+  return MediaPreviewWorker.invoke('MediaPreview.handleWheel', id, eventX, eventY)
+}
