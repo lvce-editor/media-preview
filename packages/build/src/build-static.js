@@ -1,7 +1,7 @@
 import { replace } from '@lvce-editor/package-extension'
 import { exportStatic } from '@lvce-editor/shared-process'
-import { cp } from 'node:fs/promises'
-import path from 'node:path'
+import { cp, readdir, rm, writeFile } from 'node:fs/promises'
+import path, { join } from 'node:path'
 import { root } from './root.js'
 
 await import('./build.js')
@@ -26,3 +26,12 @@ await replace({
   occurrence: 'src/mediaPreviewMain.ts',
   replacement: 'dist/mediaPreviewMain.js',
 })
+
+await rm(join(root, 'dist', commitHash, 'playground'), { recursive: true, force: true })
+await cp(join(root, 'packages', 'sample-files', 'files'), join(root, 'dist', commitHash, 'playground'), {
+  recursive: true,
+})
+
+const dirents = await readdir(join(root, 'dist', commitHash, 'playground'))
+const fileMap = dirents.map((dirent) => `/playground/${dirent}`)
+await writeFile(join(root, 'dist', commitHash, 'config', 'fileMap.json'), JSON.stringify(fileMap, null, 2) + '\n')
