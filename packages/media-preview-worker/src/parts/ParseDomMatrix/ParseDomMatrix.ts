@@ -15,6 +15,9 @@ const parseDomMatrixInner = (innerString: string): DOMMatrixReadOnly => {
   const d = parseFloat(dString)
   const e = parseFloat(eString)
   const f = parseFloat(fString)
+  if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d) || isNaN(e) || isNaN(f)) {
+    return DomMatrix.create()
+  }
   return new DOMMatrixReadOnly([a, b, c, d, e, f])
 }
 

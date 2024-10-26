@@ -43,7 +43,8 @@ export const webViewProvider = {
       return webViewProvider.commands.update(newState)
     },
     async handleWheel(eventX, eventY, deltaX, deltaY) {
-      const newState = await MediaPreview.handleWheel(id, eventX, eventY, deltaX, deltaY)
+      await MediaPreview.handleWheel(id, eventX, eventY, deltaX, deltaY)
+      const newState = await MediaPreview.getState(id)
       return webViewProvider.commands.update(newState)
     },
   },
