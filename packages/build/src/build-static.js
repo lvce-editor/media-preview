@@ -29,7 +29,7 @@ await replace({
 
 const pathPrefix = '/media-preview'
 const webViewsPath = join(root, 'dist', commitHash, 'config', 'webViews.json')
-const extensionJsonPath = join(root, 'dist', commitHash, 'extensions', 'builtin.csv-viewer', 'extension.json')
+const extensionJsonPath = join(root, 'dist', commitHash, 'extensions', 'builtin.media-preview', 'extension.json')
 const extensionJsonContent = await readFile(extensionJsonPath, 'utf8')
 const extensionJson = JSON.parse(extensionJsonContent)
 extensionJson.webViews[0].path = `${commitHash}/extensions/${extensionJson.id}/${extensionJson.webViews[0].path}`
