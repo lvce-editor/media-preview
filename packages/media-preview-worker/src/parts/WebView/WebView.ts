@@ -1,3 +1,5 @@
+import type { EventCacheItem } from '../EventCacheItem/EventCacheItem.ts'
+
 export interface WebView {
   readonly pointerOffsetX: number
   readonly pointerOffsetY: number
@@ -6,5 +8,5 @@ export interface WebView {
   readonly minZoom: number
   readonly maxZoom: number
   readonly zoomFactor: 200
-  readonly eventCache: readonly any[]
+  readonly eventCache: readonly EventCacheItem[]
 }
