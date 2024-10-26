@@ -1,4 +1,4 @@
-import * as IsFirefox from '../IsFirefox/IsFirefox.js'
+import * as IsFirefox from '../IsFirefox/IsFirefox.ts'
 
 export const normalizeDelta = (delta: number): number => {
   if (IsFirefox.isFirefox) {
