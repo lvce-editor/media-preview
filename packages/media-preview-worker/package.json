@@ -26,6 +26,14 @@
           "useESM": true
         }
       ]
+    },
+    "collectCoverage": true,
+    "coverageThreshold": {
+      "global": {
+        "branches": 56,
+        "functions": 56,
+        "lines": 60
+      }
     }
   }
 }
