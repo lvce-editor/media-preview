@@ -1,6 +1,6 @@
 export const name = 'media-preview-png-error'
 
-export const test = async ({ Workspace, FileSystem, Main, Editor, Locator, expect }) => {
+export const test = async ({ Workspace, FileSystem, Main, Editor, Locator, expect, WebView }) => {
   // arrange
   const tmpDir = await FileSystem.getTmpDir()
   const text = `abc`
@@ -13,4 +13,6 @@ export const test = async ({ Workspace, FileSystem, Main, Editor, Locator, expec
   // assert
 
   // TODO verify that error message is displayed
+  // const webView = await WebView.fromId(`builtin.media-preview`)
+  // console.log({ webView })
 }
