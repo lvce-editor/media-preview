@@ -12,6 +12,7 @@ export const create = (id: number): WebView => {
     maxZoom: 2 ** 15, // max value that doesn't result in degradation
     zoomFactor: 200,
     eventCache: [],
+    error: false,
   }
   PreviewStates.set(id, preview)
   return preview

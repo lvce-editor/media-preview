@@ -9,4 +9,5 @@ export interface WebView {
   readonly maxZoom: number
   readonly zoomFactor: 200
   readonly eventCache: readonly EventCacheItem[]
+  readonly error: boolean
 }

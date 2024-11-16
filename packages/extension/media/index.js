@@ -24,6 +24,10 @@ const handleWheel = async (event) => {
   await rpc.invoke('handleWheel', clientX, clientY, deltaX, deltaY)
 }
 
+const handleImageError = async () => {
+  await rpc.invoke('handleError')
+}
+
 const initialize = (remoteUrl) => {
   const app = document.createElement('div')
   app.className = 'App'
@@ -38,6 +42,7 @@ const initialize = (remoteUrl) => {
   image.className = 'ImageElement'
   image.src = remoteUrl
   image.alt = ''
+  image.addEventListener('error', handleImageError)
 
   imageContent.append(image)
   app.append(imageContent)
@@ -46,14 +51,20 @@ const initialize = (remoteUrl) => {
 }
 
 const update = (state) => {
-  const { domMatrix, pointerDown } = state
+  const { domMatrix, pointerDown, error } = state
   const app = document.querySelector('.App')
   // @ts-ignore
   app.classList.toggle('Dragging', pointerDown)
   // @ts-ignore
   const imageContent = app.querySelector('.ImageContent')
-  // @ts-ignore
-  imageContent.style.transform = `${domMatrix}`
+
+  if (error) {
+    // @ts-ignore
+    imageContent.textContent = `Image could not be loaded`
+  } else {
+    // @ts-ignore
+    imageContent.style.transform = `${domMatrix}`
+  }
 }
 
 const rpc = globalThis.lvceRpc({
