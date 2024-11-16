@@ -50,5 +50,10 @@ export const webViewProvider = {
       const newState = await MediaPreview.getState(id)
       return webViewProvider.commands.update(newState)
     },
+    async handleError(eventX, eventY, deltaX, deltaY) {
+      await MediaPreview.handleError(id)
+      const newState = await MediaPreview.getState(id)
+      return webViewProvider.commands.update(newState)
+    },
   },
 }
