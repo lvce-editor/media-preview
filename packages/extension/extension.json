@@ -9,7 +9,6 @@
     {
       "id": "builtin.media-preview",
       "rpc": true,
-      "path": "media/index.html",
       "selector": [".png", ".jpg", ".jpeg", ".avif", ".svg", ".gif", ".ico", ".webp"],
       "contentSecurityPolicy": ["default-src 'none'", "script-src 'self'", "style-src 'self'", "img-src 'self' blob:"],
       "elements": [
