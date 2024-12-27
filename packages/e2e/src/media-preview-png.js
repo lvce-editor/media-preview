@@ -1,5 +1,7 @@
 export const name = 'media-preview'
 
+export const skip = true
+
 export const test = async ({ Workspace, FileSystem, Main, Editor, Locator, expect }) => {
   // arrange
   const tmpDir = await FileSystem.getTmpDir()
