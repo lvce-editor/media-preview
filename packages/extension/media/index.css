@@ -1,3 +1,7 @@
+:root {
+  --AppBackground: #1e2324;
+}
+
 html,
 body,
 .App {
@@ -5,6 +9,7 @@ body,
   height: 100%;
   contain: strict;
   margin: 0;
+  background: var(--AppBackground);
 }
 
 .ImageContent {
