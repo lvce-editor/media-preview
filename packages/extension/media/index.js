@@ -101,7 +101,8 @@ const initialize = async (remoteUrl) => {
 }
 
 const update = (state) => {
-  const { domMatrix, pointerDown, error } = state
+  console.log('update', state)
+  const { domMatrixString, pointerDown, error } = state
   const app = document.querySelector('.App')
   // @ts-ignore
   app.classList.toggle('Dragging', pointerDown)
@@ -113,7 +114,7 @@ const update = (state) => {
     imageContent.textContent = `Image could not be loaded`
   } else {
     // @ts-ignore
-    imageContent.style.transform = `${domMatrix}`
+    imageContent.style.transform = domMatrixString
   }
 }
 

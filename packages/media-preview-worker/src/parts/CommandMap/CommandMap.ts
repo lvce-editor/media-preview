@@ -10,12 +10,32 @@ import * as HandleWheel from '../HandleWheel/HandleWheel.ts'
 import { id } from '../Id/Id.ts'
 import * as SaveState from '../SaveState/SaveState.ts'
 import * as SetSavedState from '../SetSavedState/SetSavedState.ts'
+import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
+import { WebView } from '../WebView/WebView.ts'
+
+interface SerializedState {
+  readonly domMatrixString: string
+  readonly pointerDown: boolean
+  readonly error: boolean
+}
+
+const serializeState = (state: WebView): SerializedState => {
+  const { domMatrix, pointerDown, error } = state
+  return {
+    domMatrixString: DomMatrix.toString(domMatrix),
+    pointerDown,
+    error,
+  }
+}
 
 const wrapCommand = (fn) => {
   return async (...args) => {
     const newState = await fn(id, ...args)
     const { port } = newState
-    await port.invoke('update', newState)
+    const serializedState = serializeState(newState)
+    // TODO don't send seriazlied state on every update,
+    // only send the parts that need to be changed
+    await port.invoke('update', serializedState)
   }
 }
 
