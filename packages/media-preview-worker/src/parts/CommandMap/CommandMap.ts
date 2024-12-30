@@ -11,6 +11,7 @@ import { id } from '../Id/Id.ts'
 import * as SaveState from '../SaveState/SaveState.ts'
 import * as SetSavedState from '../SetSavedState/SetSavedState.ts'
 import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
+import * as WebViewStates from '../WebViewStates/WebViewStates.ts'
 import { WebView } from '../WebView/WebView.ts'
 
 interface SerializedState {
@@ -30,7 +31,8 @@ const serializeState = (state: WebView): SerializedState => {
 
 const wrapCommand = (fn) => {
   return async (...args) => {
-    const newState = await fn(id, ...args)
+    await fn(id, ...args)
+    const newState = WebViewStates.get(id)
     const { port } = newState
     const serializedState = serializeState(newState)
     // TODO don't send seriazlied state on every update,
