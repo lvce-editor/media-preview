@@ -1,4 +1,5 @@
 import * as Create from '../Create/Create.ts'
+import * as Create2 from '../Create2/Create2.ts'
 import * as GetState from '../GetState/GetState.ts'
 import * as GetUrl from '../GetUrl/GetUrl.ts'
 import * as HandleError from '../HandleError/HandleError.ts'
@@ -10,6 +11,10 @@ import * as SaveState from '../SaveState/SaveState.ts'
 import * as SetSavedState from '../SetSavedState/SetSavedState.ts'
 
 export const commandMap = {
+  'WebView.create': Create2.create,
+  'WebView.saveState': SaveState.saveState,
+
+  // TODO this api looks better
   'MediaPreview.create': Create.create,
   'MediaPreview.getState': GetState.getState,
   'MediaPreview.getUrl': GetUrl.getUrl,
