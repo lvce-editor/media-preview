@@ -4,6 +4,7 @@ import * as WebViewStates from '../WebViewStates/WebViewStates.ts'
 
 export const handlePointerMove = (id: number, x: number, y: number): WebView => {
   const state = WebViewStates.get(id)
+  console.log('move', id, x, y, state)
   const { pointerOffsetX, pointerOffsetY, domMatrix } = state
   const deltaX = x - pointerOffsetX
   const deltaY = y - pointerOffsetY

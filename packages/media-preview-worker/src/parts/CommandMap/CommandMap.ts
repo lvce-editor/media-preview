@@ -7,14 +7,27 @@ import * as HandlePointerDown from '../HandlePointerDown/HandlePointerDown.ts'
 import * as HandlePointerMove from '../HandlePointerMove/HandlePointerMove.ts'
 import * as HandlePointerUp from '../HandlePointerUp/HandlePointerUp.ts'
 import * as HandleWheel from '../HandleWheel/HandleWheel.ts'
+import { id } from '../Id/Id.ts'
 import * as SaveState from '../SaveState/SaveState.ts'
 import * as SetSavedState from '../SetSavedState/SetSavedState.ts'
+
+const wrapCommand = (fn) => {
+  return async (...args) => {
+    const newState = await fn(id, ...args)
+    const { port } = newState
+    await port.invoke('update', newState)
+  }
+}
 
 export const commandMap = {
   'WebView.create': Create2.create,
   'WebView.saveState': SaveState.saveState,
+  handlePointerDown: wrapCommand(HandlePointerDown.handlePointerDown),
+  handlePointerMove: wrapCommand(HandlePointerMove.handlePointerMove),
+  handlePointerUp: wrapCommand(HandlePointerUp.handlePointerUp),
+  handleWheel: wrapCommand(HandleWheel.handleWheel),
 
-  // TODO this api looks better
+  // TODO this api looks better / better organized
   'MediaPreview.create': Create.create,
   'MediaPreview.getState': GetState.getState,
   'MediaPreview.getUrl': GetUrl.getUrl,

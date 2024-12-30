@@ -10,4 +10,5 @@ export interface WebView {
   readonly zoomFactor: 200
   readonly eventCache: readonly EventCacheItem[]
   readonly error: boolean
+  readonly port: any
 }

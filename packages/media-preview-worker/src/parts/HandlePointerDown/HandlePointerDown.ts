@@ -3,6 +3,7 @@ import * as WebViewStates from '../WebViewStates/WebViewStates.ts'
 
 export const handlePointerDown = (id: number, x: number, y: number): WebView => {
   const state = WebViewStates.get(id)
+  console.log('pointer down', id, x, y)
   const newState: WebView = {
     ...state,
     pointerOffsetX: x,
