@@ -16,8 +16,6 @@ export const handleWheel = (id: number, eventX: number, eventY: number, deltaX: 
   const { domMatrix, zoomFactor } = webView
   const currentZoomFactor = GetCurrentZoomFactor.getCurrentZoomFactor(zoomFactor, normalizedDeltaY)
   const newDomMatrix = DomMatrix.zoomInto(domMatrix, currentZoomFactor, relativeX, relativeY)
-  console.log({ zoomFactor, currentZoomFactor, domMatrix, newDomMatrix })
-
   const newWebView: WebView = {
     ...webView,
     domMatrix: newDomMatrix,
