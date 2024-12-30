@@ -101,7 +101,6 @@ const initialize = async (remoteUrl) => {
 }
 
 const update = (state) => {
-  console.log('update', state)
   const { domMatrixString, pointerDown, error } = state
   const app = document.querySelector('.App')
   // @ts-ignore

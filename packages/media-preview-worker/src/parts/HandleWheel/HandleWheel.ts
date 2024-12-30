@@ -6,7 +6,6 @@ import * as WebViewStates from '../WebViewStates/WebViewStates.ts'
 import * as WheelEvent from '../WheelEvent/WheelEvent.ts'
 
 export const handleWheel = (id: number, eventX: number, eventY: number, deltaX: number, deltaY: number): void => {
-  console.log({ id, eventX, eventY, deltaX, deltaY })
   if (deltaY === 0) {
     return
   }
@@ -16,7 +15,7 @@ export const handleWheel = (id: number, eventX: number, eventY: number, deltaX: 
   const relativeY = eventY
   const { domMatrix, zoomFactor } = webView
   const currentZoomFactor = GetCurrentZoomFactor.getCurrentZoomFactor(zoomFactor, normalizedDeltaY)
-  console.log({ currentZoomFactor })
+  console.log({ zoomFactor, currentZoomFactor })
   const newDomMatrix = DomMatrix.zoomInto(domMatrix, currentZoomFactor, relativeX, relativeY)
   const newWebView: WebView = {
     ...webView,
