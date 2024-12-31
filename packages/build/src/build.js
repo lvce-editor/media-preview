@@ -31,20 +31,6 @@ fs.cpSync(join(mediaPreviewWorker, 'src'), join(root, 'dist', 'media-preview-wor
   recursive: true,
 })
 
-const workerUrlFilePath = path.join(root, 'dist', 'src', 'parts', 'MediaPreviewWorkerUrl', 'MediaPreviewWorkerUrl.ts')
-await replace({
-  path: workerUrlFilePath,
-  occurrence: 'src/mediaPreviewWorkerMain.ts',
-  replacement: 'dist/mediaPreviewWorkerMain.js',
-})
-
-const assetDirPath = path.join(root, 'dist', 'src', 'parts', 'AssetDir', 'AssetDir.ts')
-await replace({
-  path: assetDirPath,
-  occurrence: '../../../../',
-  replacement: '../',
-})
-
 await replace({
   path: join(root, 'dist', 'extension.json'),
   occurrence: 'src/mediaPreviewMain.ts',
