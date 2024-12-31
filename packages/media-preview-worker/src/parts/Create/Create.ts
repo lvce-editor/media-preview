@@ -3,6 +3,7 @@ import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
 import type { WebView } from '../WebView/WebView.ts'
 
 export const create = (id: number): WebView => {
+  // @ts-ignore
   const preview: WebView = {
     domMatrix: DomMatrix.create(),
     pointerOffsetX: 0,
