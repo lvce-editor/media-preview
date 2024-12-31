@@ -36,6 +36,11 @@ await replace({
   occurrence: 'src/mediaPreviewMain.ts',
   replacement: 'dist/mediaPreviewMain.js',
 })
+await replace({
+  path: join(root, 'dist', 'extension.json'),
+  occurrence: '../media-preview-worker/src/mediaPreviewWorkerMain.ts',
+  replacement: './media-preview-worker/dist/mediaPreviewWorkerMain.js',
+})
 
 await bundleJs(
   join(root, 'dist', 'media-preview-worker', 'src', 'mediaPreviewWorkerMain.ts'),
