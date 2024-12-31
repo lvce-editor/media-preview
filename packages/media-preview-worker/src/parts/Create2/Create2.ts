@@ -17,6 +17,7 @@ export const create = async ({ port, savedState, webViewId, uri }) => {
     zoomFactor: 200,
     eventCache: [],
     error: false,
+    port,
   }
   PreviewStates.set(id, preview)
   SetSavedState.setSavedState(id, savedState)

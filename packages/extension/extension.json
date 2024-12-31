@@ -5,10 +5,19 @@
   "browser": "src/mediaPreviewMain.ts",
   "activation": ["onWebView:builtin.media-preview"],
   "languages": [],
+  "rpc": [
+    {
+      "id": "builtin.media-preview.media-preview-worker",
+      "type": "web-worker",
+      "name": "Media Preview Worker",
+      "url": "../media-preview-worker/src/mediaPreviewWorkerMain.ts",
+      "contentSecurityPolicy": ["default-src 'none'"]
+    }
+  ],
   "webViews": [
     {
       "id": "builtin.media-preview",
-      "rpc": true,
+      "rpc": "builtin.media-preview.media-preview-worker",
       "selector": [".png", ".jpg", ".jpeg", ".avif", ".svg", ".gif", ".ico", ".webp"],
       "contentSecurityPolicy": ["default-src 'none'", "script-src 'self'", "style-src 'self'", "img-src 'self' blob:"],
       "elements": [

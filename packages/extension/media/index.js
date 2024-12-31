@@ -28,7 +28,53 @@ const handleImageError = async () => {
   await rpc.invoke('handleError')
 }
 
-const initialize = (remoteUrl) => {
+const waitForImageReady = ($Element) => {
+  const handleError = (event) => {
+    cleanup(event)
+  }
+
+  const handleLoad = (event) => {
+    cleanup(event)
+  }
+
+  // @ts-ignore
+  const { resolve, promise } = Promise.withResolvers()
+  const cleanup = (event) => {
+    $Element.removeEventListener('error', handleError)
+    $Element.removeEventListener('load', handleLoad)
+    resolve(event)
+  }
+
+  $Element.addEventListener('error', handleError)
+  $Element.addEventListener('load', handleLoad)
+  return promise
+}
+
+const serializeErrorEvent = (event) => {
+  const { target } = event
+  const { error } = target
+  const { code, message } = error
+  return {
+    type: 'error',
+    code,
+    message,
+  }
+}
+
+const serializeLoadEvent = (event) => {
+  return {
+    type: 'load',
+  }
+}
+
+const serializeEvent = (event) => {
+  if (event.type === 'error') {
+    return serializeErrorEvent(event)
+  }
+  return serializeLoadEvent(event)
+}
+
+const initialize = async (remoteUrl) => {
   const app = document.createElement('div')
   app.className = 'App'
   app.addEventListener('pointerdown', handlePointerDown)
@@ -48,10 +94,14 @@ const initialize = (remoteUrl) => {
   app.append(imageContent)
 
   document.body.append(app)
+
+  const event = await waitForImageReady(image)
+  const serializedEvent = serializeEvent(event)
+  return serializedEvent
 }
 
 const update = (state) => {
-  const { domMatrix, pointerDown, error } = state
+  const { domMatrixString, pointerDown, error } = state
   const app = document.querySelector('.App')
   // @ts-ignore
   app.classList.toggle('Dragging', pointerDown)
@@ -63,7 +113,7 @@ const update = (state) => {
     imageContent.textContent = `Image could not be loaded`
   } else {
     // @ts-ignore
-    imageContent.style.transform = `${domMatrix}`
+    imageContent.style.transform = domMatrixString
   }
 }
 
