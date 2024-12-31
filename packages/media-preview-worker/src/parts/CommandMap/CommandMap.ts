@@ -7,14 +7,49 @@ import * as HandlePointerDown from '../HandlePointerDown/HandlePointerDown.ts'
 import * as HandlePointerMove from '../HandlePointerMove/HandlePointerMove.ts'
 import * as HandlePointerUp from '../HandlePointerUp/HandlePointerUp.ts'
 import * as HandleWheel from '../HandleWheel/HandleWheel.ts'
+import { id } from '../Id/Id.ts'
 import * as SaveState from '../SaveState/SaveState.ts'
 import * as SetSavedState from '../SetSavedState/SetSavedState.ts'
+import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
+import * as WebViewStates from '../WebViewStates/WebViewStates.ts'
+import { WebView } from '../WebView/WebView.ts'
+
+interface SerializedState {
+  readonly domMatrixString: string
+  readonly pointerDown: boolean
+  readonly error: boolean
+}
+
+const serializeState = (state: WebView): SerializedState => {
+  const { domMatrix, pointerDown, error } = state
+  return {
+    domMatrixString: DomMatrix.toString(domMatrix),
+    pointerDown,
+    error,
+  }
+}
+
+const wrapCommand = (fn) => {
+  return async (...args) => {
+    await fn(id, ...args)
+    const newState = WebViewStates.get(id)
+    const { port } = newState
+    const serializedState = serializeState(newState)
+    // TODO don't send seriazlied state on every update,
+    // only send the parts that need to be changed
+    await port.invoke('update', serializedState)
+  }
+}
 
 export const commandMap = {
   'WebView.create': Create2.create,
   'WebView.saveState': SaveState.saveState,
+  handlePointerDown: wrapCommand(HandlePointerDown.handlePointerDown),
+  handlePointerMove: wrapCommand(HandlePointerMove.handlePointerMove),
+  handlePointerUp: wrapCommand(HandlePointerUp.handlePointerUp),
+  handleWheel: wrapCommand(HandleWheel.handleWheel),
 
-  // TODO this api looks better
+  // TODO this api looks better / better organized
   'MediaPreview.create': Create.create,
   'MediaPreview.getState': GetState.getState,
   'MediaPreview.getUrl': GetUrl.getUrl,
