@@ -27,6 +27,7 @@ jobs:
         with:
           tag_name: ${{ env.RG_VERSION }}
           release_name: ${{ env.RG_VERSION }}
+          draft: true
 
   build-release:
     name: build-release
@@ -52,6 +53,7 @@ jobs:
         if: steps.npm-cache.outputs.cache-hit != 'true'
       - run: npm run type-check
       - run: npm test
+      - run: npm run lint
       - name: install playwright dependencies
         working-directory: ./packages/e2e
         run: npx playwright install chromium
@@ -79,3 +81,9 @@ jobs:
           asset_path: ${{ env.ASSET }}
           asset_name: ${{ env.ASSET }}
           asset_content_type: application/octet-stream
+      - name: Publish GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.create-release.outputs.rg_version }}"
+          gh release edit $VERSION --draft=false
