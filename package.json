@@ -11,19 +11,20 @@
     "test:watch": "node --unhandled-rejections=warn --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch",
     "e2e": "cd packages/e2e && npm run e2e",
     "e2e:headless": "cd packages/e2e && npm run e2e:headless",
-    "build": "node packages/build/src/build.js"
+    "build": "node packages/build/src/build.js",
+    "lint": "echo ok"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@lerna/legacy-package-management": "^8.1.9",
+    "@lerna/legacy-package-management": "^8.2.0",
     "@types/node": "^22.8.1",
     "jest": "^29.7.0",
-    "lerna": "^8.1.9",
-    "prettier": "^3.4.2",
-    "ts-jest": "^29.2.5",
-    "typescript": "^5.7.2"
+    "lerna": "^8.2.0",
+    "prettier": "^3.5.2",
+    "ts-jest": "^29.2.6",
+    "typescript": "^5.7.3"
   },
   "prettier": {
     "semi": false,
