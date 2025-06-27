@@ -1,9 +1,6 @@
 import { spawn } from 'child_process'
 import { join } from 'path'
-
-const __dirname = import.meta.dirname
-
-const root = join(__dirname, '..', '..', '..')
+import { root } from './root.js'
 
 const serverPath = join(root, 'packages', 'server', 'node_modules', '@lvce-editor', 'server', 'bin', 'server.js')
 const esbuildPath = join(root, 'packages', 'build', 'node_modules', '.bin', 'esbuild')
