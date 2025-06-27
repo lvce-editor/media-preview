@@ -33,12 +33,12 @@ fs.cpSync(join(mediaPreviewWorker, 'src'), join(root, 'dist', 'media-preview-wor
 
 await replace({
   path: join(root, 'dist', 'extension.json'),
-  occurrence: 'src/mediaPreviewMain.ts',
+  occurrence: 'dist/mediaPreviewMain.js',
   replacement: 'dist/mediaPreviewMain.js',
 })
 await replace({
   path: join(root, 'dist', 'extension.json'),
-  occurrence: '../media-preview-worker/src/mediaPreviewWorkerMain.ts',
+  occurrence: '../media-preview-worker/dist/mediaPreviewWorkerMain.js',
   replacement: './media-preview-worker/dist/mediaPreviewWorkerMain.js',
 })
 
