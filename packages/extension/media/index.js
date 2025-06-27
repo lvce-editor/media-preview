@@ -74,6 +74,8 @@ const serializeEvent = (event) => {
   return serializeLoadEvent(event)
 }
 
+const styleSheet = new CSSStyleSheet()
+
 const initialize = async (remoteUrl) => {
   const app = document.createElement('div')
   app.className = 'App'
@@ -94,6 +96,7 @@ const initialize = async (remoteUrl) => {
   app.append(imageContent)
 
   document.body.append(app)
+  document.adoptedStyleSheets.push(styleSheet)
 
   const event = await waitForImageReady(image)
   const serializedEvent = serializeEvent(event)
@@ -113,7 +116,10 @@ const update = (state) => {
     imageContent.textContent = `Image could not be loaded`
   } else {
     // @ts-ignore
-    imageContent.style.transform = domMatrixString
+    // imageContent.style.transform = domMatrixString
+    styleSheet.replaceSync(`.ImageContent {
+      transform: ${domMatrixString};
+  }`)
   }
 }
 
