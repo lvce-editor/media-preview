@@ -2,7 +2,7 @@ import { spawn } from 'child_process'
 import { join } from 'path'
 import { root } from './root.js'
 
-const serverPath = join(root, 'packages', 'server', 'node_modules', '@lvce-editor', 'server', 'bin', 'server.js')
+const serverPath = join(root, 'packages', 'build', 'node_modules', '@lvce-editor', 'server', 'bin', 'server.js')
 const esbuildPath = join(root, 'packages', 'build', 'node_modules', '.bin', 'esbuild')
 
 const main = () => {
@@ -44,6 +44,7 @@ const main = () => {
     ],
     {
       cwd: root,
+      stdio: 'inherit',
     },
   )
 }

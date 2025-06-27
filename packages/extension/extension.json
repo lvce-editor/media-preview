@@ -2,7 +2,7 @@
   "id": "builtin.media-preview",
   "name": "Media Preview",
   "description": "Media Preview",
-  "browser": "src/mediaPreviewMain.ts",
+  "browser": "dist/mediaPreviewMain.js",
   "activation": ["onWebView:builtin.media-preview"],
   "languages": [],
   "rpc": [
@@ -10,7 +10,7 @@
       "id": "builtin.media-preview.media-preview-worker",
       "type": "web-worker",
       "name": "Media Preview Worker",
-      "url": "../media-preview-worker/src/mediaPreviewWorkerMain.ts",
+      "url": "../media-preview-worker/dist/mediaPreviewWorkerMain.js",
       "contentSecurityPolicy": ["default-src 'none'"]
     }
   ],
