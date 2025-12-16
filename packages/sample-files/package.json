@@ -1,9 +1,7 @@
 {
   "name": "sample-files",
   "version": "0.0.0-dev",
-  "description": "",
-  "keywords": [],
-  "author": "",
-  "main": "index.js",
-  "scripts": {}
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js"
 }
