@@ -1,10 +1,7 @@
 {
   "name": "media-preview-integration",
   "version": "0.0.0-dev",
-  "description": "",
-  "keywords": [],
   "license": "MIT",
-  "author": "",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -27,6 +24,5 @@
         }
       ]
     }
-  },
-  "devDependencies": {}
+  }
 }

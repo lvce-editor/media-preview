@@ -1,9 +1,7 @@
 {
   "name": "builtin.media-preview",
   "version": "0.0.0-dev",
-  "description": "",
-  "keywords": [],
-  "author": "",
+  "license": "MIT",
   "type": "module",
   "main": "src/mediaPreviewMain.ts",
   "scripts": {
@@ -26,6 +24,5 @@
         }
       ]
     }
-  },
-  "devDependencies": {}
+  }
 }
