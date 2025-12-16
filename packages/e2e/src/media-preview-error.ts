@@ -2,7 +2,7 @@ import type { Test } from '@lvce-editor/test-with-playwright'
 
 export const name = 'media-preview-png-error'
 
-export const test: Test = async ({ Workspace, FileSystem, Main, Editor, Locator, expect, WebView }) => {
+export const test: Test = async ({ Editor, expect, FileSystem, Locator, Main, WebView, Workspace }) => {
   // arrange
   const tmpDir = await FileSystem.getTmpDir()
   const text = `abc`
