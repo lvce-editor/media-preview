@@ -2,33 +2,35 @@
   "name": "builtin.media-preview-monorepo",
   "version": "0.0.0-dev",
   "description": "",
+  "keywords": [],
+  "license": "MIT",
+  "author": "",
   "type": "module",
   "scripts": {
-    "postinstall": "lerna bootstrap --ci",
-    "test": "lerna run test",
+    "build": "node packages/build/src/build.js",
     "dev": "node ./packages/build/src/dev.js",
-    "type-check": "tsc -b",
-    "test:watch": "node --unhandled-rejections=warn --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch",
     "e2e": "cd packages/e2e && npm run e2e",
     "e2e:headless": "cd packages/e2e && npm run e2e:headless",
-    "build": "node packages/build/src/build.js",
-    "lint": "echo ok"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "@lerna/legacy-package-management": "^8.2.4",
-    "@types/node": "^22.8.1",
-    "jest": "^30.2.0",
-    "lerna": "^8.2.3",
-    "prettier": "^3.7.4",
-    "ts-jest": "^29.4.6",
-    "typescript": "^5.9.3"
+    "postinstall": "lerna bootstrap --ci",
+    "lint": "echo ok",
+    "test": "lerna run test",
+    "test:watch": "node --unhandled-rejections=warn --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch",
+    "type-check": "tsc -b"
   },
   "prettier": {
     "semi": false,
     "singleQuote": true,
     "printWidth": 130
+  },
+  "devDependencies": {
+    "@lerna/legacy-package-management": "^8.2.4",
+    "@lvce-editor/eslint-config": "^3.1.0",
+    "@types/node": "^22.8.1",
+    "eslint": "^9.39.2",
+    "jest": "^30.2.0",
+    "lerna": "^8.2.3",
+    "prettier": "^3.7.4",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.9.3"
   }
 }
