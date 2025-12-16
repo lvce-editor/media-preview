@@ -1,8 +1,8 @@
 // TODO add integration tests for git worker
 // send and receive messages
 
-import { startWorker } from './startWorker.ts'
 import * as PolyFill from './polyfill.ts'
+import { startWorker } from './startWorker.ts'
 
 export const testWorker = async ({ execMap }) => {
   const invocations = []

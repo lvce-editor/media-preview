@@ -1,6 +1,6 @@
+import type { WebView } from '../WebView/WebView.ts'
 import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
 import * as ParseDomMatrix from '../ParseDomMatrix/ParseDomMatrix.ts'
-import type { WebView } from '../WebView/WebView.ts'
 import * as WebViewStates from '../WebViewStates/WebViewStates.ts'
 
 const getSavedDomMatrix = (savedState: any): DOMMatrixReadOnly => {

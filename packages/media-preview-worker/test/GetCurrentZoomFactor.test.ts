@@ -4,7 +4,7 @@ import * as GetCurrentZoomFactor from '../src/parts/GetCurrentZoomFactor/GetCurr
 test('getCurrentZoomFactor - zoom out', () => {
   const zoomFactor = 1
   const deltaY = 0.2
-  expect(GetCurrentZoomFactor.getCurrentZoomFactor(zoomFactor, deltaY)).toBeCloseTo(0.83333)
+  expect(GetCurrentZoomFactor.getCurrentZoomFactor(zoomFactor, deltaY)).toBeCloseTo(0.833_33)
 })
 
 test('getCurrentZoomFactor - zoom in', () => {
