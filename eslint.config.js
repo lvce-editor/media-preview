@@ -8,6 +8,7 @@ export default [
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/prefer-readonly-parameter-types': 'off',
+      '@typescript-eslint/only-throw-error': 'off',
     },
   },
 ]
