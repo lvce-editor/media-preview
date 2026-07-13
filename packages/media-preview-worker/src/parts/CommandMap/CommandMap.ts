@@ -35,7 +35,7 @@ const wrapCommand = (fn) => {
     const newState = WebViewStates.get(id)
     const { port } = newState
     const serializedState = serializeState(newState)
-    // TODO don't send seriazlied state on every update,
+    // TODO don't send serialized state on every update,
     // only send the parts that need to be changed
     await port.invoke('update', serializedState)
   }
