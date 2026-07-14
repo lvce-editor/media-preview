@@ -20,25 +20,6 @@ const main = () => {
       '--external:node:worker_threads',
       '--bundle',
       '--watch',
-      'packages/media-preview-worker/src/mediaPreviewWorkerMain.ts',
-      '--outfile=packages/media-preview-worker/dist/mediaPreviewWorkerMain.js',
-    ],
-    {
-      cwd: root,
-      stdio: 'inherit',
-    },
-  )
-  const child3 = spawn(
-    esbuildPath,
-    [
-      '--format=esm',
-      '--bundle',
-      '--external:node:buffer',
-      '--external:electron',
-      '--external:ws',
-      '--external:node:worker_threads',
-      '--bundle',
-      '--watch',
       'packages/extension/src/mediaPreviewMain.ts',
       '--outfile=packages/extension/dist/mediaPreviewMain.js',
     ],
