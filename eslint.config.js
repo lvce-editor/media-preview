@@ -13,7 +13,7 @@ export default [
     },
   },
   {
-    files: ['packages/integration/**/*.ts', '**/*.test.ts'],
+    files: ['**/*.test.ts'],
     rules: {
       '@cspell/spellchecker': 'off',
       'sonarjs/no-floating-point-equality': 'off',
