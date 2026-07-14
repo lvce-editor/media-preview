@@ -32,5 +32,8 @@
         "lines": 64
       }
     }
+  },
+  "dependencies": {
+    "@lvce-editor/rpc": "^6.8.0"
   }
 }
