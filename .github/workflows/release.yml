@@ -51,8 +51,8 @@ jobs:
       - name: npm ci
         run: npm ci --ignore-scripts && npm run postinstall
         if: steps.npm-cache.outputs.cache-hit != 'true'
-      - run: npm run type-check
       - run: npm test
+      - run: npm run type-check
       - run: npm run lint
       - run: node packages/build/src/build.js
       - name: Build archive
