@@ -1,6 +1,6 @@
 import type { ViewContext, ViewEvent, VirtualDomViewInstance } from '@lvce-editor/api'
 import type { VirtualDomNode } from '@lvce-editor/virtual-dom-worker'
-import * as MediaPreviewWorker from '../MediaPreviewWorker/MediaPreviewWorker.ts'
+import * as MediaPreview from '../MediaPreview/MediaPreview.ts'
 import { render } from '../RenderMediaPreview/RenderMediaPreview.ts'
 
 export interface MediaPreviewState {
@@ -19,8 +19,18 @@ export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
   readonly saveState: () => Promise<unknown>
 }
 
-interface MediaPreviewWorkerApi {
-  readonly invoke: (method: string, ...params: readonly unknown[]) => Promise<any>
+interface MediaPreviewApi {
+  readonly create: (id: number) => unknown
+  readonly dispose: (id: number) => unknown
+  readonly getState: (id: number) => Omit<MediaPreviewState, 'url'>
+  readonly getUrl: (uri: string) => string
+  readonly handleError: (id: number) => Partial<MediaPreviewState>
+  readonly handlePointerDown: (id: number, x: number, y: number) => Partial<MediaPreviewState>
+  readonly handlePointerMove: (id: number, x: number, y: number) => Partial<MediaPreviewState>
+  readonly handlePointerUp: (id: number, x: number, y: number) => Partial<MediaPreviewState>
+  readonly handleWheel: (id: number, eventX: number, eventY: number, deltaX: number, deltaY: number) => Partial<MediaPreviewState>
+  readonly saveState: (id: number) => unknown
+  readonly setSavedState: (id: number, state: unknown) => unknown
 }
 
 const getUri = (context: MediaPreviewViewContext | undefined): string => {
@@ -35,37 +45,37 @@ const getNumber = (value: unknown): number => {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
-export const createInstanceWithWorker = async (
+export const createInstanceWithApi = async (
   context: ViewContext | undefined,
-  worker: MediaPreviewWorkerApi,
+  api: MediaPreviewApi,
 ): Promise<MediaPreviewViewInstance> => {
   const viewContext: MediaPreviewViewContext | undefined = context
   const id = viewContext?.uid ?? 0
   const uri = getUri(viewContext)
-  await worker.invoke('MediaPreview.create', id)
-  await worker.invoke('MediaPreview.setSavedState', id, context?.state)
-  const workerState = await worker.invoke('MediaPreview.getState', id)
-  const url = uri ? await worker.invoke('MediaPreview.getUrl', uri) : ''
+  api.create(id)
+  api.setSavedState(id, context?.state)
+  const previewState = api.getState(id)
+  const url = uri ? api.getUrl(uri) : ''
   let state: MediaPreviewState = {
-    ...workerState,
-    error: !url || workerState.error,
+    ...previewState,
+    error: !url || previewState.error,
     url,
   }
 
-  const updateState = async (method: string, ...params: readonly unknown[]): Promise<void> => {
+  const updateState = (newState: Partial<MediaPreviewState>): void => {
     state = {
       ...state,
-      ...(await worker.invoke(method, id, ...params)),
+      ...newState,
     }
   }
 
   return {
-    async dispose(): Promise<void> {
-      await worker.invoke('MediaPreview.dispose', id)
+    dispose(): void {
+      api.dispose(id)
     },
-    async handleEvent(event: Readonly<ViewEvent>): Promise<void> {
+    handleEvent(event: Readonly<ViewEvent>): void {
       if (event.type === 'error') {
-        await updateState('MediaPreview.handleError')
+        updateState(api.handleError(id))
         return
       }
       if (event.type !== 'contextmenu') {
@@ -75,16 +85,16 @@ export const createInstanceWithWorker = async (
       const y = getNumber(event.y)
       switch (event.name) {
         case 'pointerdown':
-          await updateState('MediaPreview.handlePointerDown', x, y)
+          updateState(api.handlePointerDown(id, x, y))
           break
         case 'pointermove':
-          await updateState('MediaPreview.handlePointerMove', x, y)
+          updateState(api.handlePointerMove(id, x, y))
           break
         case 'pointerup':
-          await updateState('MediaPreview.handlePointerUp', x, y)
+          updateState(api.handlePointerUp(id, x, y))
           break
         case 'wheel':
-          await updateState('MediaPreview.handleWheel', 0, 0, 0, x)
+          updateState(api.handleWheel(id, 0, 0, 0, x))
           break
       }
     },
@@ -92,9 +102,9 @@ export const createInstanceWithWorker = async (
       return render(state)
     },
     async saveState(): Promise<unknown> {
-      const savedState = await worker.invoke('MediaPreview.saveState', id)
+      const savedState = api.saveState(id)
       return {
-        ...savedState,
+        ...(savedState as object),
         uri,
       }
     },
@@ -102,5 +112,5 @@ export const createInstanceWithWorker = async (
 }
 
 export const createInstance = (context?: ViewContext): Promise<MediaPreviewViewInstance> => {
-  return createInstanceWithWorker(context, MediaPreviewWorker)
+  return createInstanceWithApi(context, MediaPreview)
 }

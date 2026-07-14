@@ -1,10 +1,9 @@
-import { packageExtension, bundleJs, replace } from '@lvce-editor/package-extension'
+import { packageExtension, bundleJs } from '@lvce-editor/package-extension'
 import fs, { readFileSync } from 'node:fs'
 import path, { join } from 'node:path'
 import { root } from './root.js'
 
 const extension = path.join(root, 'packages', 'extension')
-const mediaPreviewWorker = path.join(root, 'packages', 'media-preview-worker')
 
 fs.rmSync(join(root, 'dist'), { recursive: true, force: true })
 
@@ -27,23 +26,8 @@ fs.cpSync(join(extension, 'media'), join(root, 'dist', 'media'), {
   recursive: true,
 })
 
-fs.cpSync(join(mediaPreviewWorker, 'src'), join(root, 'dist', 'media-preview-worker', 'src'), {
-  recursive: true,
-})
-
-await bundleJs(
-  join(mediaPreviewWorker, 'src', 'mediaPreviewWorkerMain.ts'),
-  join(root, 'dist', 'media-preview-worker', 'dist', 'mediaPreviewWorkerMain.js'),
-)
-
 const extensionBundlePath = join(root, 'dist', 'dist', 'mediaPreviewMain.js')
 await bundleJs(join(extension, 'src', 'mediaPreviewMain.ts'), extensionBundlePath)
-
-await replace({
-  path: extensionBundlePath,
-  occurrence: '../../media-preview-worker/',
-  replacement: '../media-preview-worker/',
-})
 
 await packageExtension({
   highestCompression: true,
