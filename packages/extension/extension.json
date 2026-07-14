@@ -2,38 +2,21 @@
   "id": "builtin.media-preview",
   "name": "Media Preview",
   "description": "Media Preview",
+  "repository": "https://github.com/lvce-editor/media-preview",
   "browser": "dist/mediaPreviewMain.js",
-  "activation": ["onWebView:builtin.media-preview"],
+  "isolated": true,
+  "workerName": "Media Preview Extension Worker",
+  "activation": ["onView:builtin.media-preview"],
   "languages": [],
-  "rpc": [
-    {
-      "id": "builtin.media-preview.media-preview-worker",
-      "type": "web-worker",
-      "name": "Media Preview Worker",
-      "url": "../media-preview-worker/dist/mediaPreviewWorkerMain.js",
-      "contentSecurityPolicy": ["default-src 'none'"]
-    }
-  ],
-  "webViews": [
+  "views": [
     {
       "id": "builtin.media-preview",
-      "rpc": "builtin.media-preview.media-preview-worker",
+      "title": "Media Preview",
+      "kind": "virtualDom",
+      "type": "preview",
+      "css": "media/index.css",
       "selector": [".png", ".jpg", ".jpeg", ".avif", ".svg", ".gif", ".ico", ".webp"],
-      "contentSecurityPolicy": ["default-src 'none'", "script-src 'self'", "style-src 'self'", "img-src 'self' blob:"],
-      "elements": [
-        {
-          "type": "title",
-          "value": "Media Preview"
-        },
-        {
-          "type": "script",
-          "path": "media/index.js"
-        },
-        {
-          "type": "css",
-          "path": "media/index.css"
-        }
-      ]
+      "showSideBarHeader": false
     }
   ]
 }

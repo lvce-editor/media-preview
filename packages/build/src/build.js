@@ -31,23 +31,19 @@ fs.cpSync(join(mediaPreviewWorker, 'src'), join(root, 'dist', 'media-preview-wor
   recursive: true,
 })
 
-await replace({
-  path: join(root, 'dist', 'extension.json'),
-  occurrence: 'dist/mediaPreviewMain.js',
-  replacement: 'dist/mediaPreviewMain.js',
-})
-await replace({
-  path: join(root, 'dist', 'extension.json'),
-  occurrence: '../media-preview-worker/dist/mediaPreviewWorkerMain.js',
-  replacement: './media-preview-worker/dist/mediaPreviewWorkerMain.js',
-})
-
 await bundleJs(
-  join(root, 'dist', 'media-preview-worker', 'src', 'mediaPreviewWorkerMain.ts'),
+  join(mediaPreviewWorker, 'src', 'mediaPreviewWorkerMain.ts'),
   join(root, 'dist', 'media-preview-worker', 'dist', 'mediaPreviewWorkerMain.js'),
 )
 
-await bundleJs(join(root, 'dist', 'src', 'mediaPreviewMain.ts'), join(root, 'dist', 'dist', 'mediaPreviewMain.js'))
+const extensionBundlePath = join(root, 'dist', 'dist', 'mediaPreviewMain.js')
+await bundleJs(join(extension, 'src', 'mediaPreviewMain.ts'), extensionBundlePath)
+
+await replace({
+  path: extensionBundlePath,
+  occurrence: '../../media-preview-worker/',
+  replacement: '../media-preview-worker/',
+})
 
 await packageExtension({
   highestCompression: true,

@@ -9,3 +9,7 @@ export const set = (id: number, preview: WebView) => {
 export const get = (id: number): WebView => {
   return webViews[id]
 }
+
+export const remove = (id: number): void => {
+  delete webViews[id]
+}

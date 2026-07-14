@@ -1,6 +1,6 @@
 export const getRemoteUrl = (uri: string): string => {
-  // TODO maybe instead of hardcoding path,
-  // ask extension api to generate a remote url for a file path
-  // e.g. vscode.getRemoteUrl(uri)
-  return `/remote/${uri}`
+  if (uri.startsWith('http://') || uri.startsWith('https://')) {
+    return uri
+  }
+  return uri.startsWith('/') ? `/remote${uri}` : `/remote/${uri}`
 }
