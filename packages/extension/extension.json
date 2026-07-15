@@ -10,6 +10,33 @@
   "languages": [],
   "views": [
     {
+      "eventListeners": [
+        {
+          "name": "handleMediaPreviewImageError",
+          "params": ["handleViewEvent", "error", "event.target.name"]
+        },
+        {
+          "name": "handleMediaPreviewPointerDown",
+          "params": ["handleContextMenu", "pointerdown", "event.clientX", "event.clientY"],
+          "preventDefault": true,
+          "trackPointerEvents": ["handleMediaPreviewPointerMove", "handleMediaPreviewPointerUp"]
+        },
+        {
+          "name": "handleMediaPreviewPointerMove",
+          "params": ["handleContextMenu", "pointermove", "event.clientX", "event.clientY"],
+          "preventDefault": true
+        },
+        {
+          "name": "handleMediaPreviewPointerUp",
+          "params": ["handleContextMenu", "pointerup", "event.clientX", "event.clientY"],
+          "preventDefault": true
+        },
+        {
+          "name": "handleMediaPreviewWheel",
+          "params": ["handleContextMenu", "wheel", "event.deltaY", "event.deltaMode"],
+          "preventDefault": true
+        }
+      ],
       "id": "builtin.media-preview",
       "title": "Media Preview",
       "kind": "virtualDom",
