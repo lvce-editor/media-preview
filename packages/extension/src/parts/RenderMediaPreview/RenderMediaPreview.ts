@@ -28,11 +28,12 @@ const renderError = (): TreeNode => {
 }
 
 const renderImage = (state: Readonly<MediaPreviewState>): TreeNode => {
+  const { domMatrixString, url } = state
   return node(
     VirtualDomElements.Div,
     {
       className: 'MediaPreviewContent',
-      style: `transform: ${state.domMatrixString}`,
+      style: `transform: ${domMatrixString}`,
     },
     [
       node(VirtualDomElements.Img, {
@@ -41,14 +42,15 @@ const renderImage = (state: Readonly<MediaPreviewState>): TreeNode => {
         draggable: false,
         name: 'image',
         onError: 'handleMediaPreviewImageError',
-        src: state.url,
+        src: url,
       }),
     ],
   )
 }
 
 export const render = (state: Readonly<MediaPreviewState>): readonly VirtualDomNode[] => {
-  const className = state.pointerDown ? 'MediaPreview MediaPreviewDragging' : 'MediaPreview'
+  const { error, pointerDown } = state
+  const className = pointerDown ? 'MediaPreview MediaPreviewDragging' : 'MediaPreview'
   return flatten(
     node(
       VirtualDomElements.Div,
@@ -57,7 +59,7 @@ export const render = (state: Readonly<MediaPreviewState>): readonly VirtualDomN
         onPointerDown: 'handleMediaPreviewPointerDown',
         onWheel: 'handleMediaPreviewWheel',
       },
-      [state.error ? renderError() : renderImage(state)],
+      [error ? renderError() : renderImage(state)],
     ),
   )
 }
