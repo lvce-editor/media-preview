@@ -3,6 +3,7 @@ import * as actions from '@lvce-editor/eslint-plugin-github-actions'
 
 export default [
   ...config.default,
+  ...config.recommendedVirtualDom,
   ...actions.default,
   {
     rules: {
@@ -20,6 +21,20 @@ export default [
       'sonarjs/no-identical-functions': 'off',
       'unicorn/no-global-object-property-assignment': 'off',
       'unicorn/numeric-separators-style': 'off',
+      'virtual-dom/no-inline-event-handlers': 'off',
+      'virtual-dom/no-inline-style': 'off',
+    },
+  },
+  {
+    files: ['packages/extension/src/parts/Main/Main.ts'],
+    rules: {
+      'virtual-dom/prefer-state-destructuring': 'off',
+    },
+  },
+  {
+    files: ['packages/extension/src/parts/RenderMediaPreview/RenderMediaPreview.ts'],
+    rules: {
+      'virtual-dom/no-inline-style': 'off',
     },
   },
 ]
