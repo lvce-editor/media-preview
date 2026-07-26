@@ -13,7 +13,7 @@ const createApi = () => {
     create: jest.fn((_id: number) => {}),
     dispose: jest.fn((_id: number) => {}),
     getState: jest.fn((_id: number) => initialState),
-    getUrl: jest.fn((_uri: string) => '/remote/workspace/image.png'),
+    getUrl: jest.fn(async (_uri: string) => 'blob:https://example.com/image-id'),
     handleError: jest.fn((_id: number) => ({ ...initialState, error: true })),
     handlePointerDown: jest.fn((_id: number, _x: number, _y: number) => ({ ...initialState, pointerDown: true })),
     handlePointerMove: jest.fn((_id: number, _x: number, _y: number) => initialState),
@@ -39,7 +39,16 @@ test('creates a preview and renders its image', async () => {
   expect(api.setSavedState).toHaveBeenCalledWith(7, undefined)
   expect(api.getState).toHaveBeenCalledWith(7)
   expect(api.getUrl).toHaveBeenCalledWith('/workspace/image.png')
-  expect(instance.render().some((node) => node.src === '/remote/workspace/image.png')).toBe(true)
+  expect(instance.render().some((node) => node.src === 'blob:https://example.com/image-id')).toBe(true)
+})
+
+test('renders an error when the image URL cannot be read', async () => {
+  const api = createApi()
+  api.getUrl.mockResolvedValue('')
+
+  const instance = await createInstanceWithApi(context, api)
+
+  expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
 })
 
 test('forwards pointer and image events to the media preview api', async () => {

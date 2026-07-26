@@ -1,8 +1,8 @@
-import * as GetRemoteUrl from '../GetRemoteUrl/GetRemoteUrl.ts'
+import { readAsObjectUrl, type ReadAsObjectUrlResult } from '@lvce-editor/api'
 
-export const getUrl = (uri: string): string => {
-  // TODO if platform is web, use data url or blob url
-  // TODO if platform is remote or electron, use remote url
-  const url = GetRemoteUrl.getRemoteUrl(uri)
-  return url
+type ReadAsObjectUrl = (uri: string) => Promise<ReadAsObjectUrlResult>
+
+export const getUrl = async (uri: string, read: ReadAsObjectUrl = readAsObjectUrl): Promise<string> => {
+  const result = await read(uri)
+  return result.wasFound ? result.objectUrl : ''
 }

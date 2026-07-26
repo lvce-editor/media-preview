@@ -23,7 +23,7 @@ interface MediaPreviewApi {
   readonly create: (id: number) => unknown
   readonly dispose: (id: number) => unknown
   readonly getState: (id: number) => Omit<MediaPreviewState, 'url'>
-  readonly getUrl: (uri: string) => string
+  readonly getUrl: (uri: string) => Promise<string>
   readonly handleError: (id: number) => Partial<MediaPreviewState>
   readonly handlePointerDown: (id: number, x: number, y: number) => Partial<MediaPreviewState>
   readonly handlePointerMove: (id: number, x: number, y: number) => Partial<MediaPreviewState>
@@ -55,7 +55,7 @@ export const createInstanceWithApi = async (
   api.create(id)
   api.setSavedState(id, context?.state)
   const previewState = api.getState(id)
-  const url = uri ? api.getUrl(uri) : ''
+  const url = uri ? await api.getUrl(uri) : ''
   let state: MediaPreviewState = {
     ...previewState,
     error: !url || previewState.error,
