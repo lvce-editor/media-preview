@@ -55,11 +55,20 @@ test('forwards pointer and image events to the media preview api', async () => {
   const api = createApi()
   const instance = await createInstanceWithApi(context, api)
 
-  await instance.handleEvent?.({ name: 'pointerdown', type: 'contextmenu', x: 10, y: 20 })
+  instance.handleMediaPreviewPointerDown(10, 20)
   expect(api.handlePointerDown).toHaveBeenCalledWith(7, 10, 20)
   expect(instance.render()[0].className).toBe('MediaPreview MediaPreviewDragging')
 
-  await instance.handleEvent?.({ name: 'image', type: 'error' })
+  instance.handleMediaPreviewPointerMove(30, 40)
+  expect(api.handlePointerMove).toHaveBeenCalledWith(7, 30, 40)
+
+  instance.handleMediaPreviewPointerUp(50, 60)
+  expect(api.handlePointerUp).toHaveBeenCalledWith(7, 50, 60)
+
+  instance.handleMediaPreviewWheel(70, 0)
+  expect(api.handleWheel).toHaveBeenCalledWith(7, 0, 0, 0, 70)
+
+  instance.handleMediaPreviewImageError()
   expect(api.handleError).toHaveBeenCalledWith(7)
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
 })
