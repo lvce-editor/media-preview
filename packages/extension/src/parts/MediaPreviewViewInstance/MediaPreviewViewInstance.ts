@@ -15,6 +15,11 @@ interface MediaPreviewViewContext extends ViewContext {
 }
 
 export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
+  readonly handleMediaPreviewImageError: () => void
+  readonly handleMediaPreviewPointerDown: (x: unknown, y: unknown) => void
+  readonly handleMediaPreviewPointerMove: (x: unknown, y: unknown) => void
+  readonly handleMediaPreviewPointerUp: (x: unknown, y: unknown) => void
+  readonly handleMediaPreviewWheel: (deltaY: unknown, deltaMode: unknown) => void
   readonly render: () => readonly VirtualDomNode[]
   readonly saveState: () => Promise<unknown>
 }
@@ -97,6 +102,21 @@ export const createInstanceWithApi = async (
           updateState(api.handleWheel(id, 0, 0, 0, x))
           break
       }
+    },
+    handleMediaPreviewImageError(): void {
+      updateState(api.handleError(id))
+    },
+    handleMediaPreviewPointerDown(x: unknown, y: unknown): void {
+      updateState(api.handlePointerDown(id, getNumber(x), getNumber(y)))
+    },
+    handleMediaPreviewPointerMove(x: unknown, y: unknown): void {
+      updateState(api.handlePointerMove(id, getNumber(x), getNumber(y)))
+    },
+    handleMediaPreviewPointerUp(x: unknown, y: unknown): void {
+      updateState(api.handlePointerUp(id, getNumber(x), getNumber(y)))
+    },
+    handleMediaPreviewWheel(deltaY: unknown, _deltaMode: unknown): void {
+      updateState(api.handleWheel(id, 0, 0, 0, getNumber(deltaY)))
     },
     render(): readonly VirtualDomNode[] {
       return render(state)
