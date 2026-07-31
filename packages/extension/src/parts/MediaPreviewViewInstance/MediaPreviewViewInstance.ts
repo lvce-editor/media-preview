@@ -81,7 +81,8 @@ export const createInstanceWithApi = async (
       api.dispose(id)
     },
     getCss(): string {
-      return getCss(state.domMatrixString)
+      const { domMatrixString } = state
+      return getCss(domMatrixString)
     },
     handleEvent(event: Readonly<ViewEvent>): void {
       if (event.type === 'error') {
