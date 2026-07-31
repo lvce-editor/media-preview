@@ -25,6 +25,10 @@
   -webkit-user-drag: none;
 }
 
+.MediaPreviewImageWrapper {
+  contain: content;
+}
+
 .MediaPreviewDragging {
   cursor: grabbing;
 }
