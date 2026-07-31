@@ -1,10 +1,10 @@
 import * as config from '@lvce-editor/eslint-config'
-import * as actions from '@lvce-editor/eslint-plugin-github-actions'
+import { defineConfig } from 'eslint/config'
 
-export default [
+export default defineConfig([
   ...config.default,
   ...config.recommendedVirtualDom,
-  ...actions.default,
+  ...config.recommendedActions,
   {
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'off',
@@ -37,4 +37,4 @@ export default [
       'virtual-dom/no-inline-style': 'off',
     },
   },
-]
+])
