@@ -27,7 +27,7 @@ fs.cpSync(join(extension, 'media'), join(root, 'dist', 'media'), {
 })
 
 const extensionBundlePath = join(root, 'dist', 'dist', 'mediaPreviewMain.js')
-await bundleJs(join(extension, 'src', 'mediaPreviewMain.ts'), extensionBundlePath)
+await bundleJs(join(extension, 'src', 'mediaPreviewMain.ts'), extensionBundlePath, false)
 
 await packageExtension({
   highestCompression: true,
