@@ -23,6 +23,12 @@
           "useESM": true
         }
       ]
+    },
+    "collectCoverage": true,
+    "coverageThreshold": {
+      "global": {
+        "branches": 95
+      }
     }
   },
   "devDependencies": {
