@@ -19,9 +19,6 @@ fs.writeFileSync(join(root, 'dist', 'package.json'), JSON.stringify(packageJson,
 fs.copyFileSync(join(root, 'README.md'), join(root, 'dist', 'README.md'))
 fs.copyFileSync(join(root, 'LICENSE'), join(root, 'dist', 'LICENSE'))
 fs.copyFileSync(join(extension, 'extension.json'), join(root, 'dist', 'extension.json'))
-fs.cpSync(join(extension, 'src'), join(root, 'dist', 'src'), {
-  recursive: true,
-})
 fs.cpSync(join(extension, 'media'), join(root, 'dist', 'media'), {
   recursive: true,
 })
