@@ -40,6 +40,9 @@ test('creates a preview and renders its image', async () => {
   expect(api.getState).toHaveBeenCalledWith(7)
   expect(api.getUrl).toHaveBeenCalledWith('/workspace/image.png')
   expect(instance.render().some((node) => node.src === 'blob:https://example.com/image-id')).toBe(true)
+  expect(instance.getCss()).toBe(`.MediaPreview {
+  --MediaPreviewTransform: matrix(1, 0, 0, 1, 0, 0);
+}`)
 })
 
 test('renders an error when the image URL cannot be read', async () => {
@@ -71,6 +74,23 @@ test('forwards pointer and image events to the media preview api', async () => {
   instance.handleMediaPreviewImageError()
   expect(api.handleError).toHaveBeenCalledWith(7)
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
+})
+
+test('updates the transform css without changing the virtual dom', async () => {
+  const api = createApi()
+  api.handleWheel.mockReturnValue({
+    ...initialState,
+    domMatrixString: 'matrix(2, 0, 0, 2, 10, 20)',
+  })
+  const instance = await createInstanceWithApi(context, api)
+  const oldDom = instance.render()
+
+  instance.handleMediaPreviewWheel(70, 0)
+
+  expect(instance.render()).toEqual(oldDom)
+  expect(instance.getCss()).toBe(`.MediaPreview {
+  --MediaPreviewTransform: matrix(2, 0, 0, 2, 10, 20);
+}`)
 })
 
 test('saves the URI with preview state and disposes the preview instance', async () => {

@@ -23,7 +23,6 @@ test('renders the image inside a wrapper', () => {
     {
       childCount: 1,
       className: 'MediaPreviewContent',
-      style: 'transform: matrix(1, 0, 0, 1, 10, 20)',
       type: VirtualDomElements.Div,
     },
     {
