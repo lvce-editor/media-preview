@@ -54,6 +54,32 @@ test('renders an error when the image URL cannot be read', async () => {
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
 })
 
+test('restores the URI from saved state when there is no current URI', async () => {
+  const api = createApi()
+  const savedContext = {
+    state: {
+      uri: '/workspace/saved-image.png',
+    },
+    uid: 8,
+    viewId: 'builtin.media-preview',
+  } as unknown as ViewContext
+
+  await createInstanceWithApi(savedContext, api)
+
+  expect(api.getUrl).toHaveBeenCalledWith('/workspace/saved-image.png')
+})
+
+test('uses defaults when the view context is missing', async () => {
+  const api = createApi()
+
+  const instance = await createInstanceWithApi(undefined, api)
+
+  expect(api.create).toHaveBeenCalledWith(0)
+  expect(api.setSavedState).toHaveBeenCalledWith(0, undefined)
+  expect(api.getUrl).not.toHaveBeenCalled()
+  expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
+})
+
 test('forwards pointer and image events to the media preview api', async () => {
   const api = createApi()
   const instance = await createInstanceWithApi(context, api)
@@ -103,4 +129,26 @@ test('saves the URI with preview state and disposes the preview instance', async
   })
   await instance.dispose?.()
   expect(api.dispose).toHaveBeenCalledWith(7)
+})
+
+test('forwards legacy view events and normalizes invalid coordinates', async () => {
+  const api = createApi()
+  const instance = await createInstanceWithApi(context, api)
+
+  instance.handleEvent?.({ type: 'error' })
+  expect(api.handleError).toHaveBeenCalledWith(7)
+
+  instance.handleEvent?.({ name: 'pointerdown', type: 'contextmenu', x: Infinity, y: 20 })
+  expect(api.handlePointerDown).toHaveBeenCalledWith(7, 0, 20)
+
+  instance.handleEvent?.({ name: 'pointermove', type: 'contextmenu', x: 30, y: 40 })
+  expect(api.handlePointerMove).toHaveBeenCalledWith(7, 30, 40)
+
+  instance.handleEvent?.({ name: 'pointerup', type: 'contextmenu', x: 50, y: 60 })
+  expect(api.handlePointerUp).toHaveBeenCalledWith(7, 50, 60)
+
+  instance.handleEvent?.({ name: 'wheel', type: 'contextmenu', x: 70 })
+  expect(api.handleWheel).toHaveBeenCalledWith(7, 0, 0, 0, 70)
+
+  instance.handleEvent?.({ type: 'click' })
 })
