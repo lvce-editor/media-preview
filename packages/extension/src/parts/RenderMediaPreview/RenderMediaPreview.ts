@@ -28,12 +28,11 @@ const renderError = (): TreeNode => {
 }
 
 const renderImage = (state: Readonly<MediaPreviewState>): TreeNode => {
-  const { domMatrixString, url } = state
+  const { url } = state
   return node(
     VirtualDomElements.Div,
     {
       className: 'MediaPreviewContent',
-      style: `transform: ${domMatrixString}`,
     },
     [
       node(VirtualDomElements.Div, { className: 'MediaPreviewImageWrapper' }, [

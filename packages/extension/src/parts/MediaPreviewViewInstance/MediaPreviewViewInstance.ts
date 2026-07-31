@@ -1,5 +1,6 @@
 import type { ViewContext, ViewEvent, VirtualDomViewInstance } from '@lvce-editor/api'
 import type { VirtualDomNode } from '@lvce-editor/virtual-dom-worker'
+import { getCss } from '../GetCss/GetCss.ts'
 import * as MediaPreview from '../MediaPreview/MediaPreview.ts'
 import { render } from '../RenderMediaPreview/RenderMediaPreview.ts'
 
@@ -15,6 +16,7 @@ interface MediaPreviewViewContext extends ViewContext {
 }
 
 export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
+  readonly getCss: () => string
   readonly handleMediaPreviewImageError: () => void
   readonly handleMediaPreviewPointerDown: (x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerMove: (x: unknown, y: unknown) => void
@@ -77,6 +79,10 @@ export const createInstanceWithApi = async (
   return {
     dispose(): void {
       api.dispose(id)
+    },
+    getCss(): string {
+      const { domMatrixString } = state
+      return getCss(domMatrixString)
     },
     handleEvent(event: Readonly<ViewEvent>): void {
       if (event.type === 'error') {
