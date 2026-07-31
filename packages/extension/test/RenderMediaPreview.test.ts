@@ -9,7 +9,7 @@ const state = {
   url: '/remote/image.png',
 }
 
-test('renders the image directly in the virtual dom', () => {
+test('renders the image inside a wrapper', () => {
   const dom = render(state)
 
   expect(dom).toEqual([
@@ -24,6 +24,11 @@ test('renders the image directly in the virtual dom', () => {
       childCount: 1,
       className: 'MediaPreviewContent',
       style: 'transform: matrix(1, 0, 0, 1, 10, 20)',
+      type: VirtualDomElements.Div,
+    },
+    {
+      childCount: 1,
+      className: 'MediaPreviewImageWrapper',
       type: VirtualDomElements.Div,
     },
     {

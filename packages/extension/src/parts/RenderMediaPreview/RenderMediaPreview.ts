@@ -36,14 +36,16 @@ const renderImage = (state: Readonly<MediaPreviewState>): TreeNode => {
       style: `transform: ${domMatrixString}`,
     },
     [
-      node(VirtualDomElements.Img, {
-        alt: '',
-        className: 'MediaPreviewImage',
-        draggable: false,
-        name: 'image',
-        onError: 'handleMediaPreviewImageError',
-        src: url,
-      }),
+      node(VirtualDomElements.Div, { className: 'MediaPreviewImageWrapper' }, [
+        node(VirtualDomElements.Img, {
+          alt: '',
+          className: 'MediaPreviewImage',
+          draggable: false,
+          name: 'image',
+          onError: 'handleMediaPreviewImageError',
+          src: url,
+        }),
+      ]),
     ],
   )
 }
