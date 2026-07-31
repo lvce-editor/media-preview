@@ -49,8 +49,29 @@ test('renders an error without an image', () => {
     error: true,
   })
 
-  expect(dom.some((node) => node.type === VirtualDomElements.Img)).toBe(false)
-  expect(dom.some((node) => node.text === 'Image could not be loaded')).toBe(true)
+  expect(dom).toEqual([
+    {
+      childCount: 1,
+      className: 'MediaPreview',
+      onPointerDown: 'handleMediaPreviewPointerDown',
+      onWheel: 'handleMediaPreviewWheel',
+      type: VirtualDomElements.Div,
+    },
+    {
+      childCount: 1,
+      className: 'MediaPreviewError',
+      type: VirtualDomElements.Div,
+    },
+    {
+      childCount: 1,
+      type: VirtualDomElements.Span,
+    },
+    {
+      childCount: 0,
+      text: 'Image could not be loaded',
+      type: VirtualDomElements.Text,
+    },
+  ])
 })
 
 test('renders the dragging class while the pointer is down', () => {

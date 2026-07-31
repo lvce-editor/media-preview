@@ -1,66 +1,59 @@
 import { text, VirtualDomElements, type VirtualDomNode } from '@lvce-editor/virtual-dom-worker'
 import type { MediaPreviewState } from '../MediaPreviewViewInstance/MediaPreviewViewInstance.ts'
 
-interface TreeNode {
-  readonly children: readonly TreeNode[]
-  readonly node: VirtualDomNode
-}
-
-const node = (type: number, properties: Readonly<Record<string, unknown>>, children: readonly TreeNode[] = []): TreeNode => {
-  return {
-    children,
-    node: {
-      ...properties,
-      childCount: children.length,
-      type,
-    },
-  }
-}
-
-const flatten = (tree: TreeNode): readonly VirtualDomNode[] => {
-  return [tree.node, ...tree.children.flatMap(flatten)]
-}
-
-const renderError = (): TreeNode => {
-  return node(VirtualDomElements.Div, { className: 'MediaPreviewError' }, [
-    node(VirtualDomElements.Span, {}, [{ children: [], node: text('Image could not be loaded') }]),
-  ])
-}
-
-const renderImage = (state: Readonly<MediaPreviewState>): TreeNode => {
-  const { url } = state
-  return node(
-    VirtualDomElements.Div,
+const renderError = (): readonly VirtualDomNode[] => {
+  return [
     {
-      className: 'MediaPreviewContent',
+      childCount: 1,
+      className: 'MediaPreviewError',
+      type: VirtualDomElements.Div,
     },
-    [
-      node(VirtualDomElements.Div, { className: 'MediaPreviewImageWrapper' }, [
-        node(VirtualDomElements.Img, {
-          alt: '',
-          className: 'MediaPreviewImage',
-          draggable: false,
-          name: 'image',
-          onError: 'handleMediaPreviewImageError',
-          src: url,
-        }),
-      ]),
-    ],
-  )
+    {
+      childCount: 1,
+      type: VirtualDomElements.Span,
+    },
+    text('Image could not be loaded'),
+  ]
+}
+
+const renderImage = (state: Readonly<MediaPreviewState>): readonly VirtualDomNode[] => {
+  const { url } = state
+  return [
+    {
+      childCount: 1,
+      className: 'MediaPreviewContent',
+      type: VirtualDomElements.Div,
+    },
+    {
+      childCount: 1,
+      className: 'MediaPreviewImageWrapper',
+      type: VirtualDomElements.Div,
+    },
+    {
+      alt: '',
+      childCount: 0,
+      className: 'MediaPreviewImage',
+      draggable: false,
+      name: 'image',
+      onError: 'handleMediaPreviewImageError',
+      src: url,
+      type: VirtualDomElements.Img,
+    },
+  ]
 }
 
 export const render = (state: Readonly<MediaPreviewState>): readonly VirtualDomNode[] => {
   const { error, pointerDown } = state
   const className = pointerDown ? 'MediaPreview MediaPreviewDragging' : 'MediaPreview'
-  return flatten(
-    node(
-      VirtualDomElements.Div,
-      {
-        className,
-        onPointerDown: 'handleMediaPreviewPointerDown',
-        onWheel: 'handleMediaPreviewWheel',
-      },
-      [error ? renderError() : renderImage(state)],
-    ),
-  )
+  const content = error ? renderError() : renderImage(state)
+  return [
+    {
+      childCount: 1,
+      className,
+      onPointerDown: 'handleMediaPreviewPointerDown',
+      onWheel: 'handleMediaPreviewWheel',
+      type: VirtualDomElements.Div,
+    },
+    ...content,
+  ]
 }
