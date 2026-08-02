@@ -10,7 +10,6 @@ test('contributes a virtual dom media preview view', () => {
     'handleMediaPreviewPointerDown',
     'handleMediaPreviewPointerMove',
     'handleMediaPreviewPointerUp',
-    'handleMediaPreviewContextMenu',
     'handleMediaPreviewWheel',
   ])
 })

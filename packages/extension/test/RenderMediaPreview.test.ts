@@ -36,7 +36,7 @@ test('renders the image inside a wrapper', () => {
       className: 'MediaPreviewImage',
       draggable: false,
       name: 'image',
-      onContextMenu: 'handleMediaPreviewContextMenu',
+      onContextMenu: 'handleContextMenu',
       onError: 'handleMediaPreviewImageError',
       src: '/remote/image.png',
       type: VirtualDomElements.Img,

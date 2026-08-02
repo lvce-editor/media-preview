@@ -18,7 +18,6 @@ interface MediaPreviewViewContext extends ViewContext {
 export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
   readonly getCss: () => string
   readonly getMenuEntries: (menuId: string) => Promise<readonly MenuEntry[]>
-  readonly handleMediaPreviewContextMenu: (x: unknown, y: unknown) => Promise<void>
   readonly handleMediaPreviewImageError: () => void
   readonly handleMediaPreviewPointerDown: (button: unknown, x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerMove: (x: unknown, y: unknown) => void
@@ -38,7 +37,6 @@ interface MediaPreviewApi {
   readonly handlePointerMove: (id: number, x: number, y: number) => Partial<MediaPreviewState>
   readonly handlePointerUp: (id: number, x: number, y: number) => Partial<MediaPreviewState>
   readonly handleWheel: (id: number, eventX: number, eventY: number, deltaX: number, deltaY: number) => Partial<MediaPreviewState>
-  readonly readFileAsBlob: (uri: string) => Promise<Blob>
   readonly saveState: (id: number) => unknown
   readonly setSavedState: (id: number, state: unknown) => unknown
 }
@@ -93,7 +91,7 @@ export const createInstanceWithApi = async (
       if (menuId !== imageMenuId) {
         return []
       }
-      const blob = await api.readFileAsBlob(uri)
+      const { url } = state
       return [
         {
           args: [uri],
@@ -102,14 +100,14 @@ export const createInstanceWithApi = async (
           label: 'Copy Path',
         },
         {
-          args: [blob],
-          command: 'ClipBoard.writeImage',
+          args: [url],
+          command: 'ClipBoard.writeImageUrl',
           id: 'copyImage',
           label: 'Copy Image',
         },
       ]
     },
-    handleEvent(event: Readonly<ViewEvent>): void {
+    async handleEvent(event: Readonly<ViewEvent>): Promise<void> {
       if (event.type === 'error') {
         updateState(api.handleError(id))
         return
@@ -119,6 +117,10 @@ export const createInstanceWithApi = async (
       }
       const x = getNumber(event.x)
       const y = getNumber(event.y)
+      if (event.name === 'image') {
+        await viewContext?.showContextMenu(imageMenuId, x, y)
+        return
+      }
       switch (event.name) {
         case 'pointerdown':
           updateState(api.handlePointerDown(id, x, y))
@@ -133,9 +135,6 @@ export const createInstanceWithApi = async (
           updateState(api.handleWheel(id, 0, 0, 0, x))
           break
       }
-    },
-    async handleMediaPreviewContextMenu(x: unknown, y: unknown): Promise<void> {
-      await viewContext?.showContextMenu(imageMenuId, getNumber(x), getNumber(y))
     },
     handleMediaPreviewImageError(): void {
       updateState(api.handleError(id))

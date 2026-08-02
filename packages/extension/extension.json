@@ -23,11 +23,6 @@
           "trackPointerEvents": ["handleMediaPreviewPointerMove", "handleMediaPreviewPointerUp"]
         },
         {
-          "name": "handleMediaPreviewContextMenu",
-          "params": ["handleMediaPreviewContextMenu", "event.clientX", "event.clientY"],
-          "preventDefault": true
-        },
-        {
           "name": "handleMediaPreviewPointerMove",
           "params": ["handleMediaPreviewPointerMove", "event.clientX", "event.clientY"],
           "preventDefault": true

@@ -9,7 +9,6 @@ const initialState = {
 }
 
 const createApi = () => {
-  const imageBlob = new Blob(['image'], { type: 'image/png' })
   return {
     create: jest.fn((_id: number) => {}),
     dispose: jest.fn((_id: number) => {}),
@@ -20,8 +19,6 @@ const createApi = () => {
     handlePointerMove: jest.fn((_id: number, _x: number, _y: number) => initialState),
     handlePointerUp: jest.fn((_id: number, _x: number, _y: number) => initialState),
     handleWheel: jest.fn((_id: number, _eventX: number, _eventY: number, _deltaX: number, _deltaY: number) => initialState),
-    imageBlob,
-    readFileAsBlob: jest.fn(async (_uri: string) => imageBlob),
     saveState: jest.fn((_id: number) => ({ domMatrix: initialState.domMatrixString })),
     setSavedState: jest.fn((_id: number, _state: unknown) => {}),
   }
@@ -124,7 +121,7 @@ test('shows the image context menu and provides copy commands', async () => {
   } as unknown as ViewContext
   const instance = await createInstanceWithApi(contextWithMenu, api)
 
-  await instance.handleMediaPreviewContextMenu(10, 20)
+  await instance.handleEvent?.({ name: 'image', type: 'contextmenu', x: 10, y: 20 })
 
   expect(showContextMenu).toHaveBeenCalledWith('mediaPreview.image', 10, 20)
   await expect(instance.getMenuEntries('unknown')).resolves.toEqual([])
@@ -136,13 +133,12 @@ test('shows the image context menu and provides copy commands', async () => {
       label: 'Copy Path',
     },
     {
-      args: [api.imageBlob],
-      command: 'ClipBoard.writeImage',
+      args: ['blob:https://example.com/image-id'],
+      command: 'ClipBoard.writeImageUrl',
       id: 'copyImage',
       label: 'Copy Image',
     },
   ])
-  expect(api.readFileAsBlob).toHaveBeenCalledWith('/workspace/image.png')
 })
 
 test('updates the transform css without changing the virtual dom', async () => {

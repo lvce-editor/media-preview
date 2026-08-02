@@ -32,11 +32,6 @@ export const view: View<MediaPreviewViewInstance> = {
       preventDefault: true,
     },
     {
-      name: 'handleMediaPreviewContextMenu',
-      params: ['handleMediaPreviewContextMenu', 'event.clientX', 'event.clientY'],
-      preventDefault: true,
-    },
-    {
       name: 'handleMediaPreviewWheel',
       params: ['handleMediaPreviewWheel', 'event.deltaY', 'event.deltaMode'],
       preventDefault: true,
