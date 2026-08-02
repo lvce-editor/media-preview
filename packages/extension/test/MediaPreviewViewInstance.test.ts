@@ -84,7 +84,7 @@ test('forwards pointer and image events to the media preview api', async () => {
   const api = createApi()
   const instance = await createInstanceWithApi(context, api)
 
-  instance.handleMediaPreviewPointerDown(10, 20)
+  instance.handleMediaPreviewPointerDown(0, 10, 20)
   expect(api.handlePointerDown).toHaveBeenCalledWith(7, 10, 20)
   expect(instance.render()[0].className).toBe('MediaPreview MediaPreviewDragging')
 
@@ -100,6 +100,45 @@ test('forwards pointer and image events to the media preview api', async () => {
   instance.handleMediaPreviewImageError()
   expect(api.handleError).toHaveBeenCalledWith(7)
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
+})
+
+test('only starts dragging for the left mouse button', async () => {
+  const api = createApi()
+  const instance = await createInstanceWithApi(context, api)
+
+  instance.handleMediaPreviewPointerDown(2, 10, 20)
+
+  expect(api.handlePointerDown).not.toHaveBeenCalled()
+  expect(instance.render()[0].className).toBe('MediaPreview')
+})
+
+test('shows the image context menu and provides copy commands', async () => {
+  const api = createApi()
+  const showContextMenu = jest.fn(async (_menuId: string, _x: number, _y: number) => {})
+  const contextWithMenu = {
+    ...context,
+    showContextMenu,
+  } as unknown as ViewContext
+  const instance = await createInstanceWithApi(contextWithMenu, api)
+
+  await instance.handleEvent?.({ name: 'image', type: 'contextmenu', x: 10, y: 20 })
+
+  expect(showContextMenu).toHaveBeenCalledWith('mediaPreview.image', 10, 20)
+  await expect(instance.getMenuEntries('unknown')).resolves.toEqual([])
+  await expect(instance.getMenuEntries('mediaPreview.image')).resolves.toEqual([
+    {
+      args: ['/workspace/image.png'],
+      command: 'ClipBoard.writeText',
+      id: 'copyPath',
+      label: 'Copy Path',
+    },
+    {
+      args: ['blob:https://example.com/image-id'],
+      command: 'ClipBoard.writeImageUrl',
+      id: 'copyImage',
+      label: 'Copy Image',
+    },
+  ])
 })
 
 test('updates the transform css without changing the virtual dom', async () => {
