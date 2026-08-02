@@ -9,6 +9,7 @@ const initialState = {
 }
 
 const createApi = () => {
+  const imageBlob = new Blob(['image'], { type: 'image/png' })
   return {
     create: jest.fn((_id: number) => {}),
     dispose: jest.fn((_id: number) => {}),
@@ -19,6 +20,8 @@ const createApi = () => {
     handlePointerMove: jest.fn((_id: number, _x: number, _y: number) => initialState),
     handlePointerUp: jest.fn((_id: number, _x: number, _y: number) => initialState),
     handleWheel: jest.fn((_id: number, _eventX: number, _eventY: number, _deltaX: number, _deltaY: number) => initialState),
+    imageBlob,
+    readFileAsBlob: jest.fn(async (_uri: string) => imageBlob),
     saveState: jest.fn((_id: number) => ({ domMatrix: initialState.domMatrixString })),
     setSavedState: jest.fn((_id: number, _state: unknown) => {}),
   }
@@ -84,7 +87,7 @@ test('forwards pointer and image events to the media preview api', async () => {
   const api = createApi()
   const instance = await createInstanceWithApi(context, api)
 
-  instance.handleMediaPreviewPointerDown(10, 20)
+  instance.handleMediaPreviewPointerDown(0, 10, 20)
   expect(api.handlePointerDown).toHaveBeenCalledWith(7, 10, 20)
   expect(instance.render()[0].className).toBe('MediaPreview MediaPreviewDragging')
 
@@ -100,6 +103,46 @@ test('forwards pointer and image events to the media preview api', async () => {
   instance.handleMediaPreviewImageError()
   expect(api.handleError).toHaveBeenCalledWith(7)
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
+})
+
+test('only starts dragging for the left mouse button', async () => {
+  const api = createApi()
+  const instance = await createInstanceWithApi(context, api)
+
+  instance.handleMediaPreviewPointerDown(2, 10, 20)
+
+  expect(api.handlePointerDown).not.toHaveBeenCalled()
+  expect(instance.render()[0].className).toBe('MediaPreview')
+})
+
+test('shows the image context menu and provides copy commands', async () => {
+  const api = createApi()
+  const showContextMenu = jest.fn(async (_menuId: string, _x: number, _y: number) => {})
+  const contextWithMenu = {
+    ...context,
+    showContextMenu,
+  } as unknown as ViewContext
+  const instance = await createInstanceWithApi(contextWithMenu, api)
+
+  await instance.handleMediaPreviewContextMenu(10, 20)
+
+  expect(showContextMenu).toHaveBeenCalledWith('mediaPreview.image', 10, 20)
+  await expect(instance.getMenuEntries('unknown')).resolves.toEqual([])
+  await expect(instance.getMenuEntries('mediaPreview.image')).resolves.toEqual([
+    {
+      args: ['/workspace/image.png'],
+      command: 'ClipBoard.writeText',
+      id: 'copyPath',
+      label: 'Copy Path',
+    },
+    {
+      args: [api.imageBlob],
+      command: 'ClipBoard.writeImage',
+      id: 'copyImage',
+      label: 'Copy Image',
+    },
+  ])
+  expect(api.readFileAsBlob).toHaveBeenCalledWith('/workspace/image.png')
 })
 
 test('updates the transform css without changing the virtual dom', async () => {

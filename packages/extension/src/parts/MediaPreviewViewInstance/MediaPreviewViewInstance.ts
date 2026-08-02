@@ -1,4 +1,4 @@
-import type { ViewContext, ViewEvent, VirtualDomViewInstance } from '@lvce-editor/api'
+import type { MenuEntry, ViewContext, ViewEvent, VirtualDomViewInstance } from '@lvce-editor/api'
 import type { VirtualDomNode } from '@lvce-editor/virtual-dom-worker'
 import { getCss } from '../GetCss/GetCss.ts'
 import * as MediaPreview from '../MediaPreview/MediaPreview.ts'
@@ -17,8 +17,10 @@ interface MediaPreviewViewContext extends ViewContext {
 
 export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
   readonly getCss: () => string
+  readonly getMenuEntries: (menuId: string) => Promise<readonly MenuEntry[]>
+  readonly handleMediaPreviewContextMenu: (x: unknown, y: unknown) => Promise<void>
   readonly handleMediaPreviewImageError: () => void
-  readonly handleMediaPreviewPointerDown: (x: unknown, y: unknown) => void
+  readonly handleMediaPreviewPointerDown: (button: unknown, x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerMove: (x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerUp: (x: unknown, y: unknown) => void
   readonly handleMediaPreviewWheel: (deltaY: unknown, deltaMode: unknown) => void
@@ -36,6 +38,7 @@ interface MediaPreviewApi {
   readonly handlePointerMove: (id: number, x: number, y: number) => Partial<MediaPreviewState>
   readonly handlePointerUp: (id: number, x: number, y: number) => Partial<MediaPreviewState>
   readonly handleWheel: (id: number, eventX: number, eventY: number, deltaX: number, deltaY: number) => Partial<MediaPreviewState>
+  readonly readFileAsBlob: (uri: string) => Promise<Blob>
   readonly saveState: (id: number) => unknown
   readonly setSavedState: (id: number, state: unknown) => unknown
 }
@@ -51,6 +54,8 @@ const getUri = (context: MediaPreviewViewContext | undefined): string => {
 const getNumber = (value: unknown): number => {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
+
+const imageMenuId = 'mediaPreview.image'
 
 export const createInstanceWithApi = async (
   context: ViewContext | undefined,
@@ -84,6 +89,26 @@ export const createInstanceWithApi = async (
       const { domMatrixString } = state
       return getCss(domMatrixString)
     },
+    async getMenuEntries(menuId: string): Promise<readonly MenuEntry[]> {
+      if (menuId !== imageMenuId) {
+        return []
+      }
+      const blob = await api.readFileAsBlob(uri)
+      return [
+        {
+          args: [uri],
+          command: 'ClipBoard.writeText',
+          id: 'copyPath',
+          label: 'Copy Path',
+        },
+        {
+          args: [blob],
+          command: 'ClipBoard.writeImage',
+          id: 'copyImage',
+          label: 'Copy Image',
+        },
+      ]
+    },
     handleEvent(event: Readonly<ViewEvent>): void {
       if (event.type === 'error') {
         updateState(api.handleError(id))
@@ -109,10 +134,16 @@ export const createInstanceWithApi = async (
           break
       }
     },
+    async handleMediaPreviewContextMenu(x: unknown, y: unknown): Promise<void> {
+      await viewContext?.showContextMenu(imageMenuId, getNumber(x), getNumber(y))
+    },
     handleMediaPreviewImageError(): void {
       updateState(api.handleError(id))
     },
-    handleMediaPreviewPointerDown(x: unknown, y: unknown): void {
+    handleMediaPreviewPointerDown(button: unknown, x: unknown, y: unknown): void {
+      if (button !== 0) {
+        return
+      }
       updateState(api.handlePointerDown(id, getNumber(x), getNumber(y)))
     },
     handleMediaPreviewPointerMove(x: unknown, y: unknown): void {

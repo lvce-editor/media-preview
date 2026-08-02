@@ -18,9 +18,14 @@
         },
         {
           "name": "handleMediaPreviewPointerDown",
-          "params": ["handleMediaPreviewPointerDown", "event.clientX", "event.clientY"],
+          "params": ["handleMediaPreviewPointerDown", "event.button", "event.clientX", "event.clientY"],
           "preventDefault": true,
           "trackPointerEvents": ["handleMediaPreviewPointerMove", "handleMediaPreviewPointerUp"]
+        },
+        {
+          "name": "handleMediaPreviewContextMenu",
+          "params": ["handleMediaPreviewContextMenu", "event.clientX", "event.clientY"],
+          "preventDefault": true
         },
         {
           "name": "handleMediaPreviewPointerMove",

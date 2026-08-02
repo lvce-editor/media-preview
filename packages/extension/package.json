@@ -34,6 +34,7 @@
   "devDependencies": {
     "@jest/globals": "^30.4.1",
     "@lvce-editor/api": "^8.75.0",
+    "@lvce-editor/rpc-registry": "^9.43.0",
     "@lvce-editor/virtual-dom-worker": "^11.11.2"
   }
 }

@@ -1,3 +1,4 @@
+import { FileSystemWorker } from '@lvce-editor/rpc-registry'
 import type { WebView } from '../WebView/WebView.ts'
 import * as Create from '../Create/Create.ts'
 import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
@@ -42,6 +43,7 @@ const wrapCommand = (fn: (id: number, ...params: readonly any[]) => unknown) => 
 }
 
 export { getUrl } from '../GetUrl/GetUrl.ts'
+export const { readFileAsBlob } = FileSystemWorker
 export { saveState } from '../SaveState/SaveState.ts'
 export { setSavedState } from '../SetSavedState/SetSavedState.ts'
 export const handleError = wrapCommand(HandleError.handleError)

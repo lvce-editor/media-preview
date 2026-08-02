@@ -14,7 +14,7 @@ export const view: View<MediaPreviewViewInstance> = {
     },
     {
       name: 'handleMediaPreviewPointerDown',
-      params: ['handleMediaPreviewPointerDown', 'event.clientX', 'event.clientY'],
+      params: ['handleMediaPreviewPointerDown', 'event.button', 'event.clientX', 'event.clientY'],
       preventDefault: true,
       // The virtual DOM runtime uses this to attach move/up listeners while
       // the pointer is captured. It is intentionally runtime-only metadata.
@@ -29,6 +29,11 @@ export const view: View<MediaPreviewViewInstance> = {
     {
       name: 'handleMediaPreviewPointerUp',
       params: ['handleMediaPreviewPointerUp', 'event.clientX', 'event.clientY'],
+      preventDefault: true,
+    },
+    {
+      name: 'handleMediaPreviewContextMenu',
+      params: ['handleMediaPreviewContextMenu', 'event.clientX', 'event.clientY'],
       preventDefault: true,
     },
     {
