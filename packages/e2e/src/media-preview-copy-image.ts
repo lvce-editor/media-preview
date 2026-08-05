@@ -8,9 +8,8 @@ export const test: Test = async ({ Command, ContextMenu, expect, Locator, Main }
 
   const image = Locator('.MediaPreviewImage')
   await expect(image).toHaveCount(1)
-  const savedState: any = await Main.saveState(2)
-  const activeGroup = savedState.layout.groups.find((group: any) => group.id === savedState.layout.activeGroupId)
-  const activeTab = activeGroup.tabs.find((tab: any) => tab.id === activeGroup.activeTabId)
-  await Command.execute('Viewlet.executeViewletCommand', activeTab.editorUid, 'handleContextMenu', 'image', 10, 10)
+  const states = await Command.execute('Viewlet.getAllStates')
+  const mediaPreview = Object.values(states).find(({ viewId }: any) => viewId === 'builtin.media-preview') as any
+  await Command.execute('Viewlet.executeViewletCommand', mediaPreview.uid, 'handleContextMenu', 'image', 10, 10)
   await ContextMenu.selectItem('Copy Image')
 }

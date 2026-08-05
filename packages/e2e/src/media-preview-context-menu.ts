@@ -13,10 +13,9 @@ export const test: Test = async ({ Command, expect, Locator, Main }) => {
   await image.dispatchEvent('pointerdown', { bubbles: true, button: 2, clientX: 10, clientY: 10, pointerId: 1 } as any)
   await expect(preview).toHaveClass('MediaPreview')
 
-  const savedState: any = await Main.saveState(2)
-  const activeGroup = savedState.layout.groups.find((group: any) => group.id === savedState.layout.activeGroupId)
-  const activeTab = activeGroup.tabs.find((tab: any) => tab.id === activeGroup.activeTabId)
-  await Command.execute('Viewlet.executeViewletCommand', activeTab.editorUid, 'handleContextMenu', 'image', 10, 10)
+  const states = await Command.execute('Viewlet.getAllStates')
+  const mediaPreview = Object.values(states).find(({ viewId }: any) => viewId === 'builtin.media-preview') as any
+  await Command.execute('Viewlet.executeViewletCommand', mediaPreview.uid, 'handleContextMenu', 'image', 10, 10)
 
   const menuItems = Locator('.MenuItem')
   const copyPath = menuItems.nth(0)
