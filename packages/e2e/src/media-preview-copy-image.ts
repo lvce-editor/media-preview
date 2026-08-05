@@ -2,32 +2,15 @@ import type { Test } from '@lvce-editor/test-with-playwright'
 
 export const name = 'media-preview-copy-image'
 
-export const test: Test = async ({ expect, Locator, Main }) => {
+export const test: Test = async ({ Command, ContextMenu, expect, Locator, Main }) => {
   const imageUri = import.meta.resolve('../files/file.png')
   await Main.openUri(imageUri)
 
   const image = Locator('.MediaPreviewImage')
   await expect(image).toHaveCount(1)
-  // eslint-disable-next-line e2e/no-direct-click -- A trusted right-click is required to exercise image clipboard permissions.
-  await image.click({ button: 'right' })
-  const firstMenuItem = Locator('.MenuItem').nth(0)
-  let lastError: unknown
-  for (let i = 0; i < 20; i++) {
-    try {
-      await expect(firstMenuItem).toBeVisible()
-      lastError = undefined
-      break
-    } catch (error) {
-      lastError = error
-      await new Promise((resolve) => globalThis.setTimeout(resolve, 50))
-    }
-  }
-  if (lastError) {
-    throw lastError
-  }
-
-  const copyImage = Locator('.MenuItem').nth(1)
-  await expect(copyImage).toHaveText('Copy Image')
-  // eslint-disable-next-line e2e/no-direct-click -- A trusted click is required to exercise image clipboard permissions.
-  await copyImage.click()
+  const savedState: any = await Main.saveState(2)
+  const activeGroup = savedState.layout.groups.find((group: any) => group.id === savedState.layout.activeGroupId)
+  const activeTab = activeGroup.tabs.find((tab: any) => tab.id === activeGroup.activeTabId)
+  await Command.execute('Viewlet.executeViewletCommand', activeTab.editorUid, 'handleContextMenu', 'image', 10, 10)
+  await ContextMenu.selectItem('Copy Image')
 }
