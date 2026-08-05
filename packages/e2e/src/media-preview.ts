@@ -17,6 +17,8 @@ export const test: Test = async ({ Editor, expect, FileSystem, Locator, Main, Wo
   await Main.openUri(`${tmpDir}/test.svg`)
 
   // assert
-
-  // TODO verify that svg is visible
+  const image = Locator('.MediaPreviewImage')
+  const error = Locator('.MediaPreviewError')
+  await expect(image).toBeVisible()
+  await expect(error).toHaveCount(0)
 }
