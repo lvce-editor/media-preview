@@ -4,7 +4,7 @@
   "description": "Media Preview",
   "repository": "https://github.com/lvce-editor/media-preview",
   "browser": "dist/mediaPreviewMain.js",
-  "contentSecurityPolicy": ["default-src 'none'", "script-src 'self'"],
+  "contentSecurityPolicy": ["default-src 'none'", "script-src 'self' 'unsafe-eval'"],
   "isolated": true,
   "workerName": "Media Preview Extension Worker",
   "activation": ["onView:builtin.media-preview"],
@@ -43,7 +43,7 @@
       "kind": "virtualDom",
       "type": "preview",
       "css": "media/index.css",
-      "selector": [".png", ".jpg", ".jpeg", ".avif", ".svg", ".gif", ".ico", ".webp"],
+      "selector": [".png", ".jpg", ".jpeg", ".avif", ".svg", ".gif", ".ico", ".webp", ".heic", ".HEIC"],
       "showSideBarHeader": false
     }
   ]
