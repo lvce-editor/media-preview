@@ -56,7 +56,26 @@
       "kind": "virtualDom",
       "type": "preview",
       "css": "media/index.css",
-      "selector": [".png", ".jpg", ".jpeg", ".avif", ".svg", ".gif", ".ico", ".webp", ".heic", ".HEIC"],
+      "selector": [
+        ".png",
+        ".apng",
+        ".jpg",
+        ".jpeg",
+        ".jpe",
+        ".jfif",
+        ".avif",
+        ".svg",
+        ".gif",
+        ".ico",
+        ".webp",
+        ".bmp",
+        ".heic",
+        ".HEIC",
+        ".heif",
+        ".HEIF",
+        ".tif",
+        ".tiff"
+      ],
       "showSideBarHeader": false
     }
   ]

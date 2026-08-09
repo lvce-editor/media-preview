@@ -27,7 +27,8 @@
   "dependencies": {
     "@lvce-editor/rpc": "^6.16.0",
     "fast-png": "^8.0.0",
-    "heic-decode": "^2.1.0"
+    "heic-decode": "^2.1.0",
+    "utif2": "^4.1.0"
   },
   "devDependencies": {
     "@jest/globals": "^30.4.1",

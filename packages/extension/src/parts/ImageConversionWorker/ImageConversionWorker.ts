@@ -30,3 +30,8 @@ export const convertHeicToPng = async (heic: Blob): Promise<Blob> => {
   const rpc = await getRpc()
   return rpc.invoke('ImageConversion.convertHeicToPng', heic) as Promise<Blob>
 }
+
+export const convertTiffToPng = async (tiff: Blob): Promise<Blob> => {
+  const rpc = await getRpc()
+  return rpc.invoke('ImageConversion.convertTiffToPng', tiff) as Promise<Blob>
+}

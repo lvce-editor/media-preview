@@ -8,6 +8,6 @@ export const test: Test = async ({ expect, FileSystem, Locator, Main }) => {
 
   const error = Locator('.MediaPreviewError')
   const image = Locator('.MediaPreviewImage')
-  await expect(error).toHaveText('Image could not be loaded')
+  await expect(error).toHaveText('Image could not be found')
   await expect(image).toHaveCount(0)
 }
