@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "fast-png": "^8.0.0",
-    "heic-decode": "^2.1.0"
+    "heic-decode": "^2.1.0",
+    "utif2": "^4.1.0"
   }
 }
