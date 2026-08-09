@@ -54,6 +54,22 @@ test('renders an error when the image URL cannot be read', async () => {
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
 })
 
+test('opens an invalid svg in the text editor', async () => {
+  const api = createApi()
+  api.getUrl.mockResolvedValue('')
+  const execute = jest.fn(async (_id: string, ..._args: readonly unknown[]) => {})
+  const svgContext = {
+    ...context,
+    uri: '/workspace/image.SVG',
+  } as unknown as ViewContext
+  const instance = await createInstanceWithApi(svgContext, api, execute)
+
+  expect(instance.render().some((node) => node.text === 'Open in Text Editor')).toBe(true)
+  await instance.handleOpenInTextEditor()
+
+  expect(execute).toHaveBeenCalledWith('Main.reopenEditorWith', 'editor')
+})
+
 test('restores the URI from saved state when there is no current URI', async () => {
   const api = createApi()
   const savedContext = {

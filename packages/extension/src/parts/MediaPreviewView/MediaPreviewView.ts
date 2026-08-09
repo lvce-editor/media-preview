@@ -13,6 +13,10 @@ export const view: View<MediaPreviewViewInstance> = {
       params: ['handleMediaPreviewImageError'],
     },
     {
+      name: 'handleOpenInTextEditor',
+      params: ['handleOpenInTextEditor'],
+    },
+    {
       name: 'handleMediaPreviewPointerDown',
       params: ['handleMediaPreviewPointerDown', 'event.button', 'event.clientX', 'event.clientY'],
       preventDefault: true,

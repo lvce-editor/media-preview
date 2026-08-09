@@ -3,18 +3,21 @@ import type { MediaPreviewState } from '../MediaPreviewViewInstance/MediaPreview
 
 const handleMediaPreviewImageError = 'handleMediaPreviewImageError'
 const handleContextMenu = 'handleContextMenu'
+const handleOpenInTextEditor = 'handleOpenInTextEditor'
 const handleMediaPreviewPointerDown = 'handleMediaPreviewPointerDown'
 const handleMediaPreviewWheel = 'handleMediaPreviewWheel'
 
-const errorNode: VirtualDomNode = {
-  childCount: 1,
-  className: 'MediaPreviewError',
-  type: VirtualDomElements.Div,
-}
-
 const errorMessageNode: VirtualDomNode = {
   childCount: 1,
+  className: 'MediaPreviewErrorMessage',
   type: VirtualDomElements.Span,
+}
+
+const openInTextEditorButtonNode: VirtualDomNode = {
+  childCount: 1,
+  className: 'Button ButtonSecondary MediaPreviewOpenInTextEditor',
+  onClick: handleOpenInTextEditor,
+  type: VirtualDomElements.Button,
 }
 
 const contentNode: VirtualDomNode = {
@@ -29,8 +32,16 @@ const imageWrapperNode: VirtualDomNode = {
   type: VirtualDomElements.Div,
 }
 
-const renderError = (): readonly VirtualDomNode[] => {
-  return [errorNode, errorMessageNode, text('Image could not be loaded')]
+const renderError = (canOpenAsText: boolean): readonly VirtualDomNode[] => {
+  const errorNode: VirtualDomNode = {
+    childCount: canOpenAsText ? 2 : 1,
+    className: 'MediaPreviewError',
+    type: VirtualDomElements.Div,
+  }
+  const messageNodes = [errorMessageNode, text('Image could not be loaded')]
+  return canOpenAsText
+    ? [errorNode, ...messageNodes, openInTextEditorButtonNode, text('Open in Text Editor')]
+    : [errorNode, ...messageNodes]
 }
 
 const renderImage = (state: Readonly<MediaPreviewState>): readonly VirtualDomNode[] => {
@@ -53,9 +64,9 @@ const renderImage = (state: Readonly<MediaPreviewState>): readonly VirtualDomNod
 }
 
 export const render = (state: Readonly<MediaPreviewState>): readonly VirtualDomNode[] => {
-  const { error, pointerDown } = state
+  const { canOpenAsText, error, pointerDown } = state
   const className = pointerDown ? 'MediaPreview MediaPreviewDragging' : 'MediaPreview'
-  const content = error ? renderError() : renderImage(state)
+  const content = error ? renderError(canOpenAsText) : renderImage(state)
   return [
     {
       childCount: 1,

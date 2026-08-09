@@ -1,10 +1,11 @@
-import type { MenuEntry, ViewContext, ViewEvent, VirtualDomViewInstance } from '@lvce-editor/api'
+import { executeCommand, type MenuEntry, type ViewContext, type ViewEvent, type VirtualDomViewInstance } from '@lvce-editor/api'
 import type { VirtualDomNode } from '@lvce-editor/virtual-dom-worker'
 import { getCss } from '../GetCss/GetCss.ts'
 import * as MediaPreview from '../MediaPreview/MediaPreview.ts'
 import { render } from '../RenderMediaPreview/RenderMediaPreview.ts'
 
 export interface MediaPreviewState {
+  readonly canOpenAsText: boolean
   readonly domMatrixString: string
   readonly error: boolean
   readonly pointerDown: boolean
@@ -19,6 +20,7 @@ export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
   readonly getCss: () => string
   readonly getMenuEntries: (menuId: string) => Promise<readonly MenuEntry[]>
   readonly handleMediaPreviewImageError: () => void
+  readonly handleOpenInTextEditor: () => Promise<unknown>
   readonly handleMediaPreviewPointerDown: (button: unknown, x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerMove: (x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerUp: (x: unknown, y: unknown) => void
@@ -30,7 +32,7 @@ export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
 interface MediaPreviewApi {
   readonly create: (id: number) => unknown
   readonly dispose: (id: number) => unknown
-  readonly getState: (id: number) => Omit<MediaPreviewState, 'url'>
+  readonly getState: (id: number) => Omit<MediaPreviewState, 'canOpenAsText' | 'url'>
   readonly getUrl: (uri: string) => Promise<string>
   readonly handleError: (id: number) => Partial<MediaPreviewState>
   readonly handlePointerDown: (id: number, x: number, y: number) => Partial<MediaPreviewState>
@@ -40,6 +42,8 @@ interface MediaPreviewApi {
   readonly saveState: (id: number) => unknown
   readonly setSavedState: (id: number, state: unknown) => unknown
 }
+
+type ExecuteCommand = (id: string, ...args: readonly unknown[]) => Promise<unknown>
 
 const getUri = (context: MediaPreviewViewContext | undefined): string => {
   if (typeof context?.uri === 'string') {
@@ -58,6 +62,7 @@ const imageMenuId = 'mediaPreview.image'
 export const createInstanceWithApi = async (
   context: ViewContext | undefined,
   api: MediaPreviewApi,
+  execute: ExecuteCommand = executeCommand,
 ): Promise<MediaPreviewViewInstance> => {
   const viewContext: MediaPreviewViewContext | undefined = context
   const id = viewContext?.uid ?? 0
@@ -68,6 +73,7 @@ export const createInstanceWithApi = async (
   const url = uri ? await api.getUrl(uri) : ''
   let state: MediaPreviewState = {
     ...previewState,
+    canOpenAsText: uri.toLowerCase().endsWith('.svg'),
     error: !url || previewState.error,
     url,
   }
@@ -138,6 +144,9 @@ export const createInstanceWithApi = async (
     },
     handleMediaPreviewImageError(): void {
       updateState(api.handleError(id))
+    },
+    handleOpenInTextEditor(): Promise<unknown> {
+      return execute('Main.reopenEditorWith', 'editor')
     },
     handleMediaPreviewPointerDown(button: unknown, x: unknown, y: unknown): void {
       if (button !== 0) {
