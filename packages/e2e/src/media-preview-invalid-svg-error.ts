@@ -2,13 +2,32 @@ import type { Test } from '@lvce-editor/test-with-playwright'
 
 export const name = 'media-preview-invalid-svg-error'
 
-export const test: Test = async ({ expect, FileSystem, Locator, Main }) => {
+export const test: Test = async ({ Editor, expect, FileSystem, Locator, Main }) => {
   const tmpDir = await FileSystem.getTmpDir()
   const uri = `${tmpDir}/invalid.svg`
-  await FileSystem.writeFile(uri, 'not a valid svg image')
+  const content = 'not a valid svg image'
+  await FileSystem.writeFile(uri, content)
   await Main.openUri(uri)
 
   const error = Locator('.MediaPreviewError')
   await expect(error).toBeVisible()
-  await expect(error).toHaveText('Image could not be loaded')
+  const errorMessage = Locator('.MediaPreviewErrorMessage')
+  await expect(errorMessage).toHaveText('Image could not be loaded')
+
+  const openInTextEditor = Locator('.MediaPreviewOpenInTextEditor')
+  await expect(openInTextEditor).toBeVisible()
+  await expect(openInTextEditor).toHaveText('Open in Text Editor')
+  await openInTextEditor.dispatchEvent('click', { bubbles: true } as any)
+
+  const editorContent = Locator('.EditorContent')
+  for (let attempt = 0; attempt < 40; attempt++) {
+    try {
+      await expect(editorContent).toBeVisible()
+      break
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+  }
+  await expect(editorContent).toBeVisible()
+  await Editor.shouldHaveText(content)
 }

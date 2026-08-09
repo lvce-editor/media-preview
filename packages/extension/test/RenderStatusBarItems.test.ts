@@ -4,6 +4,7 @@ import { renderStatusBarItems } from '../src/parts/RenderStatusBarItems/RenderSt
 test('renders image metadata as two status bar items', () => {
   expect(
     renderStatusBarItems({
+      canOpenAsText: false,
       domMatrixString: '',
       error: false,
       errorMessage: '',

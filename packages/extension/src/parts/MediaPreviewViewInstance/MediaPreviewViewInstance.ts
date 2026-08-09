@@ -1,11 +1,19 @@
-import type { MenuEntry, StatusBarItem, ViewContext, ViewEvent, VirtualDomViewInstance } from '@lvce-editor/api'
 import type { VirtualDomNode } from '@lvce-editor/virtual-dom-worker'
+import {
+  executeCommand,
+  type MenuEntry,
+  type StatusBarItem,
+  type ViewContext,
+  type ViewEvent,
+  type VirtualDomViewInstance,
+} from '@lvce-editor/api'
 import { getCss } from '../GetCss/GetCss.ts'
 import * as MediaPreview from '../MediaPreview/MediaPreview.ts'
 import { render } from '../RenderMediaPreview/RenderMediaPreview.ts'
 import { renderStatusBarItems } from '../RenderStatusBarItems/RenderStatusBarItems.ts'
 
 export interface MediaPreviewState {
+  readonly canOpenAsText: boolean
   readonly domMatrixString: string
   readonly error: boolean
   readonly errorMessage: string
@@ -29,6 +37,7 @@ export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
   readonly handleMediaPreviewPointerMove: (x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerUp: (x: unknown, y: unknown) => void
   readonly handleMediaPreviewWheel: (deltaY: unknown, deltaMode: unknown) => void
+  readonly handleOpenInTextEditor: () => Promise<unknown>
   readonly render: () => readonly VirtualDomNode[]
   readonly renderStatusBarItems: () => readonly StatusBarItem[]
   readonly saveState: () => Promise<unknown>
@@ -50,6 +59,8 @@ interface MediaPreviewApi {
   readonly setSavedState: (id: number, state: unknown) => unknown
 }
 
+type ExecuteCommand = (id: string, ...args: readonly unknown[]) => Promise<unknown>
+
 const getUri = (context: MediaPreviewViewContext | undefined): string => {
   if (typeof context?.uri === 'string') {
     return context.uri
@@ -66,6 +77,10 @@ const imageMenuId = 'mediaPreview.image'
 const imageCouldNotBeFound = 'Image could not be found'
 const imageCouldNotBeLoaded = 'Image could not be loaded'
 
+const canOpenAsText = (uri: string, errorMessage: string): boolean => {
+  return errorMessage === imageCouldNotBeLoaded && uri.toLowerCase().endsWith('.svg')
+}
+
 const getImageErrorMessage = async (uri: string, exists: MediaPreviewApi['exists']): Promise<string> => {
   if (!uri) {
     return imageCouldNotBeLoaded
@@ -80,6 +95,7 @@ const getImageErrorMessage = async (uri: string, exists: MediaPreviewApi['exists
 export const createInstanceWithApi = async (
   context: ViewContext | undefined,
   api: MediaPreviewApi,
+  execute: ExecuteCommand = executeCommand,
 ): Promise<MediaPreviewViewInstance> => {
   const viewContext: MediaPreviewViewContext | undefined = context
   const id = viewContext?.uid ?? 0
@@ -92,6 +108,7 @@ export const createInstanceWithApi = async (
   const errorMessage = error ? await getImageErrorMessage(uri, api.exists) : ''
   let state: MediaPreviewState = {
     ...previewState,
+    canOpenAsText: canOpenAsText(uri, errorMessage),
     error,
     errorMessage,
     fileSize,
@@ -111,6 +128,7 @@ export const createInstanceWithApi = async (
     const errorMessage = await getImageErrorMessage(uri, api.exists)
     updateState({
       ...api.handleError(id),
+      canOpenAsText: canOpenAsText(uri, errorMessage),
       errorMessage,
     })
   }
@@ -195,6 +213,9 @@ export const createInstanceWithApi = async (
     },
     handleMediaPreviewWheel(deltaY: unknown, _deltaMode: unknown): void {
       updateState(api.handleWheel(id, 0, 0, 0, getNumber(deltaY)))
+    },
+    handleOpenInTextEditor(): Promise<unknown> {
+      return execute('Main.reopenEditorWith', 'editor')
     },
     render(): readonly VirtualDomNode[] {
       return render(state)

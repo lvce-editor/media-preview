@@ -1,8 +1,9 @@
 import { expect, test } from '@jest/globals'
-import { VirtualDomElements } from '@lvce-editor/virtual-dom-worker'
+import { mergeClassNames, VirtualDomElements } from '@lvce-editor/virtual-dom-worker'
 import { render } from '../src/parts/RenderMediaPreview/RenderMediaPreview.ts'
 
 const state = {
+  canOpenAsText: false,
   domMatrixString: 'matrix(1, 0, 0, 1, 10, 20)',
   error: false,
   errorMessage: '',
@@ -60,8 +61,6 @@ test('renders an error without an image', () => {
     {
       childCount: 1,
       className: 'MediaPreview',
-      onPointerDown: 'handleMediaPreviewPointerDown',
-      onWheel: 'handleMediaPreviewWheel',
       type: VirtualDomElements.Div,
     },
     {
@@ -71,6 +70,7 @@ test('renders an error without an image', () => {
     },
     {
       childCount: 1,
+      className: 'MediaPreviewErrorMessage',
       type: VirtualDomElements.Span,
     },
     {
@@ -79,6 +79,27 @@ test('renders an error without an image', () => {
       type: VirtualDomElements.Text,
     },
   ])
+})
+
+test('renders an open in text editor button for text-based images', () => {
+  const dom = render({
+    ...state,
+    canOpenAsText: true,
+    error: true,
+  })
+
+  expect(dom).toContainEqual({
+    childCount: 1,
+    className: mergeClassNames('Button', 'ButtonSecondary', 'MediaPreviewOpenInTextEditor'),
+    name: 'openInTextEditor',
+    onClick: 'handleOpenInTextEditor',
+    type: VirtualDomElements.Button,
+  })
+  expect(dom).toContainEqual({
+    childCount: 0,
+    text: 'Open in Text Editor',
+    type: VirtualDomElements.Text,
+  })
 })
 
 test('renders the dragging class while the pointer is down', () => {

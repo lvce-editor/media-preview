@@ -8,6 +8,8 @@ export const test: Test = async ({ expect, FileSystem, Locator, Main }) => {
 
   const error = Locator('.MediaPreviewError')
   const image = Locator('.MediaPreviewImage')
+  const openInTextEditor = Locator('.MediaPreviewOpenInTextEditor')
   await expect(error).toHaveText('Image could not be found')
   await expect(image).toHaveCount(0)
+  await expect(openInTextEditor).toHaveCount(0)
 }

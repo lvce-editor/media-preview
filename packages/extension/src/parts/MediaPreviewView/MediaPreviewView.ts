@@ -17,6 +17,11 @@ export const view: View<MediaPreviewViewInstance> = {
       params: ['handleMediaPreviewImageLoad', 'event.target.naturalWidth', 'event.target.naturalHeight'],
     },
     {
+      name: 'handleOpenInTextEditor',
+      params: ['handleOpenInTextEditor'],
+      preventDefault: true,
+    },
+    {
       name: 'handleMediaPreviewPointerDown',
       params: ['handleMediaPreviewPointerDown', 'event.button', 'event.clientX', 'event.clientY'],
       preventDefault: true,
