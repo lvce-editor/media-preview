@@ -7,6 +7,7 @@ test('contributes a virtual dom media preview view', () => {
   expect(view.create).toBeDefined()
   expect(view.eventListeners?.map((listener) => listener.name)).toEqual([
     'handleMediaPreviewImageError',
+    'handleMediaPreviewImageLoad',
     'handleOpenInTextEditor',
     'handleMediaPreviewPointerDown',
     'handleMediaPreviewPointerMove',

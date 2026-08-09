@@ -1,15 +1,26 @@
-import { executeCommand, type MenuEntry, type ViewContext, type ViewEvent, type VirtualDomViewInstance } from '@lvce-editor/api'
+import {
+  executeCommand,
+  type MenuEntry,
+  type StatusBarItem,
+  type ViewContext,
+  type ViewEvent,
+  type VirtualDomViewInstance,
+} from '@lvce-editor/api'
 import type { VirtualDomNode } from '@lvce-editor/virtual-dom-worker'
 import { getCss } from '../GetCss/GetCss.ts'
 import * as MediaPreview from '../MediaPreview/MediaPreview.ts'
 import { render } from '../RenderMediaPreview/RenderMediaPreview.ts'
+import { renderStatusBarItems } from '../RenderStatusBarItems/RenderStatusBarItems.ts'
 
 export interface MediaPreviewState {
   readonly canOpenAsText: boolean
   readonly domMatrixString: string
   readonly error: boolean
+  readonly fileSize: number
+  readonly height: number
   readonly pointerDown: boolean
   readonly url: string
+  readonly width: number
 }
 
 interface MediaPreviewViewContext extends ViewContext {
@@ -20,19 +31,22 @@ export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
   readonly getCss: () => string
   readonly getMenuEntries: (menuId: string) => Promise<readonly MenuEntry[]>
   readonly handleMediaPreviewImageError: () => void
+  readonly handleMediaPreviewImageLoad: (width: unknown, height: unknown) => void
   readonly handleOpenInTextEditor: () => Promise<unknown>
   readonly handleMediaPreviewPointerDown: (button: unknown, x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerMove: (x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerUp: (x: unknown, y: unknown) => void
   readonly handleMediaPreviewWheel: (deltaY: unknown, deltaMode: unknown) => void
   readonly render: () => readonly VirtualDomNode[]
+  readonly renderStatusBarItems: () => readonly StatusBarItem[]
   readonly saveState: () => Promise<unknown>
 }
 
 interface MediaPreviewApi {
   readonly create: (id: number) => unknown
   readonly dispose: (id: number) => unknown
-  readonly getState: (id: number) => Omit<MediaPreviewState, 'canOpenAsText' | 'url'>
+  readonly getFileSize: (uri: string) => Promise<number>
+  readonly getState: (id: number) => Pick<MediaPreviewState, 'domMatrixString' | 'error' | 'pointerDown'>
   readonly getUrl: (uri: string) => Promise<string>
   readonly handleError: (id: number) => Partial<MediaPreviewState>
   readonly handlePointerDown: (id: number, x: number, y: number) => Partial<MediaPreviewState>
@@ -70,12 +84,15 @@ export const createInstanceWithApi = async (
   api.create(id)
   api.setSavedState(id, context?.state)
   const previewState = api.getState(id)
-  const url = uri ? await api.getUrl(uri) : ''
+  const [url, fileSize] = uri ? await Promise.all([api.getUrl(uri), api.getFileSize(uri)]) : ['', 0]
   let state: MediaPreviewState = {
     ...previewState,
     canOpenAsText: uri.toLowerCase().endsWith('.svg'),
     error: !url || previewState.error,
+    fileSize,
+    height: 0,
     url,
+    width: 0,
   }
 
   const updateState = (newState: Partial<MediaPreviewState>): void => {
@@ -145,6 +162,12 @@ export const createInstanceWithApi = async (
     handleMediaPreviewImageError(): void {
       updateState(api.handleError(id))
     },
+    handleMediaPreviewImageLoad(width: unknown, height: unknown): void {
+      updateState({
+        height: getNumber(height),
+        width: getNumber(width),
+      })
+    },
     handleOpenInTextEditor(): Promise<unknown> {
       return execute('Main.reopenEditorWith', 'editor')
     },
@@ -165,6 +188,9 @@ export const createInstanceWithApi = async (
     },
     render(): readonly VirtualDomNode[] {
       return render(state)
+    },
+    renderStatusBarItems(): readonly StatusBarItem[] {
+      return renderStatusBarItems(state)
     },
     async saveState(): Promise<unknown> {
       const savedState = api.saveState(id)

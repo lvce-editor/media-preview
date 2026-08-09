@@ -6,8 +6,11 @@ const state = {
   canOpenAsText: false,
   domMatrixString: 'matrix(1, 0, 0, 1, 10, 20)',
   error: false,
+  fileSize: 873,
+  height: 1,
   pointerDown: false,
   url: '/remote/image.png',
+  width: 1,
 }
 
 test('renders the image inside a wrapper', () => {
@@ -39,6 +42,7 @@ test('renders the image inside a wrapper', () => {
       name: 'image',
       onContextMenu: 'handleContextMenu',
       onError: 'handleMediaPreviewImageError',
+      onLoad: 'handleMediaPreviewImageLoad',
       src: '/remote/image.png',
       type: VirtualDomElements.Img,
     },
