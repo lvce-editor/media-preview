@@ -1,14 +1,13 @@
 import type { Test } from '@lvce-editor/test-with-playwright'
 
-export const name = 'media-preview-invalid-svg-error'
+export const name = 'media-preview-missing-webp-error'
 
 export const test: Test = async ({ expect, FileSystem, Locator, Main }) => {
   const tmpDir = await FileSystem.getTmpDir()
-  const uri = `${tmpDir}/invalid.svg`
-  await FileSystem.writeFile(uri, 'not a valid svg image')
-  await Main.openUri(uri)
+  await Main.openUri(tmpDir + '/missing.webp')
 
   const error = Locator('.MediaPreviewError')
-  await expect(error).toBeVisible()
+  const image = Locator('.MediaPreviewImage')
   await expect(error).toHaveText('Image could not be loaded')
+  await expect(image).toHaveCount(0)
 }
