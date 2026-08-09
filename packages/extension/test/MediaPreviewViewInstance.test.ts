@@ -12,6 +12,7 @@ const createApi = () => {
   return {
     create: jest.fn((_id: number) => {}),
     dispose: jest.fn((_id: number) => {}),
+    getFileSize: jest.fn(async (_uri: string) => 512_596),
     getState: jest.fn((_id: number) => initialState),
     getUrl: jest.fn(async (_uri: string) => 'blob:https://example.com/image-id'),
     handleError: jest.fn((_id: number) => ({ ...initialState, error: true })),
@@ -38,6 +39,7 @@ test('creates a preview and renders its image', async () => {
   expect(api.create).toHaveBeenCalledWith(7)
   expect(api.setSavedState).toHaveBeenCalledWith(7, undefined)
   expect(api.getState).toHaveBeenCalledWith(7)
+  expect(api.getFileSize).toHaveBeenCalledWith('/workspace/image.png')
   expect(api.getUrl).toHaveBeenCalledWith('/workspace/image.png')
   expect(instance.render().some((node) => node.src === 'blob:https://example.com/image-id')).toBe(true)
   expect(instance.getCss()).toBe(`.MediaPreview {
@@ -77,6 +79,7 @@ test('uses defaults when the view context is missing', async () => {
   expect(api.create).toHaveBeenCalledWith(0)
   expect(api.setSavedState).toHaveBeenCalledWith(0, undefined)
   expect(api.getUrl).not.toHaveBeenCalled()
+  expect(api.getFileSize).not.toHaveBeenCalled()
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
 })
 
@@ -100,6 +103,44 @@ test('forwards pointer and image events to the media preview api', async () => {
   instance.handleMediaPreviewImageError()
   expect(api.handleError).toHaveBeenCalledWith(7)
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
+})
+
+test('renders image dimensions and file size as status bar items', async () => {
+  const api = createApi()
+  const instance = await createInstanceWithApi(context, api)
+
+  expect(instance.renderStatusBarItems()).toEqual([
+    {
+      ariaLabel: 'Image dimensions unavailable',
+      name: 'media-preview-dimensions',
+      text: '— × —',
+      title: 'Image dimensions',
+    },
+    {
+      ariaLabel: 'Image size: 501 kB',
+      name: 'media-preview-size',
+      text: '501 kB',
+      title: 'Image size',
+    },
+  ])
+
+  instance.handleMediaPreviewImageLoad(640, 480)
+
+  expect(instance.renderStatusBarItems()[0]).toEqual({
+    ariaLabel: 'Image dimensions: 640 by 480 pixels',
+    name: 'media-preview-dimensions',
+    text: '640 × 480',
+    title: 'Image dimensions',
+  })
+})
+
+test('normalizes invalid image dimensions', async () => {
+  const api = createApi()
+  const instance = await createInstanceWithApi(context, api)
+
+  instance.handleMediaPreviewImageLoad(Infinity, '480')
+
+  expect(instance.renderStatusBarItems()[0]?.text).toBe('— × —')
 })
 
 test('only starts dragging for the left mouse button', async () => {

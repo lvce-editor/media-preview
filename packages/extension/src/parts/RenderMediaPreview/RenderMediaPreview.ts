@@ -2,6 +2,7 @@ import { text, VirtualDomElements, type VirtualDomNode } from '@lvce-editor/virt
 import type { MediaPreviewState } from '../MediaPreviewViewInstance/MediaPreviewViewInstance.ts'
 
 const handleMediaPreviewImageError = 'handleMediaPreviewImageError'
+const handleMediaPreviewImageLoad = 'handleMediaPreviewImageLoad'
 const handleContextMenu = 'handleContextMenu'
 const handleMediaPreviewPointerDown = 'handleMediaPreviewPointerDown'
 const handleMediaPreviewWheel = 'handleMediaPreviewWheel'
@@ -46,6 +47,7 @@ const renderImage = (state: Readonly<MediaPreviewState>): readonly VirtualDomNod
       name: 'image',
       onContextMenu: handleContextMenu,
       onError: handleMediaPreviewImageError,
+      onLoad: handleMediaPreviewImageLoad,
       src: url,
       type: VirtualDomElements.Img,
     },
