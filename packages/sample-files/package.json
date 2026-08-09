@@ -1,7 +1,0 @@
-{
-  "name": "sample-files",
-  "version": "0.0.0-dev",
-  "license": "MIT",
-  "type": "module",
-  "main": "index.js"
-}

@@ -22,8 +22,7 @@ function updateDependencies {
                                     updateDependencies &&
 cd packages/build                && updateDependencies && cd ../../ &&
 cd packages/extension            && updateDependencies && cd ../../ &&
-cd packages/e2e                  && updateDependencies && cd ../../ &&
-cd packages/sample-files         && updateDependencies && cd ../../
+cd packages/e2e                  && updateDependencies && cd ../../
 
 npm install
 

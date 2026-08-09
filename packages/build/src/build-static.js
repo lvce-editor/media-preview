@@ -22,7 +22,7 @@ await cp(path.join(root, 'dist2'), path.join(root, 'dist', commitHash, 'extensio
 })
 
 await rm(join(root, 'dist', commitHash, 'playground'), { recursive: true, force: true })
-await cp(join(root, 'packages', 'sample-files', 'files'), join(root, 'dist', commitHash, 'playground'), {
+await cp(join(root, 'packages', 'e2e', 'files'), join(root, 'dist', commitHash, 'playground'), {
   recursive: true,
 })
 
