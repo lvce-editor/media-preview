@@ -3,7 +3,7 @@ import type { Test } from '@lvce-editor/test-with-playwright'
 export const name = 'media-preview-heic-visible'
 
 export const test: Test = async ({ expect, Locator, Main }) => {
-  await Main.openUri(import.meta.resolve('../../sample-files/files/green.heic'))
+  await Main.openUri(import.meta.resolve('../files/green.heic'))
 
   const image = Locator('.MediaPreviewImage')
   const error = Locator('.MediaPreviewError')
