@@ -9,13 +9,16 @@
     "moduleResolution": "nodenext",
     "rootDir": ".",
     "allowJs": true,
-    "skipLibCheck": true,
+    "skipLibCheck": false,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "assumeChangesOnlyAffectDirectDependencies": true,
     "strict": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedSideEffectImports": true,
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src", "test"]

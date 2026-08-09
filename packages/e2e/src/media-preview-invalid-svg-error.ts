@@ -5,7 +5,7 @@ export const name = 'media-preview-invalid-svg-error'
 export const test: Test = async ({ Command, Editor, expect, FileSystem, Locator, Main }) => {
   const tmpDir = await FileSystem.getTmpDir()
   const uri = `${tmpDir}/invalid.svg`
-  await FileSystem.writeFile(uri, '<svg>')
+  await FileSystem.writeFile(uri, 'not a valid svg image')
   await Main.openUri(uri)
 
   const error = Locator('.MediaPreviewError')
