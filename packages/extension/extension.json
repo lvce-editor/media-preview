@@ -4,11 +4,20 @@
   "description": "Media Preview",
   "repository": "https://github.com/lvce-editor/media-preview",
   "browser": "dist/mediaPreviewMain.js",
-  "contentSecurityPolicy": ["default-src 'none'", "script-src 'self' 'unsafe-eval'"],
+  "contentSecurityPolicy": ["default-src 'none'", "script-src 'self'"],
   "isolated": true,
   "workerName": "Media Preview Extension Worker",
   "activation": ["onView:builtin.media-preview"],
   "languages": [],
+  "rpc": [
+    {
+      "id": "builtin.media-preview.image-conversion-worker",
+      "type": "web-worker",
+      "name": "Media Preview Image Conversion Worker",
+      "url": "dist/imageConversionWorkerMain.js",
+      "contentSecurityPolicy": ["default-src 'none'", "script-src 'self' 'unsafe-eval'"]
+    }
+  ],
   "views": [
     {
       "eventListeners": [
