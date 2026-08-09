@@ -18,10 +18,10 @@ const main = () => {
       '--external:electron',
       '--external:ws',
       '--external:node:worker_threads',
-      '--bundle',
       '--watch',
       'packages/extension/src/mediaPreviewMain.ts',
-      '--outfile=packages/extension/dist/mediaPreviewMain.js',
+      'packages/image-conversion-worker/src/imageConversionWorkerMain.ts',
+      '--outdir=packages/extension/dist',
     ],
     {
       cwd: root,
