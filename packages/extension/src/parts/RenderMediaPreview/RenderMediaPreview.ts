@@ -30,8 +30,9 @@ const imageWrapperNode: VirtualDomNode = {
   type: VirtualDomElements.Div,
 }
 
-const renderError = (): readonly VirtualDomNode[] => {
-  return [errorNode, errorMessageNode, text('Image could not be loaded')]
+const renderError = (state: Readonly<MediaPreviewState>): readonly VirtualDomNode[] => {
+  const { errorMessage } = state
+  return [errorNode, errorMessageNode, text(errorMessage)]
 }
 
 const renderImage = (state: Readonly<MediaPreviewState>): readonly VirtualDomNode[] => {
@@ -57,7 +58,7 @@ const renderImage = (state: Readonly<MediaPreviewState>): readonly VirtualDomNod
 export const render = (state: Readonly<MediaPreviewState>): readonly VirtualDomNode[] => {
   const { error, pointerDown } = state
   const className = pointerDown ? 'MediaPreview MediaPreviewDragging' : 'MediaPreview'
-  const content = error ? renderError() : renderImage(state)
+  const content = error ? renderError(state) : renderImage(state)
   return [
     {
       childCount: 1,

@@ -6,6 +6,7 @@ test('renders image metadata as two status bar items', () => {
     renderStatusBarItems({
       domMatrixString: '',
       error: false,
+      errorMessage: '',
       fileSize: 873,
       height: 480,
       pointerDown: false,

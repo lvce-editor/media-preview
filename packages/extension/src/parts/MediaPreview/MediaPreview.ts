@@ -43,6 +43,7 @@ const wrapCommand = (fn: (id: number, ...params: readonly any[]) => unknown) => 
 
 export { getUrl } from '../GetUrl/GetUrl.ts'
 export { getFileSize } from '../GetFileSize/GetFileSize.ts'
+export { exists } from '@lvce-editor/api'
 export { saveState } from '../SaveState/SaveState.ts'
 export { setSavedState } from '../SetSavedState/SetSavedState.ts'
 export const handleError = wrapCommand(HandleError.handleError)
