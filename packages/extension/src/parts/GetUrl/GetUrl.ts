@@ -1,24 +1,40 @@
 import { readAsObjectUrl, readFileAsBlob, type ReadAsObjectUrlResult } from '@lvce-editor/api'
 import { convertHeicToPngUrl } from '../ConvertHeicToPngUrl/ConvertHeicToPngUrl.ts'
+import { convertTiffToPngUrl } from '../ConvertTiffToPngUrl/ConvertTiffToPngUrl.ts'
 
 type ReadAsObjectUrl = (uri: string) => Promise<ReadAsObjectUrlResult>
 type ReadFileAsBlob = (uri: string) => Promise<Blob>
-type ConvertHeicToPngUrl = (blob: Blob) => Promise<string>
+type ConvertToPngUrl = (blob: Blob) => Promise<string>
 
 const isHeicUri = (uri: string): boolean => {
-  return uri.toLowerCase().endsWith('.heic')
+  const normalizedUri = uri.toLowerCase()
+  return normalizedUri.endsWith('.heic') || normalizedUri.endsWith('.heif')
+}
+
+const isTiffUri = (uri: string): boolean => {
+  const normalizedUri = uri.toLowerCase()
+  return normalizedUri.endsWith('.tif') || normalizedUri.endsWith('.tiff')
 }
 
 export const getUrlWithDependencies = async (
   uri: string,
   read: ReadAsObjectUrl,
   readBlob: ReadFileAsBlob,
-  convert: ConvertHeicToPngUrl,
+  convertHeic: ConvertToPngUrl,
+  convertTiff: ConvertToPngUrl,
 ): Promise<string> => {
   if (isHeicUri(uri)) {
     try {
       const blob = await readBlob(uri)
-      return await convert(blob)
+      return await convertHeic(blob)
+    } catch {
+      return ''
+    }
+  }
+  if (isTiffUri(uri)) {
+    try {
+      const blob = await readBlob(uri)
+      return await convertTiff(blob)
     } catch {
       return ''
     }
@@ -28,5 +44,5 @@ export const getUrlWithDependencies = async (
 }
 
 export const getUrl = async (uri: string): Promise<string> => {
-  return getUrlWithDependencies(uri, readAsObjectUrl, readFileAsBlob, convertHeicToPngUrl)
+  return getUrlWithDependencies(uri, readAsObjectUrl, readFileAsBlob, convertHeicToPngUrl, convertTiffToPngUrl)
 }

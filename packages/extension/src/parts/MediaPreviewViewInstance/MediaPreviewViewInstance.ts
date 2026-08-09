@@ -16,6 +16,7 @@ export interface MediaPreviewState {
   readonly canOpenAsText: boolean
   readonly domMatrixString: string
   readonly error: boolean
+  readonly errorMessage: string
   readonly fileSize: number
   readonly height: number
   readonly pointerDown: boolean
@@ -30,7 +31,7 @@ interface MediaPreviewViewContext extends ViewContext {
 export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
   readonly getCss: () => string
   readonly getMenuEntries: (menuId: string) => Promise<readonly MenuEntry[]>
-  readonly handleMediaPreviewImageError: () => void
+  readonly handleMediaPreviewImageError: () => Promise<void>
   readonly handleMediaPreviewImageLoad: (width: unknown, height: unknown) => void
   readonly handleMediaPreviewPointerDown: (button: unknown, x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerMove: (x: unknown, y: unknown) => void
@@ -45,6 +46,7 @@ export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
 interface MediaPreviewApi {
   readonly create: (id: number) => unknown
   readonly dispose: (id: number) => unknown
+  readonly exists: (uri: string) => Promise<boolean>
   readonly getFileSize: (uri: string) => Promise<number>
   readonly getState: (id: number) => Pick<MediaPreviewState, 'domMatrixString' | 'error' | 'pointerDown'>
   readonly getUrl: (uri: string) => Promise<string>
@@ -72,6 +74,23 @@ const getNumber = (value: unknown): number => {
 }
 
 const imageMenuId = 'mediaPreview.image'
+const imageCouldNotBeFound = 'Image could not be found'
+const imageCouldNotBeLoaded = 'Image could not be loaded'
+
+const canOpenAsText = (uri: string, errorMessage: string): boolean => {
+  return errorMessage === imageCouldNotBeLoaded && uri.toLowerCase().endsWith('.svg')
+}
+
+const getImageErrorMessage = async (uri: string, exists: MediaPreviewApi['exists']): Promise<string> => {
+  if (!uri) {
+    return imageCouldNotBeLoaded
+  }
+  try {
+    return (await exists(uri)) ? imageCouldNotBeLoaded : imageCouldNotBeFound
+  } catch {
+    return imageCouldNotBeLoaded
+  }
+}
 
 export const createInstanceWithApi = async (
   context: ViewContext | undefined,
@@ -85,10 +104,13 @@ export const createInstanceWithApi = async (
   api.setSavedState(id, context?.state)
   const previewState = api.getState(id)
   const [url, fileSize] = uri ? await Promise.all([api.getUrl(uri), api.getFileSize(uri)]) : ['', 0]
+  const error = !url || previewState.error
+  const errorMessage = error ? await getImageErrorMessage(uri, api.exists) : ''
   let state: MediaPreviewState = {
     ...previewState,
-    canOpenAsText: uri.toLowerCase().endsWith('.svg'),
-    error: !url || previewState.error,
+    canOpenAsText: canOpenAsText(uri, errorMessage),
+    error,
+    errorMessage,
     fileSize,
     height: 0,
     url,
@@ -100,6 +122,15 @@ export const createInstanceWithApi = async (
       ...state,
       ...newState,
     }
+  }
+
+  const handleImageError = async (): Promise<void> => {
+    const errorMessage = await getImageErrorMessage(uri, api.exists)
+    updateState({
+      ...api.handleError(id),
+      canOpenAsText: canOpenAsText(uri, errorMessage),
+      errorMessage,
+    })
   }
 
   return {
@@ -132,7 +163,7 @@ export const createInstanceWithApi = async (
     },
     async handleEvent(event: Readonly<ViewEvent>): Promise<void> {
       if (event.type === 'error') {
-        updateState(api.handleError(id))
+        await handleImageError()
         return
       }
       if (event.type !== 'contextmenu') {
@@ -159,8 +190,8 @@ export const createInstanceWithApi = async (
           break
       }
     },
-    handleMediaPreviewImageError(): void {
-      updateState(api.handleError(id))
+    async handleMediaPreviewImageError(): Promise<void> {
+      await handleImageError()
     },
     handleMediaPreviewImageLoad(width: unknown, height: unknown): void {
       updateState({

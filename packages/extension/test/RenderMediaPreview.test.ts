@@ -6,6 +6,7 @@ const state = {
   canOpenAsText: false,
   domMatrixString: 'matrix(1, 0, 0, 1, 10, 20)',
   error: false,
+  errorMessage: '',
   fileSize: 873,
   height: 1,
   pointerDown: false,
@@ -53,6 +54,7 @@ test('renders an error without an image', () => {
   const dom = render({
     ...state,
     error: true,
+    errorMessage: 'Image could not be found',
   })
 
   expect(dom).toEqual([
@@ -73,7 +75,7 @@ test('renders an error without an image', () => {
     },
     {
       childCount: 0,
-      text: 'Image could not be loaded',
+      text: 'Image could not be found',
       type: VirtualDomElements.Text,
     },
   ])

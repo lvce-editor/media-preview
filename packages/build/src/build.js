@@ -24,7 +24,15 @@ fs.cpSync(join(extension, 'media'), join(root, 'dist', 'media'), {
 })
 
 const extensionBundlePath = join(root, 'dist', 'dist', 'mediaPreviewMain.js')
-await bundleJs(join(extension, 'src', 'mediaPreviewMain.ts'), extensionBundlePath, false)
+const imageConversionWorkerBundlePath = join(root, 'dist', 'dist', 'imageConversionWorkerMain.js')
+await Promise.all([
+  bundleJs(join(extension, 'src', 'mediaPreviewMain.ts'), extensionBundlePath, false),
+  bundleJs(
+    join(root, 'packages', 'image-conversion-worker', 'src', 'imageConversionWorkerMain.ts'),
+    imageConversionWorkerBundlePath,
+    false,
+  ),
+])
 
 await packageExtension({
   highestCompression: true,

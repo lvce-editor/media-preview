@@ -34,13 +34,14 @@ const imageWrapperNode: VirtualDomNode = {
   type: VirtualDomElements.Div,
 }
 
-const renderError = (canOpenAsText: boolean): readonly VirtualDomNode[] => {
+const renderError = (state: Readonly<MediaPreviewState>): readonly VirtualDomNode[] => {
+  const { canOpenAsText, errorMessage } = state
   const errorNode: VirtualDomNode = {
     childCount: canOpenAsText ? 2 : 1,
     className: 'MediaPreviewError',
     type: VirtualDomElements.Div,
   }
-  const messageNodes = [errorMessageNode, text('Image could not be loaded')]
+  const messageNodes = [errorMessageNode, text(errorMessage)]
   return canOpenAsText
     ? [errorNode, ...messageNodes, openInTextEditorButtonNode, text('Open in Text Editor')]
     : [errorNode, ...messageNodes]
@@ -67,9 +68,9 @@ const renderImage = (state: Readonly<MediaPreviewState>): readonly VirtualDomNod
 }
 
 export const render = (state: Readonly<MediaPreviewState>): readonly VirtualDomNode[] => {
-  const { canOpenAsText, error, pointerDown } = state
+  const { error, pointerDown } = state
   const className = pointerDown ? 'MediaPreview MediaPreviewDragging' : 'MediaPreview'
-  const content = error ? renderError(canOpenAsText) : renderImage(state)
+  const content = error ? renderError(state) : renderImage(state)
   const rootNode: VirtualDomNode = error
     ? {
         childCount: 1,

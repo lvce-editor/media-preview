@@ -7,11 +7,9 @@ export const test: Test = async ({ expect, FileSystem, Locator, Main }) => {
   await Main.openUri(tmpDir + '/missing.svg')
 
   const error = Locator('.MediaPreviewError')
-  const errorMessage = Locator('.MediaPreviewErrorMessage')
   const image = Locator('.MediaPreviewImage')
   const openInTextEditor = Locator('.MediaPreviewOpenInTextEditor')
-  await expect(error).toBeVisible()
-  await expect(errorMessage).toHaveText('Image could not be loaded')
-  await expect(openInTextEditor).toBeVisible()
+  await expect(error).toHaveText('Image could not be found')
   await expect(image).toHaveCount(0)
+  await expect(openInTextEditor).toHaveCount(0)
 }

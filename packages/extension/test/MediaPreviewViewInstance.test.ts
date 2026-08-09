@@ -12,6 +12,7 @@ const createApi = () => {
   return {
     create: jest.fn((_id: number) => {}),
     dispose: jest.fn((_id: number) => {}),
+    exists: jest.fn(async (_uri: string) => true),
     getFileSize: jest.fn(async (_uri: string) => 512_596),
     getState: jest.fn((_id: number) => initialState),
     getUrl: jest.fn(async (_uri: string) => 'blob:https://example.com/image-id'),
@@ -47,8 +48,29 @@ test('creates a preview and renders its image', async () => {
 }`)
 })
 
-test('renders an error when the image URL cannot be read', async () => {
+test('renders a load error when the image URL cannot be read but the file exists', async () => {
   const api = createApi()
+  api.getUrl.mockResolvedValue('')
+
+  const instance = await createInstanceWithApi(context, api)
+
+  expect(api.exists).toHaveBeenCalledWith('/workspace/image.png')
+  expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
+})
+
+test('renders a not found error when the image URL cannot be read and the file is missing', async () => {
+  const api = createApi()
+  api.exists.mockResolvedValue(false)
+  api.getUrl.mockResolvedValue('')
+
+  const instance = await createInstanceWithApi(context, api)
+
+  expect(instance.render().some((node) => node.text === 'Image could not be found')).toBe(true)
+})
+
+test('falls back to a load error when checking whether the image exists fails', async () => {
+  const api = createApi()
+  api.exists.mockRejectedValue(new Error('filesystem unavailable'))
   api.getUrl.mockResolvedValue('')
 
   const instance = await createInstanceWithApi(context, api)
@@ -96,6 +118,7 @@ test('uses defaults when the view context is missing', async () => {
   expect(api.setSavedState).toHaveBeenCalledWith(0, undefined)
   expect(api.getUrl).not.toHaveBeenCalled()
   expect(api.getFileSize).not.toHaveBeenCalled()
+  expect(api.exists).not.toHaveBeenCalled()
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
 })
 
@@ -116,9 +139,20 @@ test('forwards pointer and image events to the media preview api', async () => {
   instance.handleMediaPreviewWheel(70, 0)
   expect(api.handleWheel).toHaveBeenCalledWith(7, 0, 0, 0, 70)
 
-  instance.handleMediaPreviewImageError()
+  await instance.handleMediaPreviewImageError()
   expect(api.handleError).toHaveBeenCalledWith(7)
+  expect(api.exists).toHaveBeenCalledWith('/workspace/image.png')
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
+})
+
+test('renders a not found error when the image disappears before the error event', async () => {
+  const api = createApi()
+  const instance = await createInstanceWithApi(context, api)
+  api.exists.mockResolvedValue(false)
+
+  await instance.handleMediaPreviewImageError()
+
+  expect(instance.render().some((node) => node.text === 'Image could not be found')).toBe(true)
 })
 
 test('renders image dimensions and file size as status bar items', async () => {
@@ -231,7 +265,7 @@ test('forwards legacy view events and normalizes invalid coordinates', async () 
   const api = createApi()
   const instance = await createInstanceWithApi(context, api)
 
-  instance.handleEvent?.({ type: 'error' })
+  await instance.handleEvent?.({ type: 'error' })
   expect(api.handleError).toHaveBeenCalledWith(7)
 
   instance.handleEvent?.({ name: 'pointerdown', type: 'contextmenu', x: Infinity, y: 20 })
