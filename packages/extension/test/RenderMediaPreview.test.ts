@@ -59,8 +59,6 @@ test('renders an error without an image', () => {
     {
       childCount: 1,
       className: 'MediaPreview',
-      onPointerDown: 'handleMediaPreviewPointerDown',
-      onWheel: 'handleMediaPreviewWheel',
       type: VirtualDomElements.Div,
     },
     {
@@ -91,6 +89,7 @@ test('renders an open in text editor button for text-based images', () => {
   expect(dom).toContainEqual({
     childCount: 1,
     className: mergeClassNames('Button', 'ButtonSecondary', 'MediaPreviewOpenInTextEditor'),
+    name: 'openInTextEditor',
     onClick: 'handleOpenInTextEditor',
     type: VirtualDomElements.Button,
   })

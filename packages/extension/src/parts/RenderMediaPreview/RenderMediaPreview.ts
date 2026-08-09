@@ -17,6 +17,7 @@ const errorMessageNode: VirtualDomNode = {
 const openInTextEditorButtonNode: VirtualDomNode = {
   childCount: 1,
   className: mergeClassNames('Button', 'ButtonSecondary', 'MediaPreviewOpenInTextEditor'),
+  name: 'openInTextEditor',
   onClick: handleOpenInTextEditor,
   type: VirtualDomElements.Button,
 }
@@ -69,14 +70,18 @@ export const render = (state: Readonly<MediaPreviewState>): readonly VirtualDomN
   const { canOpenAsText, error, pointerDown } = state
   const className = pointerDown ? 'MediaPreview MediaPreviewDragging' : 'MediaPreview'
   const content = error ? renderError(canOpenAsText) : renderImage(state)
-  return [
-    {
-      childCount: 1,
-      className,
-      onPointerDown: handleMediaPreviewPointerDown,
-      onWheel: handleMediaPreviewWheel,
-      type: VirtualDomElements.Div,
-    },
-    ...content,
-  ]
+  const rootNode: VirtualDomNode = error
+    ? {
+        childCount: 1,
+        className,
+        type: VirtualDomElements.Div,
+      }
+    : {
+        childCount: 1,
+        className,
+        onPointerDown: handleMediaPreviewPointerDown,
+        onWheel: handleMediaPreviewWheel,
+        type: VirtualDomElements.Div,
+      }
+  return [rootNode, ...content]
 }

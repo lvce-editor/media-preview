@@ -19,5 +19,15 @@ export const test: Test = async ({ Editor, expect, FileSystem, Locator, Main }) 
   await expect(openInTextEditor).toHaveText('Open in Text Editor')
   await openInTextEditor.dispatchEvent('click', { bubbles: true } as any)
 
+  const editorContent = Locator('.EditorContent')
+  for (let attempt = 0; attempt < 40; attempt++) {
+    try {
+      await expect(editorContent).toBeVisible()
+      break
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+  }
+  await expect(editorContent).toBeVisible()
   await Editor.shouldHaveText(content)
 }

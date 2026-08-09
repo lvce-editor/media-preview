@@ -19,6 +19,7 @@ export const view: View<MediaPreviewViewInstance> = {
     {
       name: 'handleOpenInTextEditor',
       params: ['handleOpenInTextEditor'],
+      preventDefault: true,
     },
     {
       name: 'handleMediaPreviewPointerDown',
