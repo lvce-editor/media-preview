@@ -55,7 +55,7 @@ beforeAll(() => {
       return this
     }
 
-    translate(deltaX, deltaY) {
+    translate(deltaX: number, deltaY: number) {
       return new DOMMatrix([this.a, this.b, this.c, this.d, this.e + this.a * deltaX, this.f + this.d * deltaY])
     }
 
@@ -65,7 +65,7 @@ beforeAll(() => {
       return this
     }
 
-    multiplySelf(domMatrix) {
+    multiplySelf(domMatrix: DOMMatrix) {
       const newA = this.a * domMatrix.a + this.b * domMatrix.c
       const newB = this.a * domMatrix.b + this.b * domMatrix.d
       const newC = this.c * domMatrix.a + this.d * domMatrix.c
