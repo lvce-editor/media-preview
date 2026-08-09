@@ -1,3 +1,4 @@
+import type { VirtualDomNode } from '@lvce-editor/virtual-dom-worker'
 import {
   executeCommand,
   type MenuEntry,
@@ -6,7 +7,6 @@ import {
   type ViewEvent,
   type VirtualDomViewInstance,
 } from '@lvce-editor/api'
-import type { VirtualDomNode } from '@lvce-editor/virtual-dom-worker'
 import { getCss } from '../GetCss/GetCss.ts'
 import * as MediaPreview from '../MediaPreview/MediaPreview.ts'
 import { render } from '../RenderMediaPreview/RenderMediaPreview.ts'
@@ -32,11 +32,11 @@ export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
   readonly getMenuEntries: (menuId: string) => Promise<readonly MenuEntry[]>
   readonly handleMediaPreviewImageError: () => void
   readonly handleMediaPreviewImageLoad: (width: unknown, height: unknown) => void
-  readonly handleOpenInTextEditor: () => Promise<unknown>
   readonly handleMediaPreviewPointerDown: (button: unknown, x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerMove: (x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerUp: (x: unknown, y: unknown) => void
   readonly handleMediaPreviewWheel: (deltaY: unknown, deltaMode: unknown) => void
+  readonly handleOpenInTextEditor: () => Promise<unknown>
   readonly render: () => readonly VirtualDomNode[]
   readonly renderStatusBarItems: () => readonly StatusBarItem[]
   readonly saveState: () => Promise<unknown>
@@ -168,9 +168,6 @@ export const createInstanceWithApi = async (
         width: getNumber(width),
       })
     },
-    handleOpenInTextEditor(): Promise<unknown> {
-      return execute('Main.reopenEditorWith', 'editor')
-    },
     handleMediaPreviewPointerDown(button: unknown, x: unknown, y: unknown): void {
       if (button !== 0) {
         return
@@ -185,6 +182,9 @@ export const createInstanceWithApi = async (
     },
     handleMediaPreviewWheel(deltaY: unknown, _deltaMode: unknown): void {
       updateState(api.handleWheel(id, 0, 0, 0, getNumber(deltaY)))
+    },
+    handleOpenInTextEditor(): Promise<unknown> {
+      return execute('Main.reopenEditorWith', 'editor')
     },
     render(): readonly VirtualDomNode[] {
       return render(state)

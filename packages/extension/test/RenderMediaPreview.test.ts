@@ -1,5 +1,5 @@
 import { expect, test } from '@jest/globals'
-import { VirtualDomElements } from '@lvce-editor/virtual-dom-worker'
+import { mergeClassNames, VirtualDomElements } from '@lvce-editor/virtual-dom-worker'
 import { render } from '../src/parts/RenderMediaPreview/RenderMediaPreview.ts'
 
 const state = {
@@ -90,7 +90,7 @@ test('renders an open in text editor button for text-based images', () => {
 
   expect(dom).toContainEqual({
     childCount: 1,
-    className: 'Button ButtonSecondary MediaPreviewOpenInTextEditor',
+    className: mergeClassNames('Button', 'ButtonSecondary', 'MediaPreviewOpenInTextEditor'),
     onClick: 'handleOpenInTextEditor',
     type: VirtualDomElements.Button,
   })

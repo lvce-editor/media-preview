@@ -1,4 +1,4 @@
-import { text, VirtualDomElements, type VirtualDomNode } from '@lvce-editor/virtual-dom-worker'
+import { mergeClassNames, text, VirtualDomElements, type VirtualDomNode } from '@lvce-editor/virtual-dom-worker'
 import type { MediaPreviewState } from '../MediaPreviewViewInstance/MediaPreviewViewInstance.ts'
 
 const handleMediaPreviewImageError = 'handleMediaPreviewImageError'
@@ -16,7 +16,7 @@ const errorMessageNode: VirtualDomNode = {
 
 const openInTextEditorButtonNode: VirtualDomNode = {
   childCount: 1,
-  className: 'Button ButtonSecondary MediaPreviewOpenInTextEditor',
+  className: mergeClassNames('Button', 'ButtonSecondary', 'MediaPreviewOpenInTextEditor'),
   onClick: handleOpenInTextEditor,
   type: VirtualDomElements.Button,
 }
