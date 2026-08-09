@@ -5,6 +5,7 @@ export default defineConfig([
   ...config.default,
   ...config.recommendedVirtualDom,
   ...config.recommendedActions,
+  ...config.recommendedTsconfig,
   {
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'off',
