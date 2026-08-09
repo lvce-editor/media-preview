@@ -20,9 +20,7 @@ const getRpc = (): Promise<Rpc> => {
     return rpcPromise
   }
   const newRpcPromise = createRpc({
-    contentSecurityPolicy: "default-src 'none'; script-src 'self' 'unsafe-eval'",
-    name: 'Media Preview Image Conversion Worker',
-    url: new URL('imageConversionWorkerMain.js', import.meta.url).href,
+    id: 'builtin.media-preview.image-conversion-worker',
   })
   state.rpcPromise = newRpcPromise
   return newRpcPromise

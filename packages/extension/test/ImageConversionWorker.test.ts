@@ -26,9 +26,7 @@ test('lazily creates and reuses the image conversion worker', async () => {
 
   expect(createRpc).toHaveBeenCalledTimes(1)
   expect(createRpc).toHaveBeenCalledWith({
-    contentSecurityPolicy: "default-src 'none'; script-src 'self' 'unsafe-eval'",
-    name: 'Media Preview Image Conversion Worker',
-    url: expect.stringMatching(/\/imageConversionWorkerMain\.js$/),
+    id: 'builtin.media-preview.image-conversion-worker',
   })
   expect(invoke).toHaveBeenCalledTimes(2)
   expect(invoke).toHaveBeenCalledWith('ImageConversion.convertHeicToPng', heic)

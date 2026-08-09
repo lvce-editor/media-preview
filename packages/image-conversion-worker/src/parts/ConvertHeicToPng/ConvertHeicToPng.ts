@@ -1,4 +1,5 @@
 import { encode } from 'fast-png'
+import decodeHeic from 'heic-decode'
 
 interface DecodedImage {
   readonly data: Uint8ClampedArray
@@ -8,11 +9,6 @@ interface DecodedImage {
 
 type Decode = (options: { readonly buffer: Uint8Array }) => Promise<DecodedImage>
 type Encode = (image: DecodedImage) => Uint8Array
-
-const decodeHeic = async (options: { readonly buffer: Uint8Array }): Promise<DecodedImage> => {
-  const heicDecode = await import('heic-decode')
-  return heicDecode.default(options)
-}
 
 export const convertHeicToPngWithDependencies = async (heic: Blob, decode: Decode, encodePng: Encode): Promise<Blob> => {
   const buffer = new Uint8Array(await heic.arrayBuffer())
