@@ -8,7 +8,7 @@ interface DecodedImage {
 }
 
 type Decode = (options: { readonly buffer: Uint8Array }) => Promise<DecodedImage>
-type Encode = (image: DecodedImage) => Uint8Array
+type Encode = typeof encode
 
 export const convertHeicToPngWithDependencies = async (heic: Blob, decode: Decode, encodePng: Encode): Promise<Blob> => {
   const buffer = new Uint8Array(await heic.arrayBuffer())

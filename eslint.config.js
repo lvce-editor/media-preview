@@ -7,14 +7,6 @@ export default defineConfig([
   ...config.recommendedActions,
   ...config.recommendedTsconfig,
   {
-    rules: {
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/prefer-readonly-parameter-types': 'off',
-      '@typescript-eslint/only-throw-error': 'off',
-      'unicorn/prefer-number-coercion': 'off',
-    },
-  },
-  {
     files: ['**/*.test.ts'],
     rules: {
       '@cspell/spellchecker': 'off',

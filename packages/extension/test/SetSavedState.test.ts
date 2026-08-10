@@ -1,4 +1,5 @@
 import { beforeAll, expect, test } from '@jest/globals'
+import type { WebView } from '../src/parts/WebView/WebView.ts'
 import * as SetSavedState from '../src/parts/SetSavedState/SetSavedState.ts'
 import * as WebViewStates from '../src/parts/WebViewStates/WebViewStates.ts'
 
@@ -12,7 +13,7 @@ beforeAll(() => {
     e: number
     f: number
 
-    constructor([a = 1, b = 0, c = 0, d = 1, e = 0, f = 0] = []) {
+    constructor([a = 1, b = 0, c = 0, d = 1, e = 0, f = 0]: readonly number[] = []) {
       this.a = a
       this.b = b
       this.c = c
@@ -23,7 +24,7 @@ beforeAll(() => {
   }
 })
 
-const createState = () => ({
+const createState = (): WebView => ({
   domMatrix: {} as DOMMatrixReadOnly,
   error: false,
   maxZoom: 2 ** 15,
@@ -38,7 +39,7 @@ test.each([
   ['missing state', undefined],
   ['missing matrix', {}],
   ['invalid matrix', { domMatrix: 1 }],
-])('uses the identity matrix for %s', (_name, savedState) => {
+])('uses the identity matrix for %s', (_name: string, savedState: Readonly<{ readonly domMatrix?: unknown }> | undefined) => {
   const id = 201
   WebViewStates.set(id, createState())
 

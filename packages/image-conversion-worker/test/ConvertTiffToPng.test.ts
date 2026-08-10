@@ -3,7 +3,9 @@ import { encode } from 'fast-png'
 import { convertTiffToPngWithDependencies } from '../src/parts/ConvertTiffToPng/ConvertTiffToPng.ts'
 
 test('converts a TIFF image to a PNG blob', async () => {
-  const decode = jest.fn<(buffer: ArrayBuffer) => { data: Uint8Array; height: number; width: number }>(() => ({
+  const decode = jest.fn<
+    (buffer: Readonly<ArrayBuffer>) => { readonly data: Uint8Array; readonly height: number; readonly width: number }
+  >(() => ({
     data: new Uint8Array([255, 0, 0, 255]),
     height: 1,
     width: 1,

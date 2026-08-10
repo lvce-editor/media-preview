@@ -1,4 +1,4 @@
-const getIsFirefox = () => {
+const getIsFirefox = (): boolean => {
   if (typeof navigator === 'undefined') {
     return false
   }

@@ -8,7 +8,13 @@ const initialState = {
   pointerDown: false,
 }
 
-const createApi = () => {
+type MediaPreviewApi = Parameters<typeof createInstanceWithApi>[1]
+
+type MockMediaPreviewApi = {
+  readonly [Key in keyof MediaPreviewApi]: jest.Mock<MediaPreviewApi[Key]>
+}
+
+const createApi = (): MockMediaPreviewApi => {
   return {
     create: jest.fn((_id: number) => {}),
     dispose: jest.fn((_id: number) => {}),

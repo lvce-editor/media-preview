@@ -1,9 +1,8 @@
-import type { CreateRpcOptions } from '@lvce-editor/api'
 import { beforeEach, expect, jest, test } from '@jest/globals'
 import * as ImageConversionWorker from '../src/parts/ImageConversionWorker/ImageConversionWorker.ts'
 
 const invoke = jest.fn<(method: string, ...params: readonly unknown[]) => Promise<unknown>>()
-const createRpc = jest.fn<(options: CreateRpcOptions) => Promise<{ readonly invoke: typeof invoke }>>()
+const createRpc = jest.fn<(options: { readonly id: string }) => Promise<{ readonly invoke: typeof invoke }>>()
 
 beforeEach(() => {
   jest.resetAllMocks()

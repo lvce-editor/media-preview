@@ -1,10 +1,10 @@
-import { createRpc, type CreateRpcOptions } from '@lvce-editor/api'
+import { createRpc } from '@lvce-editor/api'
 
 interface Rpc {
   readonly invoke: (method: string, ...params: readonly unknown[]) => Promise<unknown>
 }
 
-type CreateRpc = (options: CreateRpcOptions) => Promise<Rpc>
+type CreateRpc = (options: { readonly id: string }) => Promise<Rpc>
 
 export const state: {
   createRpc: CreateRpc
