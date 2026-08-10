@@ -2,8 +2,17 @@ import type { Test } from '@lvce-editor/test-with-playwright'
 
 export const name = 'media-preview-status-bar-items'
 
-// The e2e editor currently starts without extension status bar items enabled.
-export const skip = true
+const waitForExpectation = async (assertion: () => Promise<void>): Promise<void> => {
+  for (let attempt = 0; attempt < 40; attempt++) {
+    try {
+      await assertion()
+      return
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+  }
+  await assertion()
+}
 
 export const test: Test = async ({ expect, Locator, Main, Settings }) => {
   await Settings.update({ 'statusBar.itemsVisible': true })
@@ -12,12 +21,12 @@ export const test: Test = async ({ expect, Locator, Main, Settings }) => {
 
   const dimensions = Locator('.StatusBarItem[name="media-preview-dimensions"]')
   const size = Locator('.StatusBarItem[name="media-preview-size"]')
-  await expect(dimensions).toBeVisible()
-  await expect(dimensions).toHaveText('1 × 1')
-  await expect(size).toBeVisible()
-  await expect(size).toHaveText('873 B')
+  await waitForExpectation(() => expect(dimensions).toBeVisible())
+  await waitForExpectation(() => expect(dimensions).toHaveText('256 × 256'))
+  await waitForExpectation(() => expect(size).toBeVisible())
+  await waitForExpectation(() => expect(size).toHaveText('873 B'))
 
   await Main.closeAllEditors()
-  await expect(dimensions).toBeHidden()
-  await expect(size).toBeHidden()
+  await waitForExpectation(() => expect(dimensions).toBeHidden())
+  await waitForExpectation(() => expect(size).toBeHidden())
 }

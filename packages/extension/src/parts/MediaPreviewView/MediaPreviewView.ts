@@ -14,7 +14,7 @@ export const view: View<MediaPreviewViewInstance> = {
     },
     {
       name: 'handleMediaPreviewImageLoad',
-      params: ['handleMediaPreviewImageLoad', 'event.target.naturalWidth', 'event.target.naturalHeight'],
+      params: ['handleMediaPreviewImageLoad', 'event.currentTarget.naturalWidth', 'event.currentTarget.naturalHeight'],
     },
     {
       name: 'handleOpenInTextEditor',

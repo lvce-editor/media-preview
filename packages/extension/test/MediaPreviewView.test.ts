@@ -5,6 +5,11 @@ test('contributes a virtual dom media preview view', () => {
   expect(view.id).toBe(viewId)
   expect(view.kind).toBe('virtualDom')
   expect(view.create).toBeDefined()
+  expect(view.eventListeners?.find((listener) => listener.name === 'handleMediaPreviewImageLoad')?.params).toEqual([
+    'handleMediaPreviewImageLoad',
+    'event.currentTarget.naturalWidth',
+    'event.currentTarget.naturalHeight',
+  ])
   expect(view.eventListeners?.map((listener) => listener.name)).toEqual([
     'handleMediaPreviewImageError',
     'handleMediaPreviewImageLoad',
