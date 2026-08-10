@@ -4,7 +4,8 @@ import type { Test } from '@lvce-editor/test-with-playwright'
 export const name = 'media-preview-apng-visible'
 
 export const test: Test = async ({ expect, Locator, Main }) => {
-  await Main.openUri(import.meta.resolve('../files/sample.apng'))
+  const uri = import.meta.resolve('../files/sample.apng')
+  await Main.openUri(uri)
 
   const image = Locator('.MediaPreviewImage')
   const error = Locator('.MediaPreviewError')

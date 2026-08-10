@@ -3,7 +3,8 @@ import type { Test } from '@lvce-editor/test-with-playwright'
 export const name = 'media-preview-ico-visible'
 
 export const test: Test = async ({ expect, Locator, Main }) => {
-  await Main.openUri(import.meta.resolve('../files/sample.ico'))
+  const uri = import.meta.resolve('../files/sample.ico')
+  await Main.openUri(uri)
 
   const image = Locator('.MediaPreviewImage')
   const error = Locator('.MediaPreviewError')
