@@ -11,7 +11,31 @@ beforeEach(() => {
   jest.resetAllMocks()
 })
 
-test('returns the object URL when the file was found', async () => {
+test('returns a memfs URI directly', async () => {
+  const uri = 'memfs:///workspace/image.png'
+
+  await expect(
+    getUrlWithDependencies(uri, readAsObjectUrl, readFileAsBlob, convertHeicToPngUrl, convertTiffToPngUrl),
+  ).resolves.toBe(uri)
+  expect(readAsObjectUrl).not.toHaveBeenCalled()
+  expect(readFileAsBlob).not.toHaveBeenCalled()
+  expect(convertHeicToPngUrl).not.toHaveBeenCalled()
+  expect(convertTiffToPngUrl).not.toHaveBeenCalled()
+})
+
+test('returns an HTTP URI directly', async () => {
+  const uri = 'https://example.com/image.png'
+
+  await expect(
+    getUrlWithDependencies(uri, readAsObjectUrl, readFileAsBlob, convertHeicToPngUrl, convertTiffToPngUrl),
+  ).resolves.toBe(uri)
+  expect(readAsObjectUrl).not.toHaveBeenCalled()
+  expect(readFileAsBlob).not.toHaveBeenCalled()
+  expect(convertHeicToPngUrl).not.toHaveBeenCalled()
+  expect(convertTiffToPngUrl).not.toHaveBeenCalled()
+})
+
+test('returns the object URL for a file URI', async () => {
   readAsObjectUrl.mockResolvedValue({
     error: '',
     objectUrl: 'blob:https://example.com/image-id',
@@ -20,20 +44,20 @@ test('returns the object URL when the file was found', async () => {
 
   await expect(
     getUrlWithDependencies(
-      'html:///workspace/image.png',
+      'file:///workspace/image.png',
       readAsObjectUrl,
       readFileAsBlob,
       convertHeicToPngUrl,
       convertTiffToPngUrl,
     ),
   ).resolves.toBe('blob:https://example.com/image-id')
-  expect(readAsObjectUrl).toHaveBeenCalledWith('html:///workspace/image.png')
+  expect(readAsObjectUrl).toHaveBeenCalledWith('file:///workspace/image.png')
   expect(readFileAsBlob).not.toHaveBeenCalled()
   expect(convertHeicToPngUrl).not.toHaveBeenCalled()
   expect(convertTiffToPngUrl).not.toHaveBeenCalled()
 })
 
-test('returns an empty URL when the file could not be read', async () => {
+test('returns an empty URL when a file URI could not be read', async () => {
   readAsObjectUrl.mockResolvedValue({
     error: 'File not found',
     objectUrl: '',
@@ -42,7 +66,7 @@ test('returns an empty URL when the file could not be read', async () => {
 
   await expect(
     getUrlWithDependencies(
-      'html:///workspace/missing.png',
+      'file:///workspace/missing.png',
       readAsObjectUrl,
       readFileAsBlob,
       convertHeicToPngUrl,
@@ -51,6 +75,25 @@ test('returns an empty URL when the file could not be read', async () => {
   ).resolves.toBe('')
   expect(readFileAsBlob).not.toHaveBeenCalled()
   expect(convertHeicToPngUrl).not.toHaveBeenCalled()
+})
+
+test('returns the object URL for a path that is not a URI', async () => {
+  readAsObjectUrl.mockResolvedValue({
+    error: '',
+    objectUrl: 'blob:https://example.com/image-id',
+    wasFound: true,
+  })
+
+  await expect(
+    getUrlWithDependencies(
+      '/workspace/image.png',
+      readAsObjectUrl,
+      readFileAsBlob,
+      convertHeicToPngUrl,
+      convertTiffToPngUrl,
+    ),
+  ).resolves.toBe('blob:https://example.com/image-id')
+  expect(readAsObjectUrl).toHaveBeenCalledWith('/workspace/image.png')
 })
 
 test('converts lowercase HEIC images to PNG', async () => {

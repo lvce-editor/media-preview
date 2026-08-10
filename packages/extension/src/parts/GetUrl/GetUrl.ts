@@ -16,6 +16,14 @@ const isTiffUri = (uri: string): boolean => {
   return normalizedUri.endsWith('.tif') || normalizedUri.endsWith('.tiff')
 }
 
+const getProtocol = (uri: string): string => {
+  try {
+    return new URL(uri).protocol
+  } catch {
+    return ''
+  }
+}
+
 export const getUrlWithDependencies = async (
   uri: string,
   read: ReadAsObjectUrl,
@@ -38,6 +46,10 @@ export const getUrlWithDependencies = async (
     } catch {
       return ''
     }
+  }
+  const protocol = getProtocol(uri)
+  if (protocol && protocol !== 'file:') {
+    return uri
   }
   const result = await read(uri)
   return result.wasFound ? result.objectUrl : ''
