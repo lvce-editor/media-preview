@@ -7,7 +7,8 @@ export const skip = true
 
 export const test: Test = async ({ expect, Locator, Main, Settings }) => {
   await Settings.update({ 'statusBar.itemsVisible': true })
-  await Main.openUri(import.meta.resolve('../files/file.png'))
+  const uri = import.meta.resolve('../files/file.png')
+  await Main.openUri(uri)
 
   const dimensions = Locator('.StatusBarItem[name="media-preview-dimensions"]')
   const size = Locator('.StatusBarItem[name="media-preview-size"]')
