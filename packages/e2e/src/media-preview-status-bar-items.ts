@@ -21,10 +21,10 @@ export const test: Test = async ({ expect, Locator, Main, Settings }) => {
 
   const dimensions = Locator('.StatusBarItem[name="media-preview-dimensions"]')
   const size = Locator('.StatusBarItem[name="media-preview-size"]')
-  await expect(dimensions).toBeVisible()
+  await waitForExpectation(() => expect(dimensions).toBeVisible())
   await waitForExpectation(() => expect(dimensions).toHaveText('256 × 256'))
-  await expect(size).toBeVisible()
-  await expect(size).toHaveText('873 B')
+  await waitForExpectation(() => expect(size).toBeVisible())
+  await waitForExpectation(() => expect(size).toHaveText('873 B'))
 
   await Main.closeAllEditors()
   await waitForExpectation(() => expect(dimensions).toBeHidden())
