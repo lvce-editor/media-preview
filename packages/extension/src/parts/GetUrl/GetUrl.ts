@@ -9,6 +9,15 @@ const isHeicUri = (uri: string): boolean => {
   return uri.toLowerCase().endsWith('.heic')
 }
 
+const readHeic = async (uri: string, read: ReadAsObjectUrl, readBlob: ReadFileAsBlob, convert: ConvertHeicToPngUrl) => {
+  try {
+    const blob = await readBlob(uri)
+    return await convert(blob)
+  } catch {
+    return ''
+  }
+}
+
 export const getUrlWithDependencies = async (
   uri: string,
   read: ReadAsObjectUrl,
@@ -16,12 +25,7 @@ export const getUrlWithDependencies = async (
   convert: ConvertHeicToPngUrl,
 ): Promise<string> => {
   if (isHeicUri(uri)) {
-    try {
-      const blob = await readBlob(uri)
-      return await convert(blob)
-    } catch {
-      return ''
-    }
+    return readHeic(uri, read, readBlob, convert)
   }
   const result = await read(uri)
   return result.wasFound ? result.objectUrl : ''
