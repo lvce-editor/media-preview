@@ -12,7 +12,7 @@ beforeAll(() => {
     e: number
     f: number
 
-    constructor([a = 1, b = 0, c = 0, d = 1, e = 0, f = 0] = []) {
+    constructor([a = 1, b = 0, c = 0, d = 1, e = 0, f = 0]: readonly number[] = []) {
       this.a = a
       this.b = b
       this.c = c
@@ -21,7 +21,7 @@ beforeAll(() => {
       this.f = f
     }
 
-    translate(deltaX = 0, deltaY = 0) {
+    translate(deltaX = 0, deltaY = 0): DOMMatrixReadOnly {
       return new DOMMatrixReadOnly([this.a, this.b, this.c, this.d, this.e + this.a * deltaX, this.f + this.d * deltaY])
     }
   }
@@ -34,7 +34,7 @@ beforeAll(() => {
     d: number
     e: number
     f: number
-    constructor([a = 1, b = 0, c = 0, d = 1, e = 0, f = 0] = []) {
+    constructor([a = 1, b = 0, c = 0, d = 1, e = 0, f = 0]: readonly number[] = []) {
       this.a = a
       this.b = b
       this.c = c
@@ -43,23 +43,23 @@ beforeAll(() => {
       this.f = f
     }
 
-    translateSelf(deltaX = 0, deltaY = 0) {
+    translateSelf(deltaX = 0, deltaY = 0): this {
       this.e += deltaX * this.a
       this.f += deltaY * this.d
       return this
     }
 
-    translate(deltaX: number, deltaY: number) {
+    translate(deltaX: number, deltaY: number): DOMMatrix {
       return new DOMMatrix([this.a, this.b, this.c, this.d, this.e + this.a * deltaX, this.f + this.d * deltaY])
     }
 
-    scaleSelf(scaleX = 1, scaleY = scaleX) {
+    scaleSelf(scaleX = 1, scaleY = scaleX): this {
       this.a *= scaleX
       this.d *= scaleY
       return this
     }
 
-    multiplySelf(domMatrix: DOMMatrix) {
+    multiplySelf(domMatrix: Readonly<DOMMatrix>): this {
       const newA = this.a * domMatrix.a + this.b * domMatrix.c
       const newB = this.a * domMatrix.b + this.b * domMatrix.d
       const newC = this.c * domMatrix.a + this.d * domMatrix.c

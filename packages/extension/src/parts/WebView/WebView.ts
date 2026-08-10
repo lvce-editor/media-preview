@@ -1,5 +1,5 @@
 export interface WebView {
-  readonly domMatrix: DOMMatrixReadOnly
+  readonly domMatrix: Readonly<DOMMatrixReadOnly>
   readonly error: boolean
   readonly maxZoom: number
   readonly minZoom: number

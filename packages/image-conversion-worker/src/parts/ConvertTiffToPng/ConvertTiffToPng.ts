@@ -8,10 +8,10 @@ interface DecodedImage {
   readonly width: number
 }
 
-type Decode = (buffer: ArrayBuffer) => DecodedImage
-type Encode = (image: DecodedImage) => Uint8Array
+type Decode = (buffer: Readonly<ArrayBuffer>) => DecodedImage
+type Encode = (image: Readonly<DecodedImage>) => Uint8Array
 
-const decodeTiff = (buffer: ArrayBuffer): DecodedImage => {
+const decodeTiff = (buffer: Readonly<ArrayBuffer>): DecodedImage => {
   const [image] = tiffDecoder.decode(buffer)
   if (!image) {
     throw new Error('TIFF contains no images')

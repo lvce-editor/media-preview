@@ -6,12 +6,12 @@ export const parseDomMatrixInternal = (innerString: string): DOMMatrixReadOnly =
     return DomMatrix.create()
   }
   const [aString, bString, cString, dString, eString, fString] = parts
-  const a = Number.parseFloat(aString)
-  const b = Number.parseFloat(bString)
-  const c = Number.parseFloat(cString)
-  const d = Number.parseFloat(dString)
-  const e = Number.parseFloat(eString)
-  const f = Number.parseFloat(fString)
+  const a = Number(aString)
+  const b = Number(bString)
+  const c = Number(cString)
+  const d = Number(dString)
+  const e = Number(eString)
+  const f = Number(fString)
   if (Number.isNaN(a) || Number.isNaN(b) || Number.isNaN(c) || Number.isNaN(d) || Number.isNaN(e) || Number.isNaN(f)) {
     return DomMatrix.create()
   }

@@ -2,7 +2,7 @@ import type { WebView } from '../WebView/WebView.ts'
 
 const webViews = Object.create(null)
 
-export const set = (id: number, preview: WebView) => {
+export const set = (id: number, preview: WebView): void => {
   webViews[id] = preview
 }
 
