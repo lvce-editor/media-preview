@@ -85,13 +85,7 @@ test('returns the object URL for a path that is not a URI', async () => {
   })
 
   await expect(
-    getUrlWithDependencies(
-      '/workspace/image.png',
-      readAsObjectUrl,
-      readFileAsBlob,
-      convertHeicToPngUrl,
-      convertTiffToPngUrl,
-    ),
+    getUrlWithDependencies('/workspace/image.png', readAsObjectUrl, readFileAsBlob, convertHeicToPngUrl, convertTiffToPngUrl),
   ).resolves.toBe('blob:https://example.com/image-id')
   expect(readAsObjectUrl).toHaveBeenCalledWith('/workspace/image.png')
 })
