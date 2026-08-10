@@ -6,7 +6,7 @@
   "browser": "dist/mediaPreviewMain.js",
   "contentSecurityPolicy": ["default-src 'none'", "script-src 'self'"],
   "isolated": true,
-  "workerName": "Media Preview Extension Worker",
+  "workerName": "Media Preview Worker",
   "activation": ["onView:builtin.media-preview"],
   "languages": [],
   "rpc": [
