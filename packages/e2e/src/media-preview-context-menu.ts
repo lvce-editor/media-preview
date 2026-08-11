@@ -15,10 +15,39 @@ export const test: Test = async ({ Command, ContextMenu, expect, Locator, Main }
 
   const states = await Command.execute('Viewlet.getAllStates')
   const mediaPreview = Object.values(states).find(({ viewId }: any) => viewId === 'builtin.media-preview') as any
-  await Command.execute('Viewlet.executeViewletCommand', mediaPreview.uid, 'handleMediaPreviewWheel', -100, 0)
-  await Command.execute('Viewlet.executeViewletCommand', mediaPreview.uid, 'handleMediaPreviewPointerDown', 0, 0, 0)
-  await Command.execute('Viewlet.executeViewletCommand', mediaPreview.uid, 'handleMediaPreviewPointerMove', 10, 20)
-  await Command.execute('Viewlet.executeViewletCommand', mediaPreview.uid, 'handleMediaPreviewPointerUp', 10, 20)
+  await Command.execute(
+    'Viewlet.executeViewletCommand',
+    mediaPreview.uid,
+    'handleViewCommand',
+    'handleMediaPreviewWheel',
+    -100,
+    0,
+  )
+  await Command.execute(
+    'Viewlet.executeViewletCommand',
+    mediaPreview.uid,
+    'handleViewCommand',
+    'handleMediaPreviewPointerDown',
+    0,
+    0,
+    0,
+  )
+  await Command.execute(
+    'Viewlet.executeViewletCommand',
+    mediaPreview.uid,
+    'handleViewCommand',
+    'handleMediaPreviewPointerMove',
+    10,
+    20,
+  )
+  await Command.execute(
+    'Viewlet.executeViewletCommand',
+    mediaPreview.uid,
+    'handleViewCommand',
+    'handleMediaPreviewPointerUp',
+    10,
+    20,
+  )
   const content = Locator('.MediaPreviewContent')
   await expect(content).not.toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)')
   await Command.execute('Viewlet.executeViewletCommand', mediaPreview.uid, 'handleContextMenu', 'image', 10, 10)

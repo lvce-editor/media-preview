@@ -237,7 +237,7 @@ test('shows the image context menu and provides image commands', async () => {
       label: 'Copy Image',
     },
     {
-      args: [7, 'handleResetImage'],
+      args: [7, 'handleViewCommand', 'handleResetImage'],
       command: 'Viewlet.executeViewletCommand',
       id: 'resetImage',
       label: 'Reset Image',
