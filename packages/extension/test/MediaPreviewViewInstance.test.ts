@@ -28,6 +28,7 @@ const createApi = (): MockMediaPreviewApi => {
     handlePointerMove: jest.fn((_id: number, _x: number, _y: number) => initialState),
     handlePointerUp: jest.fn((_id: number, _x: number, _y: number) => initialState),
     handleWheel: jest.fn((_id: number, _eventX: number, _eventY: number, _deltaX: number, _deltaY: number) => initialState),
+    reset: jest.fn((_id: number) => initialState),
     saveState: jest.fn((_id: number) => ({ domMatrix: initialState.domMatrixString })),
     setSavedState: jest.fn((_id: number, _state: unknown) => {}),
   }
@@ -273,7 +274,7 @@ test('only starts dragging for the left mouse button', async () => {
   expect(instance.render()[0].className).toBe('MediaPreview')
 })
 
-test('shows the image context menu and provides copy commands', async () => {
+test('shows the image context menu and provides image commands', async () => {
   const api = createApi()
   const showContextMenu = jest.fn(async (_menuId: string, _x: number, _y: number) => {})
   const contextWithMenu = {
@@ -299,7 +300,31 @@ test('shows the image context menu and provides copy commands', async () => {
       id: 'copyImage',
       label: 'Copy Image',
     },
+    {
+      args: [7, 'handleViewCommand', 'handleResetImage'],
+      command: 'Viewlet.executeViewletCommand',
+      flags: 6,
+      id: 'resetImage',
+      label: 'Reset Image',
+    },
   ])
+})
+
+test('resets image zoom and drag', async () => {
+  const api = createApi()
+  api.handleWheel.mockReturnValue({
+    ...initialState,
+    domMatrixString: 'matrix(2, 0, 0, 2, 10, 20)',
+  })
+  const instance = await createInstanceWithApi(context, api)
+
+  instance.handleMediaPreviewWheel(70, 0)
+  instance.handleResetImage()
+
+  expect(api.reset).toHaveBeenCalledWith(7)
+  expect(instance.getCss()).toBe(`.MediaPreview {
+  --MediaPreviewTransform: matrix(1, 0, 0, 1, 0, 0);
+}`)
 })
 
 test('updates the transform css without changing the virtual dom', async () => {
@@ -310,7 +335,6 @@ test('updates the transform css without changing the virtual dom', async () => {
   })
   const instance = await createInstanceWithApi(context, api)
   const oldDom = instance.render()
-
   instance.handleMediaPreviewWheel(70, 0)
 
   expect(instance.render()).toEqual(oldDom)
