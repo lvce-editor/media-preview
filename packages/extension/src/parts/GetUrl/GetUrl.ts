@@ -4,7 +4,8 @@ import { convertTiffToPngUrl } from '../ConvertTiffToPngUrl/ConvertTiffToPngUrl.
 
 type ReadAsObjectUrl = (uri: string) => Promise<ReadAsObjectUrlResult>
 type ReadFileAsBlob = (uri: string) => Promise<Blob>
-type ConvertToPngUrl = (blob: Blob) => Promise<string>
+type ConvertHeicToPngUrl = (uri: string) => Promise<string>
+type ConvertTiffToPngUrl = (blob: Blob) => Promise<string>
 
 const isHeicUri = (uri: string): boolean => {
   const normalizedUri = uri.toLowerCase()
@@ -20,13 +21,12 @@ export const getUrlWithDependencies = async (
   uri: string,
   read: ReadAsObjectUrl,
   readBlob: ReadFileAsBlob,
-  convertHeic: ConvertToPngUrl,
-  convertTiff: ConvertToPngUrl,
+  convertHeic: ConvertHeicToPngUrl,
+  convertTiff: ConvertTiffToPngUrl,
 ): Promise<string> => {
   if (isHeicUri(uri)) {
     try {
-      const blob = await readBlob(uri)
-      return await convertHeic(blob)
+      return await convertHeic(uri)
     } catch {
       return ''
     }
