@@ -1,4 +1,5 @@
-import { expect, test } from '@jest/globals'
+import { expect, jest, test } from '@jest/globals'
+import type { MediaPreviewViewInstance } from '../src/parts/MediaPreviewViewInstance/MediaPreviewViewInstance.ts'
 import { view, viewId } from '../src/parts/MediaPreviewView/MediaPreviewView.ts'
 
 test('contributes a virtual dom media preview view', () => {
@@ -19,4 +20,15 @@ test('contributes a virtual dom media preview view', () => {
     'handleMediaPreviewPointerUp',
     'handleMediaPreviewWheel',
   ])
+})
+
+test('contributes a reset image command', async () => {
+  const instance = {
+    handleResetImage: jest.fn(),
+  } as unknown as MediaPreviewViewInstance
+
+  const result = await view.commands?.['mediaPreview.resetImage']?.(instance)
+
+  expect(instance.handleResetImage).toHaveBeenCalledTimes(1)
+  expect(result).toBe(instance)
 })

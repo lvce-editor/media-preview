@@ -6,6 +6,12 @@ export const viewId = 'builtin.media-preview'
 // The coordinate-bearing view command transports both pointer coordinates.
 // The instance distinguishes these synthetic events by name.
 export const view: View<MediaPreviewViewInstance> = {
+  commands: {
+    'mediaPreview.resetImage': (instance) => {
+      instance.handleResetImage()
+      return instance
+    },
+  },
   create: createInstance,
   eventListeners: [
     {

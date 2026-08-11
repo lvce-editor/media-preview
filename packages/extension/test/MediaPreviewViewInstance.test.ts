@@ -237,8 +237,7 @@ test('shows the image context menu and provides image commands', async () => {
       label: 'Copy Image',
     },
     {
-      args: [7, 'handleViewCommand', 'handleResetImage'],
-      command: 'Viewlet.executeViewletCommand',
+      command: 'mediaPreview.resetImage',
       id: 'resetImage',
       label: 'Reset Image',
     },
