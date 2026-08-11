@@ -37,6 +37,10 @@
           "params": ["handleMediaPreviewImageLoad", "event.currentTarget.naturalWidth", "event.currentTarget.naturalHeight"]
         },
         {
+          "name": "handleMediaPreviewKeyDown",
+          "params": ["handleMediaPreviewKeyDown", "event.key"]
+        },
+        {
           "name": "handleMediaPreviewPointerDown",
           "params": ["handleMediaPreviewPointerDown", "event.button", "event.clientX", "event.clientY"],
           "preventDefault": true,
