@@ -1,23 +1,23 @@
 import { getFileHash, getPreference, readFileAsBlob } from '@lvce-editor/api'
 import * as ImageConversionWorker from '../ImageConversionWorker/ImageConversionWorker.ts'
 
-type ConvertHeicToPng = (heic: Blob) => Promise<Blob>
+type ConvertHeicToPreview = (heic: Blob) => Promise<Blob>
 type CreateObjectUrl = (blob: Blob) => string
 type GetFileHash = (uri: string) => Promise<string>
 type GetPreference = (key: string) => Promise<unknown>
 type ReadFileAsBlob = (uri: string) => Promise<Blob>
 
-interface ConvertHeicToPngUrlDependencies {
+interface ConvertHeicToPreviewUrlDependencies {
   readonly cacheStorage: Readonly<CacheStorage> | undefined
-  readonly convert: ConvertHeicToPng
+  readonly convert: ConvertHeicToPreview
   readonly createUrl: CreateObjectUrl
   readonly getHash: GetFileHash
   readonly getSetting: GetPreference
   readonly readBlob: ReadFileAsBlob
 }
 
-const CacheName = 'builtin.media-preview.heic-png-v1'
-const CacheKeyPrefix = 'https://media-preview-cache.invalid/heic-png/'
+const CacheName = 'builtin.media-preview.heic-preview-v1'
+const CacheKeyPrefix = 'https://media-preview-cache.invalid/heic-preview/'
 const CachingEnabledSetting = 'mediaPreview.cachingEnabled'
 
 const createObjectUrl = (blob: Blob): string => {
@@ -36,10 +36,10 @@ const getCache = async (cacheStorage: Readonly<CacheStorage> | undefined): Promi
 }
 
 const getCacheKey = (hash: string): string => {
-  return `${CacheKeyPrefix}${encodeURIComponent(hash)}.png`
+  return `${CacheKeyPrefix}${encodeURIComponent(hash)}.webp`
 }
 
-const getCachedPng = async (cache: Readonly<Cache> | undefined, key: string): Promise<Blob | undefined> => {
+const getCachedPreview = async (cache: Readonly<Cache> | undefined, key: string): Promise<Blob | undefined> => {
   if (!cache) {
     return undefined
   }
@@ -59,49 +59,49 @@ const getFileHashForCache = async (uri: string, getHash: GetFileHash): Promise<s
   }
 }
 
-const putCachedPng = async (cache: Readonly<Cache> | undefined, key: string, png: Blob): Promise<void> => {
+const putCachedPreview = async (cache: Readonly<Cache> | undefined, key: string, preview: Blob): Promise<void> => {
   if (!cache) {
     return
   }
   try {
-    await cache.put(key, new Response(png))
+    await cache.put(key, new Response(preview))
   } catch {
     // Caching is best-effort; the converted image can still be displayed.
   }
 }
 
-export const convertHeicToPngUrlWithDependencies = async (
+export const convertHeicToPreviewUrlWithDependencies = async (
   uri: string,
-  dependencies: ConvertHeicToPngUrlDependencies,
+  dependencies: ConvertHeicToPreviewUrlDependencies,
 ): Promise<string> => {
   const { cacheStorage, convert, createUrl, getHash, getSetting, readBlob } = dependencies
   const cachingEnabled = (await getSetting(CachingEnabledSetting)) === true
   if (!cachingEnabled) {
     const heic = await readBlob(uri)
-    const png = await convert(heic)
-    return createUrl(png)
+    const preview = await convert(heic)
+    return createUrl(preview)
   }
 
   const hash = await getFileHashForCache(uri, getHash)
   const cache = hash ? await getCache(cacheStorage) : undefined
   const cacheKey = hash ? getCacheKey(hash) : ''
-  const cachedPng = cacheKey ? await getCachedPng(cache, cacheKey) : undefined
-  if (cachedPng) {
-    return createUrl(cachedPng)
+  const cachedPreview = cacheKey ? await getCachedPreview(cache, cacheKey) : undefined
+  if (cachedPreview) {
+    return createUrl(cachedPreview)
   }
 
   const heic = await readBlob(uri)
-  const png = await convert(heic)
+  const preview = await convert(heic)
   if (cacheKey) {
-    await putCachedPng(cache, cacheKey, png)
+    await putCachedPreview(cache, cacheKey, preview)
   }
-  return createUrl(png)
+  return createUrl(preview)
 }
 
-export const convertHeicToPngUrl = async (uri: string): Promise<string> => {
-  return convertHeicToPngUrlWithDependencies(uri, {
+export const convertHeicToPreviewUrl = async (uri: string): Promise<string> => {
+  return convertHeicToPreviewUrlWithDependencies(uri, {
     cacheStorage: globalThis.caches,
-    convert: ImageConversionWorker.convertHeicToPng,
+    convert: ImageConversionWorker.convertHeicToPreview,
     createUrl: createObjectUrl,
     getHash: getFileHash,
     getSetting: getPreference,

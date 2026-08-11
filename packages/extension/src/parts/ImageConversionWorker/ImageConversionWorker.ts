@@ -26,9 +26,9 @@ const getRpc = (): Promise<Rpc> => {
   return newRpcPromise
 }
 
-export const convertHeicToPng = async (heic: Blob): Promise<Blob> => {
+export const convertHeicToPreview = async (heic: Blob): Promise<Blob> => {
   const rpc = await getRpc()
-  return rpc.invoke('ImageConversion.convertHeicToPng', heic) as Promise<Blob>
+  return rpc.invoke('ImageConversion.convertHeicToPreview', heic) as Promise<Blob>
 }
 
 export const convertTiffToPng = async (tiff: Blob): Promise<Blob> => {

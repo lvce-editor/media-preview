@@ -1,11 +1,11 @@
 import { beforeEach, expect, jest, test } from '@jest/globals'
-import { convertHeicToPngUrlWithDependencies } from '../src/parts/ConvertHeicToPngUrl/ConvertHeicToPngUrl.ts'
+import { convertHeicToPreviewUrlWithDependencies } from '../src/parts/ConvertHeicToPreviewUrl/ConvertHeicToPreviewUrl.ts'
 
 const uri = 'file:///workspace/image.heic'
 const hash = 'sha256-image-hash'
-const cacheKey = `https://media-preview-cache.invalid/heic-png/${hash}.png`
+const cacheKey = `https://media-preview-cache.invalid/heic-preview/${hash}.webp`
 const heic = new Blob(['heic'], { type: 'image/heic' })
-const png = new Blob(['png'], { type: 'image/png' })
+const preview = new Blob(['preview'], { type: 'image/webp' })
 const convert = jest.fn<(blob: Blob) => Promise<Blob>>()
 const createObjectUrl = jest.fn<(blob: Blob) => string>()
 const getHash = jest.fn<(uri: string) => Promise<string>>()
@@ -31,7 +31,7 @@ const createMemoryCacheStorage = (
   } as unknown as Cache
   const cacheStorage = {
     async open(name: string): Promise<Cache> {
-      expect(name).toBe('builtin.media-preview.heic-png-v1')
+      expect(name).toBe('builtin.media-preview.heic-preview-v1')
       return cache
     },
   } as unknown as CacheStorage
@@ -40,8 +40,8 @@ const createMemoryCacheStorage = (
 
 beforeEach(() => {
   jest.resetAllMocks()
-  convert.mockResolvedValue(png)
-  createObjectUrl.mockReturnValue('blob:https://example.com/png-id')
+  convert.mockResolvedValue(preview)
+  createObjectUrl.mockReturnValue('blob:https://example.com/preview-id')
   getHash.mockResolvedValue(hash)
   readFileAsBlob.mockResolvedValue(heic)
 })
@@ -51,7 +51,7 @@ test('converts without querying the hash or cache when caching is disabled', asy
   const { cacheStorage, putKeys } = createMemoryCacheStorage()
 
   await expect(
-    convertHeicToPngUrlWithDependencies(uri, {
+    convertHeicToPreviewUrlWithDependencies(uri, {
       cacheStorage,
       convert,
       createUrl: createObjectUrl,
@@ -59,25 +59,25 @@ test('converts without querying the hash or cache when caching is disabled', asy
       getSetting,
       readBlob: readFileAsBlob,
     }),
-  ).resolves.toBe('blob:https://example.com/png-id')
+  ).resolves.toBe('blob:https://example.com/preview-id')
 
   expect(getSetting).toHaveBeenCalledWith('mediaPreview.cachingEnabled')
   expect(getHash).not.toHaveBeenCalled()
   expect(putKeys).toEqual([])
   expect(readFileAsBlob).toHaveBeenCalledWith(uri)
   expect(convert).toHaveBeenCalledWith(heic)
-  expect(createObjectUrl).toHaveBeenCalledWith(png)
+  expect(createObjectUrl).toHaveBeenCalledWith(preview)
 })
 
-test('uses the cached PNG before reading the HEIC blob when caching is enabled', async () => {
+test('uses the cached preview before reading the HEIC blob when caching is enabled', async () => {
   getSetting.mockResolvedValue(true)
-  const cachedPng = new Blob(['cached png'], { type: 'image/png' })
+  const cachedPreview = new Blob(['cached preview'], { type: 'image/webp' })
   const { cacheStorage, putKeys } = createMemoryCacheStorage({
-    [cacheKey]: new Response(cachedPng),
+    [cacheKey]: new Response(cachedPreview),
   })
 
   await expect(
-    convertHeicToPngUrlWithDependencies(uri, {
+    convertHeicToPreviewUrlWithDependencies(uri, {
       cacheStorage,
       convert,
       createUrl: createObjectUrl,
@@ -85,22 +85,22 @@ test('uses the cached PNG before reading the HEIC blob when caching is enabled',
       getSetting,
       readBlob: readFileAsBlob,
     }),
-  ).resolves.toBe('blob:https://example.com/png-id')
+  ).resolves.toBe('blob:https://example.com/preview-id')
 
   expect(getHash).toHaveBeenCalledWith(uri)
   expect(readFileAsBlob).not.toHaveBeenCalled()
   expect(convert).not.toHaveBeenCalled()
   expect(putKeys).toEqual([])
   expect(createObjectUrl).toHaveBeenCalledTimes(1)
-  expect(await createObjectUrl.mock.calls[0][0].text()).toBe('cached png')
+  expect(await createObjectUrl.mock.calls[0][0].text()).toBe('cached preview')
 })
 
-test('converts and caches the PNG after a cache miss', async () => {
+test('converts and caches the preview after a cache miss', async () => {
   getSetting.mockResolvedValue(true)
   const { cacheStorage, putKeys } = createMemoryCacheStorage()
 
   await expect(
-    convertHeicToPngUrlWithDependencies(uri, {
+    convertHeicToPreviewUrlWithDependencies(uri, {
       cacheStorage,
       convert,
       createUrl: createObjectUrl,
@@ -108,21 +108,21 @@ test('converts and caches the PNG after a cache miss', async () => {
       getSetting,
       readBlob: readFileAsBlob,
     }),
-  ).resolves.toBe('blob:https://example.com/png-id')
+  ).resolves.toBe('blob:https://example.com/preview-id')
 
   expect(getHash).toHaveBeenCalledWith(uri)
   expect(readFileAsBlob).toHaveBeenCalledWith(uri)
   expect(getHash.mock.invocationCallOrder[0]).toBeLessThan(readFileAsBlob.mock.invocationCallOrder[0])
   expect(convert).toHaveBeenCalledWith(heic)
   expect(putKeys).toEqual([cacheKey])
-  expect(createObjectUrl).toHaveBeenCalledWith(png)
+  expect(createObjectUrl).toHaveBeenCalledWith(preview)
 })
 
 test('falls back to conversion when Cache Storage is unavailable', async () => {
   getSetting.mockResolvedValue(true)
 
   await expect(
-    convertHeicToPngUrlWithDependencies(uri, {
+    convertHeicToPreviewUrlWithDependencies(uri, {
       cacheStorage: undefined,
       convert,
       createUrl: createObjectUrl,
@@ -130,7 +130,7 @@ test('falls back to conversion when Cache Storage is unavailable', async () => {
       getSetting,
       readBlob: readFileAsBlob,
     }),
-  ).resolves.toBe('blob:https://example.com/png-id')
+  ).resolves.toBe('blob:https://example.com/preview-id')
 
   expect(getHash).toHaveBeenCalledWith(uri)
   expect(readFileAsBlob).toHaveBeenCalledWith(uri)
