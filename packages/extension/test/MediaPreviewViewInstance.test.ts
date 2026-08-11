@@ -53,8 +53,6 @@ test('creates a preview and renders its image', async () => {
   expect(instance.getCss()).toBe(`.MediaPreview {
   --MediaPreviewTransform: matrix(1, 0, 0, 1, 0, 0);
 }`)
-  expect(instance.getContext?.()).toEqual({ mediaPreviewFocus: true })
-  expect(instance.renderFocus?.({}, {})).toBe('.MediaPreview')
 })
 
 test('navigates to the next and previous image and resets the preview state', async () => {

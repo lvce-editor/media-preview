@@ -8,7 +8,20 @@ const getSvg = (width: number): string => {
 
 export const name = 'media-preview-keyboard-navigation'
 
-export const test: Test = async ({ expect, FileSystem, KeyBoard, Locator, Main }) => {
+const waitForExpectation = async (assertion: () => Promise<void>): Promise<void> => {
+  for (let attempt = 0; attempt < 40; attempt++) {
+    try {
+      await assertion()
+      return
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+  }
+  await assertion()
+}
+
+export const test: Test = async ({ Command, expect, FileSystem, KeyBoard, Locator, Main, Settings }) => {
+  await Settings.update({ 'statusBar.itemsVisible': true })
   const tmpDir = await FileSystem.getTmpDir()
   await FileSystem.setFiles([
     { content: getSvg(100), uri: `${tmpDir}/image1.svg` },
@@ -17,21 +30,28 @@ export const test: Test = async ({ expect, FileSystem, KeyBoard, Locator, Main }
     { content: 'not an image', uri: `${tmpDir}/notes.txt` },
   ])
   await Main.openUri(`${tmpDir}/image2.svg`)
+  const preview = Locator('.MediaPreview')
   const image = Locator('.MediaPreviewImage')
+  const dimensions = Locator('.StatusBarItem[name="media-preview-dimensions"]')
+  const states = await Command.execute('Viewlet.getAllStates')
+  const mediaPreview = Object.values(states).find(({ viewId }: any) => viewId === 'builtin.media-preview') as any
+  await Command.execute('Viewlet.focusSelector', mediaPreview.uid, '.MediaPreview')
+  await expect(preview).toBeFocused()
   await expect(image).toHaveJSProperty('naturalWidth', 200)
+  await waitForExpectation(() => expect(dimensions).toHaveText('200 × 100'))
 
   await KeyBoard.press('ArrowRight')
-  await expect(image).toHaveJSProperty('naturalWidth', 300)
+  await waitForExpectation(() => expect(dimensions).toHaveText('300 × 100'))
 
   await KeyBoard.press('ArrowRight')
-  await expect(image).toHaveJSProperty('naturalWidth', 300)
+  await expect(dimensions).toHaveText('300 × 100')
 
   await KeyBoard.press('ArrowLeft')
-  await expect(image).toHaveJSProperty('naturalWidth', 200)
+  await waitForExpectation(() => expect(dimensions).toHaveText('200 × 100'))
 
   await KeyBoard.press('ArrowLeft')
-  await expect(image).toHaveJSProperty('naturalWidth', 100)
+  await waitForExpectation(() => expect(dimensions).toHaveText('100 × 100'))
 
   await KeyBoard.press('ArrowLeft')
-  await expect(image).toHaveJSProperty('naturalWidth', 100)
+  await expect(dimensions).toHaveText('100 × 100')
 }

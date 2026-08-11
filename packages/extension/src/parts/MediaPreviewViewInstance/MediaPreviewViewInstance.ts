@@ -193,11 +193,6 @@ export const createInstanceWithApi = async (
     dispose(): void {
       api.dispose(id)
     },
-    getContext(): Readonly<Record<string, boolean>> {
-      return {
-        mediaPreviewFocus: true,
-      }
-    },
     getCss(): string {
       const { domMatrixString } = state
       return getCss(domMatrixString)
@@ -287,9 +282,6 @@ export const createInstanceWithApi = async (
     },
     render(): readonly VirtualDomNode[] {
       return render(state)
-    },
-    renderFocus(): string {
-      return '.MediaPreview'
     },
     renderStatusBarItems(): readonly StatusBarItem[] {
       return renderStatusBarItems(state)
