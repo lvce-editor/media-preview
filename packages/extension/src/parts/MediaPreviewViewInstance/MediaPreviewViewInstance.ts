@@ -38,6 +38,7 @@ export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
   readonly handleMediaPreviewPointerUp: (x: unknown, y: unknown) => void
   readonly handleMediaPreviewWheel: (deltaY: unknown, deltaMode: unknown) => void
   readonly handleOpenInTextEditor: () => Promise<unknown>
+  readonly handleResetImage: () => void
   readonly render: () => readonly VirtualDomNode[]
   readonly renderStatusBarItems: () => readonly StatusBarItem[]
   readonly saveState: () => Promise<unknown>
@@ -55,6 +56,7 @@ interface MediaPreviewApi {
   readonly handlePointerMove: (id: number, x: number, y: number) => Partial<MediaPreviewState>
   readonly handlePointerUp: (id: number, x: number, y: number) => Partial<MediaPreviewState>
   readonly handleWheel: (id: number, eventX: number, eventY: number, deltaX: number, deltaY: number) => Partial<MediaPreviewState>
+  readonly reset: (id: number) => Partial<MediaPreviewState>
   readonly saveState: (id: number) => unknown
   readonly setSavedState: (id: number, state: unknown) => unknown
 }
@@ -159,6 +161,12 @@ export const createInstanceWithApi = async (
           id: 'copyImage',
           label: 'Copy Image',
         },
+        {
+          args: [id, 'handleResetImage'],
+          command: 'Viewlet.executeViewletCommand',
+          id: 'resetImage',
+          label: 'Reset Image',
+        },
       ]
     },
     async handleEvent(event: Readonly<ViewEvent>): Promise<void> {
@@ -216,6 +224,9 @@ export const createInstanceWithApi = async (
     },
     handleOpenInTextEditor(): Promise<unknown> {
       return execute('Main.reopenEditorWith', 'editor')
+    },
+    handleResetImage(): void {
+      updateState(api.reset(id))
     },
     render(): readonly VirtualDomNode[] {
       return render(state)

@@ -7,6 +7,7 @@ import * as HandlePointerDown from '../HandlePointerDown/HandlePointerDown.ts'
 import * as HandlePointerMove from '../HandlePointerMove/HandlePointerMove.ts'
 import * as HandlePointerUp from '../HandlePointerUp/HandlePointerUp.ts'
 import * as HandleWheel from '../HandleWheel/HandleWheel.ts'
+import * as Reset from '../Reset/Reset.ts'
 import * as WebViewStates from '../WebViewStates/WebViewStates.ts'
 
 export interface State {
@@ -51,3 +52,4 @@ export const handlePointerDown = wrapCommand(HandlePointerDown.handlePointerDown
 export const handlePointerMove = wrapCommand(HandlePointerMove.handlePointerMove)
 export const handlePointerUp = wrapCommand(HandlePointerUp.handlePointerUp)
 export const handleWheel = wrapCommand(HandleWheel.handleWheel)
+export const reset = wrapCommand(Reset.reset)
