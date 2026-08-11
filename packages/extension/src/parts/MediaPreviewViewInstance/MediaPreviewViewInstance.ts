@@ -33,6 +33,7 @@ export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
   readonly getMenuEntries: (menuId: string) => Promise<readonly MenuEntry[]>
   readonly handleMediaPreviewImageError: () => Promise<void>
   readonly handleMediaPreviewImageLoad: (width: unknown, height: unknown) => void
+  readonly handleMediaPreviewKeyDown: (key: unknown) => Promise<void>
   readonly handleMediaPreviewPointerDown: (button: unknown, x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerMove: (x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerUp: (x: unknown, y: unknown) => void
@@ -48,6 +49,7 @@ interface MediaPreviewApi {
   readonly dispose: (id: number) => unknown
   readonly exists: (uri: string) => Promise<boolean>
   readonly getFileSize: (uri: string) => Promise<number>
+  readonly getSiblingImageUris: (uri: string) => Promise<readonly string[]>
   readonly getState: (id: number) => Pick<MediaPreviewState, 'domMatrixString' | 'error' | 'pointerDown'>
   readonly getUrl: (uri: string) => Promise<string>
   readonly handleError: (id: number) => Partial<MediaPreviewState>
@@ -99,7 +101,7 @@ export const createInstanceWithApi = async (
 ): Promise<MediaPreviewViewInstance> => {
   const viewContext: MediaPreviewViewContext | undefined = context
   const id = viewContext?.uid ?? 0
-  const uri = getUri(viewContext)
+  let uri = getUri(viewContext)
   api.create(id)
   api.setSavedState(id, context?.state)
   const previewState = api.getState(id)
@@ -116,6 +118,8 @@ export const createInstanceWithApi = async (
     url,
     width: 0,
   }
+  let siblingImageUrisPromise: Promise<readonly string[]> | undefined
+  let navigationPromise = Promise.resolve()
 
   const updateState = (newState: Partial<MediaPreviewState>): void => {
     state = {
@@ -133,9 +137,66 @@ export const createInstanceWithApi = async (
     })
   }
 
+  const loadSiblingImageUris = async (): Promise<readonly string[]> => {
+    try {
+      return await api.getSiblingImageUris(uri)
+    } catch {
+      return []
+    }
+  }
+
+  const getSiblingImageUris = (): Promise<readonly string[]> => {
+    siblingImageUrisPromise ||= loadSiblingImageUris()
+    return siblingImageUrisPromise
+  }
+
+  const navigateToSibling = async (offset: number): Promise<void> => {
+    const siblingImageUris = await getSiblingImageUris()
+    const currentIndex = siblingImageUris.indexOf(uri)
+    const nextUri = siblingImageUris[currentIndex + offset]
+    if (!nextUri || currentIndex === -1) {
+      return
+    }
+    uri = nextUri
+    api.create(id)
+    const previewState = api.getState(id)
+    const [url, fileSize] = await Promise.all([api.getUrl(uri), api.getFileSize(uri)])
+    const error = !url || previewState.error
+    const errorMessage = error ? await getImageErrorMessage(uri, api.exists) : ''
+    updateState({
+      ...previewState,
+      canOpenAsText: canOpenAsText(uri, errorMessage),
+      error,
+      errorMessage,
+      fileSize,
+      height: 0,
+      url,
+      width: 0,
+    })
+  }
+
+  const queueNavigation = async (offset: number): Promise<void> => {
+    const previousNavigation = navigationPromise
+    const navigation = async (): Promise<void> => {
+      try {
+        await previousNavigation
+      } catch {
+        // Keep later key presses usable if an image failed to load.
+      }
+      await navigateToSibling(offset)
+    }
+    navigationPromise = navigation()
+    await navigationPromise
+  }
+
   return {
     dispose(): void {
       api.dispose(id)
+    },
+    getContext(): Readonly<Record<string, boolean>> {
+      return {
+        mediaPreviewFocus: true,
+      }
     },
     getCss(): string {
       const { domMatrixString } = state
@@ -199,6 +260,13 @@ export const createInstanceWithApi = async (
         width: getNumber(width),
       })
     },
+    async handleMediaPreviewKeyDown(key: unknown): Promise<void> {
+      if (key === 'ArrowLeft') {
+        await queueNavigation(-1)
+      } else if (key === 'ArrowRight') {
+        await queueNavigation(1)
+      }
+    },
     handleMediaPreviewPointerDown(button: unknown, x: unknown, y: unknown): void {
       if (button !== 0) {
         return
@@ -219,6 +287,9 @@ export const createInstanceWithApi = async (
     },
     render(): readonly VirtualDomNode[] {
       return render(state)
+    },
+    renderFocus(): string {
+      return '.MediaPreview'
     },
     renderStatusBarItems(): readonly StatusBarItem[] {
       return renderStatusBarItems(state)

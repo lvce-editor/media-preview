@@ -14,9 +14,14 @@ test('contributes a virtual dom media preview view', () => {
     'handleMediaPreviewImageError',
     'handleMediaPreviewImageLoad',
     'handleOpenInTextEditor',
+    'handleMediaPreviewKeyDown',
     'handleMediaPreviewPointerDown',
     'handleMediaPreviewPointerMove',
     'handleMediaPreviewPointerUp',
     'handleMediaPreviewWheel',
+  ])
+  expect(view.eventListeners?.find((listener) => listener.name === 'handleMediaPreviewKeyDown')?.params).toEqual([
+    'handleMediaPreviewKeyDown',
+    'event.key',
   ])
 })

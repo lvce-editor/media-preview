@@ -20,6 +20,7 @@ const createApi = (): MockMediaPreviewApi => {
     dispose: jest.fn((_id: number) => {}),
     exists: jest.fn(async (_uri: string) => true),
     getFileSize: jest.fn(async (_uri: string) => 512_596),
+    getSiblingImageUris: jest.fn(async (uri: string) => [uri]),
     getState: jest.fn((_id: number) => initialState),
     getUrl: jest.fn(async (_uri: string) => 'blob:https://example.com/image-id'),
     handleError: jest.fn((_id: number) => ({ ...initialState, error: true })),
@@ -52,6 +53,71 @@ test('creates a preview and renders its image', async () => {
   expect(instance.getCss()).toBe(`.MediaPreview {
   --MediaPreviewTransform: matrix(1, 0, 0, 1, 0, 0);
 }`)
+  expect(instance.getContext?.()).toEqual({ mediaPreviewFocus: true })
+  expect(instance.renderFocus?.({}, {})).toBe('.MediaPreview')
+})
+
+test('navigates to the next and previous image and resets the preview state', async () => {
+  const api = createApi()
+  api.getSiblingImageUris.mockResolvedValue(['/workspace/image1.png', '/workspace/image2.png', '/workspace/image10.png'])
+  api.getUrl.mockImplementation(async (uri: string) => `blob:${uri}`)
+  api.getFileSize.mockImplementation(async (uri: string) => (uri.endsWith('image2.png') ? 200 : 100))
+  api.handleWheel.mockReturnValue({
+    ...initialState,
+    domMatrixString: 'matrix(2, 0, 0, 2, 10, 20)',
+  })
+  const image2Context = {
+    ...context,
+    uri: '/workspace/image2.png',
+  } as unknown as ViewContext
+  const instance = await createInstanceWithApi(image2Context, api)
+  instance.handleMediaPreviewWheel(70, 0)
+
+  await instance.handleMediaPreviewKeyDown('ArrowRight')
+
+  expect(api.getSiblingImageUris).toHaveBeenCalledTimes(1)
+  expect(api.getSiblingImageUris).toHaveBeenCalledWith('/workspace/image2.png')
+  expect(api.create).toHaveBeenCalledTimes(2)
+  expect(api.getUrl).toHaveBeenLastCalledWith('/workspace/image10.png')
+  expect(instance.render().some((node) => node.src === 'blob:/workspace/image10.png')).toBe(true)
+  expect(instance.getCss()).toBe(`.MediaPreview {
+  --MediaPreviewTransform: matrix(1, 0, 0, 1, 0, 0);
+}`)
+
+  await instance.handleMediaPreviewKeyDown('ArrowLeft')
+
+  expect(api.getSiblingImageUris).toHaveBeenCalledTimes(1)
+  expect(api.getUrl).toHaveBeenLastCalledWith('/workspace/image2.png')
+  expect(instance.renderStatusBarItems()[1]?.text).toBe('200 B')
+})
+
+test('does nothing at image boundaries or for unrelated keys', async () => {
+  const api = createApi()
+  api.getSiblingImageUris.mockResolvedValue(['/workspace/image.png', '/workspace/next.png'])
+  const instance = await createInstanceWithApi(context, api)
+
+  await instance.handleMediaPreviewKeyDown('ArrowLeft')
+  await instance.handleMediaPreviewKeyDown('ArrowUp')
+
+  expect(api.create).toHaveBeenCalledTimes(1)
+  expect(api.getUrl).toHaveBeenCalledTimes(1)
+
+  await instance.handleMediaPreviewKeyDown('ArrowRight')
+  await instance.handleMediaPreviewKeyDown('ArrowRight')
+
+  expect(api.create).toHaveBeenCalledTimes(2)
+  expect(api.getUrl).toHaveBeenCalledTimes(2)
+})
+
+test('does nothing when sibling discovery fails', async () => {
+  const api = createApi()
+  api.getSiblingImageUris.mockRejectedValue(new Error('filesystem unavailable'))
+  const instance = await createInstanceWithApi(context, api)
+
+  await instance.handleMediaPreviewKeyDown('ArrowRight')
+
+  expect(api.create).toHaveBeenCalledTimes(1)
+  expect(api.getUrl).toHaveBeenCalledTimes(1)
 })
 
 test('renders a load error when the image URL cannot be read but the file exists', async () => {
@@ -265,6 +331,25 @@ test('saves the URI with preview state and disposes the preview instance', async
   })
   await instance.dispose?.()
   expect(api.dispose).toHaveBeenCalledWith(7)
+})
+
+test('saves and copies the navigated image URI', async () => {
+  const api = createApi()
+  api.getSiblingImageUris.mockResolvedValue(['/workspace/image.png', '/workspace/next.png'])
+  const instance = await createInstanceWithApi(context, api)
+
+  await instance.handleMediaPreviewKeyDown('ArrowRight')
+
+  await expect(instance.saveState()).resolves.toEqual({
+    domMatrix: initialState.domMatrixString,
+    uri: '/workspace/next.png',
+  })
+  await expect(instance.getMenuEntries('mediaPreview.image')).resolves.toContainEqual({
+    args: ['/workspace/next.png'],
+    command: 'ClipBoard.writeText',
+    id: 'copyPath',
+    label: 'Copy Path',
+  })
 })
 
 test('forwards legacy view events and normalizes invalid coordinates', async () => {

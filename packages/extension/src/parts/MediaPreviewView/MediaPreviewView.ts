@@ -22,6 +22,10 @@ export const view: View<MediaPreviewViewInstance> = {
       preventDefault: true,
     },
     {
+      name: 'handleMediaPreviewKeyDown',
+      params: ['handleMediaPreviewKeyDown', 'event.key'],
+    },
+    {
       name: 'handleMediaPreviewPointerDown',
       params: ['handleMediaPreviewPointerDown', 'event.button', 'event.clientX', 'event.clientY'],
       preventDefault: true,

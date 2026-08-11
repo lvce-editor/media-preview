@@ -1,6 +1,7 @@
 import { expect, test } from '@jest/globals'
 import { mergeClassNames, VirtualDomElements } from '@lvce-editor/virtual-dom-worker'
 import { render } from '../src/parts/RenderMediaPreview/RenderMediaPreview.ts'
+import * as TabIndex from '../src/parts/TabIndex/TabIndex.ts'
 
 const state = {
   canOpenAsText: false,
@@ -21,8 +22,10 @@ test('renders the image inside a wrapper', () => {
     {
       childCount: 1,
       className: 'MediaPreview',
+      onKeyDown: 'handleMediaPreviewKeyDown',
       onPointerDown: 'handleMediaPreviewPointerDown',
       onWheel: 'handleMediaPreviewWheel',
+      tabIndex: TabIndex.Focusable,
       type: VirtualDomElements.Div,
     },
     {
@@ -61,6 +64,8 @@ test('renders an error without an image', () => {
     {
       childCount: 1,
       className: 'MediaPreview',
+      onKeyDown: 'handleMediaPreviewKeyDown',
+      tabIndex: TabIndex.Focusable,
       type: VirtualDomElements.Div,
     },
     {
