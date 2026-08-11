@@ -1,10 +1,10 @@
 import { readAsObjectUrl, readFileAsBlob, type ReadAsObjectUrlResult } from '@lvce-editor/api'
-import { convertHeicToPngUrl } from '../ConvertHeicToPngUrl/ConvertHeicToPngUrl.ts'
+import { convertHeicToPreviewUrl } from '../ConvertHeicToPreviewUrl/ConvertHeicToPreviewUrl.ts'
 import { convertTiffToPngUrl } from '../ConvertTiffToPngUrl/ConvertTiffToPngUrl.ts'
 
 type ReadAsObjectUrl = (uri: string) => Promise<ReadAsObjectUrlResult>
 type ReadFileAsBlob = (uri: string) => Promise<Blob>
-type ConvertHeicToPngUrl = (uri: string) => Promise<string>
+type ConvertHeicToPreviewUrl = (uri: string) => Promise<string>
 type ConvertTiffToPngUrl = (blob: Blob) => Promise<string>
 
 const isHeicUri = (uri: string): boolean => {
@@ -21,7 +21,7 @@ export const getUrlWithDependencies = async (
   uri: string,
   read: ReadAsObjectUrl,
   readBlob: ReadFileAsBlob,
-  convertHeic: ConvertHeicToPngUrl,
+  convertHeic: ConvertHeicToPreviewUrl,
   convertTiff: ConvertTiffToPngUrl,
 ): Promise<string> => {
   if (isHeicUri(uri)) {
@@ -44,5 +44,5 @@ export const getUrlWithDependencies = async (
 }
 
 export const getUrl = async (uri: string): Promise<string> => {
-  return getUrlWithDependencies(uri, readAsObjectUrl, readFileAsBlob, convertHeicToPngUrl, convertTiffToPngUrl)
+  return getUrlWithDependencies(uri, readAsObjectUrl, readFileAsBlob, convertHeicToPreviewUrl, convertTiffToPngUrl)
 }

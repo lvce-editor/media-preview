@@ -11,7 +11,7 @@
     "mediaPreview.cachingEnabled": {
       "type": "boolean",
       "default": false,
-      "description": "Cache converted HEIC and HEIF images as PNG files to make subsequent previews faster."
+      "description": "Cache converted HEIC and HEIF preview images to make subsequent previews faster."
     }
   },
   "activation": ["onView:builtin.media-preview"],
