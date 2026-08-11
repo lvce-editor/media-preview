@@ -162,7 +162,8 @@ export const createInstanceWithApi = async (
           label: 'Copy Image',
         },
         {
-          command: 'mediaPreview.resetImage',
+          args: ['mediaPreview.resetImage'],
+          command: 'ExtensionHost.executeCommand',
           id: 'resetImage',
           label: 'Reset Image',
         },

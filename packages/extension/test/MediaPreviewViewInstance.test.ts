@@ -237,7 +237,8 @@ test('shows the image context menu and provides image commands', async () => {
       label: 'Copy Image',
     },
     {
-      command: 'mediaPreview.resetImage',
+      args: ['mediaPreview.resetImage'],
+      command: 'ExtensionHost.executeCommand',
       id: 'resetImage',
       label: 'Reset Image',
     },
