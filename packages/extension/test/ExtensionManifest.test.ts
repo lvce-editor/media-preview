@@ -2,6 +2,7 @@ import { expect, test } from '@jest/globals'
 import { readFileSync } from 'node:fs'
 
 interface ExtensionManifest {
+  readonly configuration: Readonly<Record<string, { readonly default: unknown; readonly type: string }>>
   readonly workerName: string
 }
 
@@ -10,4 +11,13 @@ const manifest = JSON.parse(readFileSync(manifestUrl, 'utf8')) as ExtensionManif
 
 test('uses the media preview worker name', () => {
   expect(manifest.workerName).toBe('Media Preview Worker')
+})
+
+test('defines HEIC conversion caching as disabled by default', () => {
+  expect(manifest.configuration['mediaPreview.cachingEnabled']).toEqual(
+    expect.objectContaining({
+      default: false,
+      type: 'boolean',
+    }),
+  )
 })

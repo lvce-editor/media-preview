@@ -7,6 +7,13 @@
   "contentSecurityPolicy": ["default-src 'none'", "script-src 'self'"],
   "isolated": true,
   "workerName": "Media Preview Worker",
+  "configuration": {
+    "mediaPreview.cachingEnabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Cache converted HEIC and HEIF images as PNG files to make subsequent previews faster."
+    }
+  },
   "activation": ["onView:builtin.media-preview"],
   "languages": [],
   "rpc": [
