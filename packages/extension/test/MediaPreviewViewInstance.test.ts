@@ -237,8 +237,9 @@ test('shows the image context menu and provides image commands', async () => {
       label: 'Copy Image',
     },
     {
-      args: ['mediaPreview.resetImage'],
-      command: 'ExtensionHost.executeCommand',
+      args: [7, 'handleViewCommand', 'handleResetImage'],
+      command: 'Viewlet.executeViewletCommand',
+      flags: 6,
       id: 'resetImage',
       label: 'Reset Image',
     },
@@ -270,7 +271,6 @@ test('updates the transform css without changing the virtual dom', async () => {
   })
   const instance = await createInstanceWithApi(context, api)
   const oldDom = instance.render()
-
   instance.handleMediaPreviewWheel(70, 0)
 
   expect(instance.render()).toEqual(oldDom)

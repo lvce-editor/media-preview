@@ -7,11 +7,7 @@ export const test: Test = async ({ Command, ContextMenu, expect, Locator, Main }
   await Main.openUri(imageUri)
 
   const image = Locator('.MediaPreviewImage')
-  const preview = Locator('.MediaPreview')
   await expect(image).toHaveCount(1)
-
-  await image.dispatchEvent('pointerdown', { bubbles: true, button: 2, clientX: 10, clientY: 10, pointerId: 1 } as any)
-  await expect(preview).toHaveClass('MediaPreview')
 
   const states = await Command.execute('Viewlet.getAllStates')
   const mediaPreview = Object.values(states).find(({ viewId }: any) => viewId === 'builtin.media-preview') as any

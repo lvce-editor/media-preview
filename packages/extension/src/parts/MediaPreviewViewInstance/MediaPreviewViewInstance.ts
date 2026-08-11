@@ -162,8 +162,9 @@ export const createInstanceWithApi = async (
           label: 'Copy Image',
         },
         {
-          args: ['mediaPreview.resetImage'],
-          command: 'ExtensionHost.executeCommand',
+          args: [id, 'handleViewCommand', 'handleResetImage'],
+          command: 'Viewlet.executeViewletCommand',
+          flags: 6,
           id: 'resetImage',
           label: 'Reset Image',
         },
