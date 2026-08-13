@@ -17,15 +17,18 @@ const createMemoryCacheStorage = (
 ): {
   readonly cacheStorage: CacheStorage
   readonly putKeys: readonly string[]
+  readonly putResponses: readonly Response[]
 } => {
   const values = new Map<string, Response>(Object.entries(initialValues))
   const putKeys: string[] = []
+  const putResponses: Response[] = []
   const cache = {
     async match(key: string): Promise<Response | undefined> {
       return values.get(key)?.clone()
     },
     async put(key: string, response: Response): Promise<void> {
       putKeys.push(key)
+      putResponses.push(response.clone())
       values.set(key, response.clone())
     },
   } as unknown as Cache
@@ -35,7 +38,7 @@ const createMemoryCacheStorage = (
       return cache
     },
   } as unknown as CacheStorage
-  return { cacheStorage, putKeys }
+  return { cacheStorage, putKeys, putResponses }
 }
 
 beforeEach(() => {
@@ -97,7 +100,7 @@ test('uses the cached preview before reading the HEIC blob when caching is enabl
 
 test('converts and caches the preview after a cache miss', async () => {
   getSetting.mockResolvedValue(true)
-  const { cacheStorage, putKeys } = createMemoryCacheStorage()
+  const { cacheStorage, putKeys, putResponses } = createMemoryCacheStorage()
 
   await expect(
     convertHeicToPreviewUrlWithDependencies(uri, {
@@ -115,6 +118,8 @@ test('converts and caches the preview after a cache miss', async () => {
   expect(getHash.mock.invocationCallOrder[0]).toBeLessThan(readFileAsBlob.mock.invocationCallOrder[0])
   expect(convert).toHaveBeenCalledWith(heic)
   expect(putKeys).toEqual([cacheKey])
+  expect(putResponses).toHaveLength(1)
+  expect(putResponses[0].headers.get('Content-Length')).toBe(String(preview.size))
   expect(createObjectUrl).toHaveBeenCalledWith(preview)
 })
 

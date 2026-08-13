@@ -64,7 +64,14 @@ const putCachedPreview = async (cache: Readonly<Cache> | undefined, key: string,
     return
   }
   try {
-    await cache.put(key, new Response(preview))
+    await cache.put(
+      key,
+      new Response(preview, {
+        headers: {
+          'Content-Length': String(preview.size),
+        },
+      }),
+    )
   } catch {
     // Caching is best-effort; the converted image can still be displayed.
   }
