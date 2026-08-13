@@ -18,7 +18,8 @@ const imageWrapperNode: VirtualDomNode = {
 }
 
 export const renderImage = (state: Readonly<MediaPreviewState>): readonly VirtualDomNode[] => {
-  const { url } = state
+  const { height, url, width } = state
+  const dimensions = width > 0 && height > 0 ? { height, width } : {}
   return [
     contentNode,
     imageWrapperNode,
@@ -26,7 +27,9 @@ export const renderImage = (state: Readonly<MediaPreviewState>): readonly Virtua
       alt: '',
       childCount: 0,
       className: 'MediaPreviewImage',
+      decoding: 'async',
       draggable: false,
+      ...dimensions,
       name: 'image',
       onContextMenu: handleContextMenu,
       onError: handleMediaPreviewImageError,

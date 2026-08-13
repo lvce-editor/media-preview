@@ -8,5 +8,8 @@ export const test: Test = async ({ expect, Locator, Main }) => {
 
   const image = Locator('.MediaPreviewImage')
   await expect(image).toHaveAttribute('alt', '')
+  await expect(image).toHaveAttribute('decoding', 'async')
   await expect(image).toHaveAttribute('draggable', 'false')
+  await expect(image).toHaveAttribute('height', '1')
+  await expect(image).toHaveAttribute('width', '1')
 }

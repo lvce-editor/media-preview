@@ -7,6 +7,7 @@ test('contributes a virtual dom media preview view', () => {
   expect(view.create).toBeDefined()
   expect(view.eventListeners?.find((listener) => listener.name === 'handleMediaPreviewImageLoad')?.params).toEqual([
     'handleMediaPreviewImageLoad',
+    'event.currentTarget.src',
     'event.currentTarget.naturalWidth',
     'event.currentTarget.naturalHeight',
   ])
@@ -19,6 +20,18 @@ test('contributes a virtual dom media preview view', () => {
     'handleMediaPreviewPointerMove',
     'handleMediaPreviewPointerUp',
     'handleMediaPreviewWheel',
+  ])
+  expect(view.eventListeners?.find((listener) => listener.name === 'handleMediaPreviewImageError')?.params).toEqual([
+    'handleMediaPreviewImageError',
+    'event.currentTarget.src',
+  ])
+  expect(view.eventListeners?.find((listener) => listener.name === 'handleMediaPreviewWheel')?.params).toEqual([
+    'handleMediaPreviewWheel',
+    'event.deltaY',
+    'event.deltaMode',
+    'event.currentTarget.clientWidth',
+    'event.currentTarget.clientHeight',
+    'event.currentTarget.ownerDocument.defaultView.devicePixelRatio',
   ])
   expect(view.eventListeners?.find((listener) => listener.name === 'handleMediaPreviewKeyDown')?.params).toEqual([
     'handleMediaPreviewKeyDown',
