@@ -119,7 +119,7 @@ test('converts and caches the preview after a cache miss', async () => {
   expect(convert).toHaveBeenCalledWith(heic)
   expect(putKeys).toEqual([cacheKey])
   expect(putResponses).toHaveLength(1)
-  expect(putResponses[0].headers.get('Content-Length')).toBe(`${preview.size}`)
+  expect(putResponses[0].headers.get('Content-Length')).toBe(String(preview.size))
   expect(createObjectUrl).toHaveBeenCalledWith(preview)
 })
 

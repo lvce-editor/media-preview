@@ -68,7 +68,7 @@ const putCachedPreview = async (cache: Readonly<Cache> | undefined, key: string,
       key,
       new Response(preview, {
         headers: {
-          'Content-Length': `${preview.size}`,
+          'Content-Length': String(preview.size),
         },
       }),
     )
