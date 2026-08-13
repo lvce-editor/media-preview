@@ -4,12 +4,23 @@ export interface DecodedImage {
   readonly width: number
 }
 
+export interface EncodedImage {
+  readonly blob: Blob
+  readonly height: number
+  readonly originalHeight: number
+  readonly originalWidth: number
+  readonly width: number
+}
+
+export type ImageTier = 'full' | 'preview'
+
 type CreateCanvas = (width: number, height: number) => OffscreenCanvas
 type CreateImageData = (data: Readonly<ArrayLike<number>>, width: number, height: number) => ImageData
 
 const PngMimeType = 'image/png'
 const WebpMimeType = 'image/webp'
 const WebpQuality = 0.9
+const PreviewMaxDimension = 2048
 
 const createCanvas = (width: number, height: number): OffscreenCanvas => {
   return new OffscreenCanvas(width, height)
@@ -23,33 +34,68 @@ const encodePng = (canvas: Readonly<OffscreenCanvas>): Promise<Blob> => {
   return canvas.convertToBlob({ type: PngMimeType })
 }
 
+const getTargetDimensions = (
+  image: Readonly<DecodedImage>,
+  tier: ImageTier,
+): { readonly height: number; readonly width: number } => {
+  if (tier === 'full') {
+    return { height: image.height, width: image.width }
+  }
+  const scale = Math.min(1, PreviewMaxDimension / Math.max(image.width, image.height))
+  return {
+    height: Math.max(1, Math.round(image.height * scale)),
+    width: Math.max(1, Math.round(image.width * scale)),
+  }
+}
+
 export const encodeImageToPreviewWithDependencies = async (
   image: Readonly<DecodedImage>,
+  tier: ImageTier,
   createCanvasFn: CreateCanvas,
   createImageDataFn: CreateImageData,
-): Promise<Blob> => {
-  const canvas = createCanvasFn(image.width, image.height)
-  const context = canvas.getContext('2d')
-  if (!context) {
+): Promise<EncodedImage> => {
+  const sourceCanvas = createCanvasFn(image.width, image.height)
+  const sourceContext = sourceCanvas.getContext('2d')
+  if (!sourceContext) {
     throw new Error('Failed to create 2D canvas context')
   }
   const imageData = createImageDataFn(image.data, image.width, image.height)
-  context.putImageData(imageData, 0, 0)
+  sourceContext.putImageData(imageData, 0, 0)
+  const { height, width } = getTargetDimensions(image, tier)
+  let outputCanvas = sourceCanvas
+  if (width !== image.width || height !== image.height) {
+    outputCanvas = createCanvasFn(width, height)
+    const outputContext = outputCanvas.getContext('2d')
+    if (!outputContext) {
+      throw new Error('Failed to create 2D canvas context')
+    }
+    outputContext.drawImage(sourceCanvas, 0, 0, width, height)
+  }
 
+  let blob: Blob
   try {
-    const preview = await canvas.convertToBlob({
+    const preview = await outputCanvas.convertToBlob({
       quality: WebpQuality,
       type: WebpMimeType,
     })
     if (preview.type === WebpMimeType || preview.type === PngMimeType) {
-      return preview
+      blob = preview
+    } else {
+      blob = await encodePng(outputCanvas)
     }
   } catch {
     // WebP encoding is optional. Browser-native PNG remains available as a fallback.
+    blob = await encodePng(outputCanvas)
   }
-  return encodePng(canvas)
+  return {
+    blob,
+    height,
+    originalHeight: image.height,
+    originalWidth: image.width,
+    width,
+  }
 }
 
-export const encodeImageToPreview = async (image: Readonly<DecodedImage>): Promise<Blob> => {
-  return encodeImageToPreviewWithDependencies(image, createCanvas, createImageData)
+export const encodeImageToPreview = async (image: Readonly<DecodedImage>, tier: ImageTier): Promise<EncodedImage> => {
+  return encodeImageToPreviewWithDependencies(image, tier, createCanvas, createImageData)
 }

@@ -1,17 +1,39 @@
 import type { ReadAsObjectUrlResult } from '@lvce-editor/api'
 import { beforeEach, expect, jest, test } from '@jest/globals'
+import type { ImageSource } from '../src/parts/ImageSource/ImageSource.ts'
 import { getUrlWithDependencies } from '../src/parts/GetUrl/GetUrl.ts'
 
 const readAsObjectUrl = jest.fn<(uri: string) => Promise<ReadAsObjectUrlResult>>()
 const readFileAsBlob = jest.fn<(uri: string) => Promise<Blob>>()
-const convertHeicToPreviewUrl = jest.fn<(uri: string) => Promise<string>>()
+const previewSource: ImageSource = {
+  height: 1536,
+  isFullResolution: false,
+  originalHeight: 3072,
+  originalWidth: 4096,
+  owned: true,
+  tier: 'preview',
+  url: 'blob:https://example.com/preview-id',
+  width: 2048,
+}
+const convertHeicToPreviewUrl = jest.fn<(uri: string) => Promise<ImageSource>>()
 const convertTiffToPngUrl = jest.fn<(blob: Blob) => Promise<string>>()
+
+const simpleSource = (url: string): ImageSource => ({
+  height: 0,
+  isFullResolution: true,
+  originalHeight: 0,
+  originalWidth: 0,
+  owned: Boolean(url),
+  tier: 'full',
+  url,
+  width: 0,
+})
 
 beforeEach(() => {
   jest.resetAllMocks()
 })
 
-test('returns the object URL when the file was found', async () => {
+test('returns an owned source when the file was found', async () => {
   readAsObjectUrl.mockResolvedValue({
     error: '',
     objectUrl: 'blob:https://example.com/image-id',
@@ -26,14 +48,14 @@ test('returns the object URL when the file was found', async () => {
       convertHeicToPreviewUrl,
       convertTiffToPngUrl,
     ),
-  ).resolves.toBe('blob:https://example.com/image-id')
+  ).resolves.toEqual(simpleSource('blob:https://example.com/image-id'))
   expect(readAsObjectUrl).toHaveBeenCalledWith('html:///workspace/image.png')
   expect(readFileAsBlob).not.toHaveBeenCalled()
   expect(convertHeicToPreviewUrl).not.toHaveBeenCalled()
   expect(convertTiffToPngUrl).not.toHaveBeenCalled()
 })
 
-test('returns an empty URL when the file could not be read', async () => {
+test('returns an empty source when the file could not be read', async () => {
   readAsObjectUrl.mockResolvedValue({
     error: 'File not found',
     objectUrl: '',
@@ -48,46 +70,27 @@ test('returns an empty URL when the file could not be read', async () => {
       convertHeicToPreviewUrl,
       convertTiffToPngUrl,
     ),
-  ).resolves.toBe('')
+  ).resolves.toEqual(simpleSource(''))
   expect(readFileAsBlob).not.toHaveBeenCalled()
   expect(convertHeicToPreviewUrl).not.toHaveBeenCalled()
 })
 
-test('converts lowercase HEIC images to previews', async () => {
-  convertHeicToPreviewUrl.mockResolvedValue('blob:https://example.com/preview-id')
+test.each(['image.heic', 'image.HEIC', 'image.HEIF'])(
+  'converts HEIC/HEIF images to metadata-rich previews: %s',
+  async (fileName) => {
+    convertHeicToPreviewUrl.mockResolvedValue(previewSource)
+    const uri = `html:///workspace/${fileName}`
 
-  await expect(
-    getUrlWithDependencies(
-      'html:///workspace/image.heic',
-      readAsObjectUrl,
-      readFileAsBlob,
-      convertHeicToPreviewUrl,
-      convertTiffToPngUrl,
-    ),
-  ).resolves.toBe('blob:https://example.com/preview-id')
-  expect(readAsObjectUrl).not.toHaveBeenCalled()
-  expect(readFileAsBlob).not.toHaveBeenCalled()
-  expect(convertHeicToPreviewUrl).toHaveBeenCalledWith('html:///workspace/image.heic')
-})
+    await expect(
+      getUrlWithDependencies(uri, readAsObjectUrl, readFileAsBlob, convertHeicToPreviewUrl, convertTiffToPngUrl),
+    ).resolves.toBe(previewSource)
+    expect(readAsObjectUrl).not.toHaveBeenCalled()
+    expect(readFileAsBlob).not.toHaveBeenCalled()
+    expect(convertHeicToPreviewUrl).toHaveBeenCalledWith(uri)
+  },
+)
 
-test('converts uppercase HEIC images to previews', async () => {
-  convertHeicToPreviewUrl.mockResolvedValue('blob:https://example.com/preview-id')
-
-  await expect(
-    getUrlWithDependencies(
-      'html:///workspace/image.HEIC',
-      readAsObjectUrl,
-      readFileAsBlob,
-      convertHeicToPreviewUrl,
-      convertTiffToPngUrl,
-    ),
-  ).resolves.toBe('blob:https://example.com/preview-id')
-  expect(readAsObjectUrl).not.toHaveBeenCalled()
-  expect(readFileAsBlob).not.toHaveBeenCalled()
-  expect(convertHeicToPreviewUrl).toHaveBeenCalledWith('html:///workspace/image.HEIC')
-})
-
-test('returns an empty URL when a HEIC image cannot be read', async () => {
+test('returns an empty source when a HEIC image cannot be read', async () => {
   convertHeicToPreviewUrl.mockRejectedValue(new Error('File not found'))
 
   await expect(
@@ -98,28 +101,10 @@ test('returns an empty URL when a HEIC image cannot be read', async () => {
       convertHeicToPreviewUrl,
       convertTiffToPngUrl,
     ),
-  ).resolves.toBe('')
-  expect(convertHeicToPreviewUrl).toHaveBeenCalledWith('html:///workspace/missing.heic')
+  ).resolves.toEqual(simpleSource(''))
 })
 
-test('converts HEIF images to previews', async () => {
-  convertHeicToPreviewUrl.mockResolvedValue('blob:https://example.com/preview-id')
-
-  await expect(
-    getUrlWithDependencies(
-      'html:///workspace/image.HEIF',
-      readAsObjectUrl,
-      readFileAsBlob,
-      convertHeicToPreviewUrl,
-      convertTiffToPngUrl,
-    ),
-  ).resolves.toBe('blob:https://example.com/preview-id')
-  expect(readAsObjectUrl).not.toHaveBeenCalled()
-  expect(readFileAsBlob).not.toHaveBeenCalled()
-  expect(convertHeicToPreviewUrl).toHaveBeenCalledWith('html:///workspace/image.HEIF')
-})
-
-test.each(['image.tif', 'image.TIFF'])('converts TIFF images to PNG: %s', async (fileName) => {
+test.each(['image.tif', 'image.TIFF'])('converts TIFF images to an owned PNG source: %s', async (fileName) => {
   const tiff = new Blob(['tiff'], { type: 'image/tiff' })
   readFileAsBlob.mockResolvedValue(tiff)
   convertTiffToPngUrl.mockResolvedValue('blob:https://example.com/png-id')
@@ -127,13 +112,13 @@ test.each(['image.tif', 'image.TIFF'])('converts TIFF images to PNG: %s', async 
 
   await expect(
     getUrlWithDependencies(uri, readAsObjectUrl, readFileAsBlob, convertHeicToPreviewUrl, convertTiffToPngUrl),
-  ).resolves.toBe('blob:https://example.com/png-id')
+  ).resolves.toEqual(simpleSource('blob:https://example.com/png-id'))
   expect(readAsObjectUrl).not.toHaveBeenCalled()
   expect(readFileAsBlob).toHaveBeenCalledWith(uri)
   expect(convertTiffToPngUrl).toHaveBeenCalledWith(tiff)
 })
 
-test('returns an empty URL when a TIFF image cannot be converted', async () => {
+test('returns an empty source when a TIFF image cannot be converted', async () => {
   readFileAsBlob.mockResolvedValue(new Blob(['invalid']))
   convertTiffToPngUrl.mockRejectedValue(new Error('Invalid TIFF'))
 
@@ -145,5 +130,5 @@ test('returns an empty URL when a TIFF image cannot be converted', async () => {
       convertHeicToPreviewUrl,
       convertTiffToPngUrl,
     ),
-  ).resolves.toBe('')
+  ).resolves.toEqual(simpleSource(''))
 })

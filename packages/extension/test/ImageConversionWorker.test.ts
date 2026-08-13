@@ -19,10 +19,17 @@ test('lazily creates and reuses the image conversion worker', async () => {
   const heic = new Blob(['heic'], { type: 'image/heic' })
   const tiff = new Blob(['tiff'], { type: 'image/tiff' })
   const png = new Blob(['png'], { type: 'image/png' })
-  invoke.mockResolvedValue(png)
+  const converted = {
+    blob: png,
+    height: 1536,
+    originalHeight: 3072,
+    originalWidth: 4096,
+    width: 2048,
+  }
+  invoke.mockResolvedValueOnce(converted).mockResolvedValueOnce(converted).mockResolvedValueOnce(png)
 
-  await expect(ImageConversionWorker.convertHeicToPreview(heic)).resolves.toBe(png)
-  await expect(ImageConversionWorker.convertHeicToPreview(heic)).resolves.toBe(png)
+  await expect(ImageConversionWorker.convertHeicToPreview(heic, 'preview')).resolves.toBe(converted)
+  await expect(ImageConversionWorker.convertHeicToPreview(heic, 'full')).resolves.toBe(converted)
   await expect(ImageConversionWorker.convertTiffToPng(tiff)).resolves.toBe(png)
 
   expect(createRpc).toHaveBeenCalledTimes(1)
@@ -30,6 +37,7 @@ test('lazily creates and reuses the image conversion worker', async () => {
     id: 'builtin.media-preview.image-conversion-worker',
   })
   expect(invoke).toHaveBeenCalledTimes(3)
-  expect(invoke).toHaveBeenCalledWith('ImageConversion.convertHeicToPreview', heic)
+  expect(invoke).toHaveBeenCalledWith('ImageConversion.convertHeicToPreview', heic, 'preview')
+  expect(invoke).toHaveBeenCalledWith('ImageConversion.convertHeicToPreview', heic, 'full')
   expect(invoke).toHaveBeenCalledWith('ImageConversion.convertTiffToPng', tiff)
 })

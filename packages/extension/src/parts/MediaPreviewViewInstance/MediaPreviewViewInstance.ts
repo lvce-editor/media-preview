@@ -7,10 +7,12 @@ import {
   type ViewEvent,
   type VirtualDomViewInstance,
 } from '@lvce-editor/api'
+import type { ImageSource } from '../ImageSource/ImageSource.ts'
 import { getCss } from '../GetCss/GetCss.ts'
 import * as MediaPreview from '../MediaPreview/MediaPreview.ts'
 import { render } from '../RenderMediaPreview/RenderMediaPreview.ts'
 import { renderStatusBarItems } from '../RenderStatusBarItems/RenderStatusBarItems.ts'
+import { shouldUpgradeImage } from '../ShouldUpgradeImage/ShouldUpgradeImage.ts'
 
 export interface MediaPreviewState {
   readonly canOpenAsText: boolean
@@ -19,7 +21,11 @@ export interface MediaPreviewState {
   readonly errorMessage: string
   readonly fileSize: number
   readonly height: number
+  readonly isFullResolution: boolean
   readonly pointerDown: boolean
+  readonly scale: number
+  readonly sourceHeight: number
+  readonly sourceWidth: number
   readonly url: string
   readonly width: number
 }
@@ -31,13 +37,19 @@ interface MediaPreviewViewContext extends ViewContext {
 export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
   readonly getCss: () => string
   readonly getMenuEntries: (menuId: string) => Promise<readonly MenuEntry[]>
-  readonly handleMediaPreviewImageError: () => Promise<void>
-  readonly handleMediaPreviewImageLoad: (width: unknown, height: unknown) => void
+  readonly handleMediaPreviewImageError: (sourceUrl: unknown) => Promise<void>
+  readonly handleMediaPreviewImageLoad: (sourceUrl: unknown, width: unknown, height: unknown) => void
   readonly handleMediaPreviewKeyDown: (key: unknown) => Promise<void>
   readonly handleMediaPreviewPointerDown: (button: unknown, x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerMove: (x: unknown, y: unknown) => void
   readonly handleMediaPreviewPointerUp: (x: unknown, y: unknown) => void
-  readonly handleMediaPreviewWheel: (deltaY: unknown, deltaMode: unknown) => void
+  readonly handleMediaPreviewWheel: (
+    deltaY: unknown,
+    deltaMode: unknown,
+    containerWidth: unknown,
+    containerHeight: unknown,
+    devicePixelRatio: unknown,
+  ) => void
   readonly handleOpenInTextEditor: () => Promise<unknown>
   readonly handleResetImage: () => void
   readonly render: () => readonly VirtualDomNode[]
@@ -50,20 +62,38 @@ interface MediaPreviewApi {
   readonly dispose: (id: number) => unknown
   readonly exists: (uri: string) => Promise<boolean>
   readonly getFileSize: (uri: string) => Promise<number>
+  readonly getFullResolutionUrl: (uri: string) => Promise<ImageSource>
   readonly getSiblingImageUris: (uri: string) => Promise<readonly string[]>
-  readonly getState: (id: number) => Pick<MediaPreviewState, 'domMatrixString' | 'error' | 'pointerDown'>
-  readonly getUrl: (uri: string) => Promise<string>
+  readonly getState: (id: number) => Pick<MediaPreviewState, 'domMatrixString' | 'error' | 'pointerDown' | 'scale'>
+  readonly getUrl: (uri: string) => Promise<ImageSource>
   readonly handleError: (id: number) => Partial<MediaPreviewState>
   readonly handlePointerDown: (id: number, x: number, y: number) => Partial<MediaPreviewState>
   readonly handlePointerMove: (id: number, x: number, y: number) => Partial<MediaPreviewState>
   readonly handlePointerUp: (id: number, x: number, y: number) => Partial<MediaPreviewState>
   readonly handleWheel: (id: number, eventX: number, eventY: number, deltaX: number, deltaY: number) => Partial<MediaPreviewState>
   readonly reset: (id: number) => Partial<MediaPreviewState>
+  readonly revokeUrl: (url: string) => void
   readonly saveState: (id: number) => unknown
   readonly setSavedState: (id: number, state: unknown) => unknown
 }
 
 type ExecuteCommand = (id: string, ...args: readonly unknown[]) => Promise<unknown>
+
+interface PendingUpgrade {
+  readonly fullSource: ImageSource
+  readonly previewSource: ImageSource
+}
+
+const emptySource: ImageSource = {
+  height: 0,
+  isFullResolution: true,
+  originalHeight: 0,
+  originalWidth: 0,
+  owned: false,
+  tier: 'full',
+  url: '',
+  width: 0,
+}
 
 const getUri = (context: MediaPreviewViewContext | undefined): string => {
   if (typeof context?.uri === 'string') {
@@ -75,6 +105,10 @@ const getUri = (context: MediaPreviewViewContext | undefined): string => {
 
 const getNumber = (value: unknown): number => {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
+
+const getString = (value: unknown): string => {
+  return typeof value === 'string' ? value : ''
 }
 
 const imageMenuId = 'mediaPreview.image'
@@ -96,6 +130,19 @@ const getImageErrorMessage = async (uri: string, exists: MediaPreviewApi['exists
   }
 }
 
+const toSourceState = (
+  source: Readonly<ImageSource>,
+): Pick<MediaPreviewState, 'height' | 'isFullResolution' | 'sourceHeight' | 'sourceWidth' | 'url' | 'width'> => {
+  return {
+    height: source.originalHeight,
+    isFullResolution: source.isFullResolution,
+    sourceHeight: source.height,
+    sourceWidth: source.width,
+    url: source.url,
+    width: source.originalWidth,
+  }
+}
+
 export const createInstanceWithApi = async (
   context: ViewContext | undefined,
   api: MediaPreviewApi,
@@ -107,19 +154,24 @@ export const createInstanceWithApi = async (
   api.create(id)
   api.setSavedState(id, context?.state)
   const previewState = api.getState(id)
-  const [url, fileSize] = uri ? await Promise.all([api.getUrl(uri), api.getFileSize(uri)]) : ['', 0]
-  const error = !url || previewState.error
+  const [initialSource, fileSize] = uri ? await Promise.all([api.getUrl(uri), api.getFileSize(uri)]) : [emptySource, 0]
+  let currentSource = initialSource
+  const error = !currentSource.url || previewState.error
   const errorMessage = error ? await getImageErrorMessage(uri, api.exists) : ''
   let state: MediaPreviewState = {
     ...previewState,
+    ...toSourceState(currentSource),
     canOpenAsText: canOpenAsText(uri, errorMessage),
     error,
     errorMessage,
     fileSize,
-    height: 0,
-    url,
-    width: 0,
   }
+  let disposed = false
+  let generation = 0
+  let menuCopySource: ImageSource | undefined
+  let pendingUpgrade: PendingUpgrade | undefined
+  let upgradeFailed = false
+  let upgradePromise: Promise<void> | undefined
   let siblingImageUrisPromise: Promise<readonly string[]> | undefined
   let navigationPromise = Promise.resolve()
 
@@ -130,13 +182,113 @@ export const createInstanceWithApi = async (
     }
   }
 
-  const handleImageError = async (): Promise<void> => {
+  const revokeSource = (source: Readonly<ImageSource>): void => {
+    if (source.owned && source.url) {
+      api.revokeUrl(source.url)
+    }
+  }
+
+  const releaseDisplayedSources = (): void => {
+    if (pendingUpgrade) {
+      revokeSource(pendingUpgrade.fullSource)
+      revokeSource(pendingUpgrade.previewSource)
+      pendingUpgrade = undefined
+    } else {
+      revokeSource(currentSource)
+    }
+    if (menuCopySource) {
+      revokeSource(menuCopySource)
+      menuCopySource = undefined
+    }
+    currentSource = emptySource
+  }
+
+  const getCopySource = async (): Promise<ImageSource> => {
+    if (currentSource.isFullResolution) {
+      return currentSource
+    }
+    if (menuCopySource) {
+      return menuCopySource
+    }
+    const requestGeneration = generation
+    const requestUri = uri
+    try {
+      const fullSource = await api.getFullResolutionUrl(requestUri)
+      if (disposed || generation !== requestGeneration || uri !== requestUri) {
+        revokeSource(fullSource)
+        return currentSource
+      }
+      if (!fullSource.url || !fullSource.isFullResolution) {
+        revokeSource(fullSource)
+        return currentSource
+      }
+      menuCopySource = fullSource
+      return fullSource
+    } catch {
+      return currentSource
+    }
+  }
+
+  const handleImageError = async (sourceUrl: string): Promise<void> => {
+    if (pendingUpgrade && sourceUrl === pendingUpgrade.fullSource.url) {
+      const { fullSource, previewSource } = pendingUpgrade
+      pendingUpgrade = undefined
+      currentSource = previewSource
+      upgradeFailed = true
+      revokeSource(fullSource)
+      updateState(toSourceState(previewSource))
+      return
+    }
+    const { url } = state
+    if (sourceUrl && sourceUrl !== url) {
+      return
+    }
     const errorMessage = await getImageErrorMessage(uri, api.exists)
     updateState({
       ...api.handleError(id),
       canOpenAsText: canOpenAsText(uri, errorMessage),
       errorMessage,
     })
+  }
+
+  const requestUpgrade = (): void => {
+    if (disposed || upgradeFailed || upgradePromise || pendingUpgrade || currentSource.isFullResolution) {
+      return
+    }
+    const requestGeneration = generation
+    const requestUri = uri
+    const previewSource = currentSource
+    upgradePromise = (async (): Promise<void> => {
+      try {
+        const fullSource = await api.getFullResolutionUrl(requestUri)
+        if (disposed || generation !== requestGeneration || uri !== requestUri || currentSource.url !== previewSource.url) {
+          revokeSource(fullSource)
+          return
+        }
+        if (!fullSource.url || !fullSource.isFullResolution) {
+          revokeSource(fullSource)
+          upgradeFailed = true
+          return
+        }
+        pendingUpgrade = {
+          fullSource,
+          previewSource,
+        }
+        updateState({
+          ...toSourceState(fullSource),
+          height: previewSource.originalHeight,
+          width: previewSource.originalWidth,
+        })
+      } catch {
+        if (generation === requestGeneration) {
+          upgradeFailed = true
+        }
+      } finally {
+        if (generation === requestGeneration) {
+          upgradePromise = undefined
+        }
+      }
+    })()
   }
 
   const loadSiblingImageUris = async (): Promise<readonly string[]> => {
@@ -159,21 +311,24 @@ export const createInstanceWithApi = async (
     if (!nextUri || currentIndex === -1) {
       return
     }
+    generation++
+    releaseDisplayedSources()
     uri = nextUri
+    upgradeFailed = false
+    upgradePromise = undefined
     api.create(id)
     const previewState = api.getState(id)
-    const [url, fileSize] = await Promise.all([api.getUrl(uri), api.getFileSize(uri)])
-    const error = !url || previewState.error
+    const [nextSource, fileSize] = await Promise.all([api.getUrl(uri), api.getFileSize(uri)])
+    currentSource = nextSource
+    const error = !nextSource.url || previewState.error
     const errorMessage = error ? await getImageErrorMessage(uri, api.exists) : ''
     updateState({
       ...previewState,
+      ...toSourceState(nextSource),
       canOpenAsText: canOpenAsText(uri, errorMessage),
       error,
       errorMessage,
       fileSize,
-      height: 0,
-      url,
-      width: 0,
     })
   }
 
@@ -193,6 +348,9 @@ export const createInstanceWithApi = async (
 
   return {
     dispose(): void {
+      disposed = true
+      generation++
+      releaseDisplayedSources()
       api.dispose(id)
     },
     getCss(): string {
@@ -203,7 +361,7 @@ export const createInstanceWithApi = async (
       if (menuId !== imageMenuId) {
         return []
       }
-      const { url } = state
+      const copySource = await getCopySource()
       return [
         {
           args: [uri],
@@ -212,7 +370,7 @@ export const createInstanceWithApi = async (
           label: 'Copy Path',
         },
         {
-          args: [url],
+          args: [copySource.url],
           command: 'ClipBoard.writeImageUrl',
           id: 'copyImage',
           label: 'Copy Image',
@@ -228,7 +386,7 @@ export const createInstanceWithApi = async (
     },
     async handleEvent(event: Readonly<ViewEvent>): Promise<void> {
       if (event.type === 'error') {
-        await handleImageError()
+        await handleImageError('')
         return
       }
       if (event.type !== 'contextmenu') {
@@ -255,14 +413,33 @@ export const createInstanceWithApi = async (
           break
       }
     },
-    async handleMediaPreviewImageError(): Promise<void> {
-      await handleImageError()
+    async handleMediaPreviewImageError(sourceUrl: unknown): Promise<void> {
+      await handleImageError(getString(sourceUrl))
     },
-    handleMediaPreviewImageLoad(width: unknown, height: unknown): void {
-      updateState({
-        height: getNumber(height),
-        width: getNumber(width),
-      })
+    handleMediaPreviewImageLoad(sourceUrl: unknown, width: unknown, height: unknown): void {
+      const loadedUrl = getString(sourceUrl)
+      if (pendingUpgrade && loadedUrl === pendingUpgrade.fullSource.url) {
+        const { fullSource, previewSource } = pendingUpgrade
+        pendingUpgrade = undefined
+        currentSource = fullSource
+        revokeSource(previewSource)
+        updateState({
+          ...toSourceState(fullSource),
+          height: fullSource.originalHeight,
+          width: fullSource.originalWidth,
+        })
+        return
+      }
+      const { url } = state
+      if (loadedUrl && loadedUrl !== url) {
+        return
+      }
+      if (!currentSource.originalWidth || !currentSource.originalHeight) {
+        updateState({
+          height: getNumber(height),
+          width: getNumber(width),
+        })
+      }
     },
     async handleMediaPreviewKeyDown(key: unknown): Promise<void> {
       if (key === 'ArrowLeft') {
@@ -283,8 +460,30 @@ export const createInstanceWithApi = async (
     handleMediaPreviewPointerUp(x: unknown, y: unknown): void {
       updateState(api.handlePointerUp(id, getNumber(x), getNumber(y)))
     },
-    handleMediaPreviewWheel(deltaY: unknown, _deltaMode: unknown): void {
-      updateState(api.handleWheel(id, 0, 0, 0, getNumber(deltaY)))
+    handleMediaPreviewWheel(
+      deltaY: unknown,
+      _deltaMode: unknown,
+      containerWidth: unknown,
+      containerHeight: unknown,
+      devicePixelRatio: unknown,
+    ): void {
+      const wheelState = api.handleWheel(id, 0, 0, 0, getNumber(deltaY))
+      updateState(wheelState)
+      const { height, scale, sourceHeight, sourceWidth, width } = state
+      if (
+        shouldUpgradeImage({
+          containerHeight: getNumber(containerHeight),
+          containerWidth: getNumber(containerWidth),
+          devicePixelRatio: getNumber(devicePixelRatio),
+          originalHeight: height,
+          originalWidth: width,
+          previewHeight: sourceHeight,
+          previewWidth: sourceWidth,
+          scale,
+        })
+      ) {
+        requestUpgrade()
+      }
     },
     handleOpenInTextEditor(): Promise<unknown> {
       return execute('Main.reopenEditorWith', 'editor')

@@ -1,12 +1,26 @@
 import type { ViewContext } from '@lvce-editor/api'
 import { expect, jest, test } from '@jest/globals'
+import type { ImageSource } from '../src/parts/ImageSource/ImageSource.ts'
 import { createInstanceWithApi } from '../src/parts/MediaPreviewViewInstance/MediaPreviewViewInstance.ts'
 
 const initialState = {
   domMatrixString: 'matrix(1, 0, 0, 1, 0, 0)',
   error: false,
   pointerDown: false,
+  scale: 1,
 }
+
+const source = (url: string, options: Partial<ImageSource> = {}): ImageSource => ({
+  height: 0,
+  isFullResolution: true,
+  originalHeight: 0,
+  originalWidth: 0,
+  owned: Boolean(url),
+  tier: 'full',
+  url,
+  width: 0,
+  ...options,
+})
 
 type MediaPreviewApi = Parameters<typeof createInstanceWithApi>[1]
 
@@ -20,15 +34,17 @@ const createApi = (): MockMediaPreviewApi => {
     dispose: jest.fn((_id: number) => {}),
     exists: jest.fn(async (_uri: string) => true),
     getFileSize: jest.fn(async (_uri: string) => 512_596),
+    getFullResolutionUrl: jest.fn(async (_uri: string) => source('blob:https://example.com/full-id')),
     getSiblingImageUris: jest.fn(async (uri: string) => [uri]),
     getState: jest.fn((_id: number) => initialState),
-    getUrl: jest.fn(async (_uri: string) => 'blob:https://example.com/image-id'),
+    getUrl: jest.fn(async (_uri: string) => source('blob:https://example.com/image-id')),
     handleError: jest.fn((_id: number) => ({ ...initialState, error: true })),
     handlePointerDown: jest.fn((_id: number, _x: number, _y: number) => ({ ...initialState, pointerDown: true })),
     handlePointerMove: jest.fn((_id: number, _x: number, _y: number) => initialState),
     handlePointerUp: jest.fn((_id: number, _x: number, _y: number) => initialState),
     handleWheel: jest.fn((_id: number, _eventX: number, _eventY: number, _deltaX: number, _deltaY: number) => initialState),
     reset: jest.fn((_id: number) => initialState),
+    revokeUrl: jest.fn((_url: string) => {}),
     saveState: jest.fn((_id: number) => ({ domMatrix: initialState.domMatrixString })),
     setSavedState: jest.fn((_id: number, _state: unknown) => {}),
   }
@@ -59,7 +75,7 @@ test('creates a preview and renders its image', async () => {
 test('navigates to the next and previous image and resets the preview state', async () => {
   const api = createApi()
   api.getSiblingImageUris.mockResolvedValue(['/workspace/image1.png', '/workspace/image2.png', '/workspace/image10.png'])
-  api.getUrl.mockImplementation(async (uri: string) => `blob:${uri}`)
+  api.getUrl.mockImplementation(async (uri: string) => source(`blob:${uri}`))
   api.getFileSize.mockImplementation(async (uri: string) => (uri.endsWith('image2.png') ? 200 : 100))
   api.handleWheel.mockReturnValue({
     ...initialState,
@@ -70,7 +86,7 @@ test('navigates to the next and previous image and resets the preview state', as
     uri: '/workspace/image2.png',
   } as unknown as ViewContext
   const instance = await createInstanceWithApi(image2Context, api)
-  instance.handleMediaPreviewWheel(70, 0)
+  instance.handleMediaPreviewWheel(70, 0, 0, 0, 0)
 
   await instance.handleMediaPreviewKeyDown('ArrowRight')
 
@@ -121,7 +137,7 @@ test('does nothing when sibling discovery fails', async () => {
 
 test('renders a load error when the image URL cannot be read but the file exists', async () => {
   const api = createApi()
-  api.getUrl.mockResolvedValue('')
+  api.getUrl.mockResolvedValue(source(''))
 
   const instance = await createInstanceWithApi(context, api)
 
@@ -132,7 +148,7 @@ test('renders a load error when the image URL cannot be read but the file exists
 test('renders a not found error when the image URL cannot be read and the file is missing', async () => {
   const api = createApi()
   api.exists.mockResolvedValue(false)
-  api.getUrl.mockResolvedValue('')
+  api.getUrl.mockResolvedValue(source(''))
 
   const instance = await createInstanceWithApi(context, api)
 
@@ -142,7 +158,7 @@ test('renders a not found error when the image URL cannot be read and the file i
 test('falls back to a load error when checking whether the image exists fails', async () => {
   const api = createApi()
   api.exists.mockRejectedValue(new Error('filesystem unavailable'))
-  api.getUrl.mockResolvedValue('')
+  api.getUrl.mockResolvedValue(source(''))
 
   const instance = await createInstanceWithApi(context, api)
 
@@ -151,7 +167,7 @@ test('falls back to a load error when checking whether the image exists fails', 
 
 test('opens an invalid svg in the text editor', async () => {
   const api = createApi()
-  api.getUrl.mockResolvedValue('')
+  api.getUrl.mockResolvedValue(source(''))
   const execute = jest.fn(async (_id: string, ..._args: readonly unknown[]) => {})
   const svgContext = {
     ...context,
@@ -207,10 +223,10 @@ test('forwards pointer and image events to the media preview api', async () => {
   instance.handleMediaPreviewPointerUp(50, 60)
   expect(api.handlePointerUp).toHaveBeenCalledWith(7, 50, 60)
 
-  instance.handleMediaPreviewWheel(70, 0)
+  instance.handleMediaPreviewWheel(70, 0, 0, 0, 0)
   expect(api.handleWheel).toHaveBeenCalledWith(7, 0, 0, 0, 70)
 
-  await instance.handleMediaPreviewImageError()
+  await instance.handleMediaPreviewImageError('')
   expect(api.handleError).toHaveBeenCalledWith(7)
   expect(api.exists).toHaveBeenCalledWith('/workspace/image.png')
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
@@ -221,7 +237,7 @@ test('renders a not found error when the image disappears before the error event
   const instance = await createInstanceWithApi(context, api)
   api.exists.mockResolvedValue(false)
 
-  await instance.handleMediaPreviewImageError()
+  await instance.handleMediaPreviewImageError('')
 
   expect(instance.render().some((node) => node.text === 'Image could not be found')).toBe(true)
 })
@@ -245,7 +261,7 @@ test('renders image dimensions and file size as status bar items', async () => {
     },
   ])
 
-  instance.handleMediaPreviewImageLoad(640, 480)
+  instance.handleMediaPreviewImageLoad('blob:https://example.com/image-id', 640, 480)
 
   expect(instance.renderStatusBarItems()[0]).toEqual({
     ariaLabel: 'Image dimensions: 640 by 480 pixels',
@@ -259,7 +275,7 @@ test('normalizes invalid image dimensions', async () => {
   const api = createApi()
   const instance = await createInstanceWithApi(context, api)
 
-  instance.handleMediaPreviewImageLoad(Infinity, '480')
+  instance.handleMediaPreviewImageLoad('blob:https://example.com/image-id', Infinity, '480')
 
   expect(instance.renderStatusBarItems()[0]?.text).toBe('— × —')
 })
@@ -318,7 +334,7 @@ test('resets image zoom and drag', async () => {
   })
   const instance = await createInstanceWithApi(context, api)
 
-  instance.handleMediaPreviewWheel(70, 0)
+  instance.handleMediaPreviewWheel(70, 0, 0, 0, 0)
   instance.handleResetImage()
 
   expect(api.reset).toHaveBeenCalledWith(7)
@@ -335,7 +351,7 @@ test('updates the transform css without changing the virtual dom', async () => {
   })
   const instance = await createInstanceWithApi(context, api)
   const oldDom = instance.render()
-  instance.handleMediaPreviewWheel(70, 0)
+  instance.handleMediaPreviewWheel(70, 0, 0, 0, 0)
 
   expect(instance.render()).toEqual(oldDom)
   expect(instance.getCss()).toBe(`.MediaPreview {
@@ -394,4 +410,206 @@ test('forwards legacy view events and normalizes invalid coordinates', async () 
   expect(api.handleWheel).toHaveBeenCalledWith(7, 0, 0, 0, 70)
 
   instance.handleEvent?.({ type: 'click' })
+})
+
+const progressivePreview = source('blob:https://example.com/preview-id', {
+  height: 1536,
+  isFullResolution: false,
+  originalHeight: 3072,
+  originalWidth: 4096,
+  tier: 'preview',
+  width: 2048,
+})
+
+const fullResolution = source('blob:https://example.com/full-id', {
+  height: 3072,
+  isFullResolution: true,
+  originalHeight: 3072,
+  originalWidth: 4096,
+  tier: 'full',
+  width: 4096,
+})
+
+test('loads full resolution once after zoom crosses the preview pixel threshold', async () => {
+  const api = createApi()
+  api.getUrl.mockResolvedValue(progressivePreview)
+  api.getFullResolutionUrl.mockResolvedValue(fullResolution)
+  api.handleWheel.mockReturnValue({
+    ...initialState,
+    domMatrixString: 'matrix(1.8, 0, 0, 1.8, 10, 20)',
+    scale: 1.8,
+  })
+  const instance = await createInstanceWithApi({ ...context, uri: '/workspace/image.heic' } as unknown as ViewContext, api)
+
+  instance.handleMediaPreviewWheel(-70, 0, 1024, 768, 1)
+  instance.handleMediaPreviewWheel(-70, 0, 1024, 768, 1)
+  expect(api.getFullResolutionUrl).toHaveBeenCalledTimes(1)
+  await Promise.resolve()
+  await Promise.resolve()
+
+  const image = instance.render().find((node) => node.type === 17)
+  expect(image).toMatchObject({
+    height: 3072,
+    src: 'blob:https://example.com/full-id',
+    width: 4096,
+  })
+  expect(instance.getCss()).toContain('matrix(1.8, 0, 0, 1.8, 10, 20)')
+  expect(instance.renderStatusBarItems()[0]?.text).toBe('4096 × 3072')
+
+  instance.handleMediaPreviewImageLoad('blob:https://example.com/full-id', 4096, 3072)
+  expect(api.revokeUrl).toHaveBeenCalledWith('blob:https://example.com/preview-id')
+})
+
+test('restores the preview and disables retries when the full image fails to load', async () => {
+  const api = createApi()
+  api.getUrl.mockResolvedValue(progressivePreview)
+  api.getFullResolutionUrl.mockResolvedValue(fullResolution)
+  api.handleWheel.mockReturnValue({ ...initialState, scale: 2 })
+  const instance = await createInstanceWithApi({ ...context, uri: '/workspace/image.heic' } as unknown as ViewContext, api)
+
+  instance.handleMediaPreviewWheel(-70, 0, 1024, 768, 1)
+  await Promise.resolve()
+  await Promise.resolve()
+  await instance.handleMediaPreviewImageError('blob:https://example.com/full-id')
+
+  expect(instance.render().some((node) => node.src === 'blob:https://example.com/preview-id')).toBe(true)
+  expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(false)
+  expect(api.revokeUrl).toHaveBeenCalledWith('blob:https://example.com/full-id')
+
+  instance.handleMediaPreviewWheel(-70, 0, 1024, 768, 1)
+  expect(api.getFullResolutionUrl).toHaveBeenCalledTimes(1)
+})
+
+test('ignores and revokes a stale upgrade after sibling navigation', async () => {
+  const api = createApi()
+  const full = Promise.withResolvers<ImageSource>()
+  api.getUrl.mockImplementation(async (uri: string) => (uri.endsWith('.heic') ? progressivePreview : source('blob:next')))
+  api.getFullResolutionUrl.mockReturnValue(full.promise)
+  api.getSiblingImageUris.mockResolvedValue(['/workspace/image.heic', '/workspace/next.png'])
+  api.handleWheel.mockReturnValue({ ...initialState, scale: 2 })
+  const instance = await createInstanceWithApi({ ...context, uri: '/workspace/image.heic' } as unknown as ViewContext, api)
+
+  instance.handleMediaPreviewWheel(-70, 0, 1024, 768, 1)
+  await instance.handleMediaPreviewKeyDown('ArrowRight')
+  full.resolve(fullResolution)
+  await Promise.resolve()
+  await Promise.resolve()
+
+  expect(instance.render().some((node) => node.src === 'blob:next')).toBe(true)
+  expect(api.revokeUrl).toHaveBeenCalledWith('blob:https://example.com/preview-id')
+  expect(api.revokeUrl).toHaveBeenCalledWith('blob:https://example.com/full-id')
+})
+
+test('routes HEIC image copy through the full tier', async () => {
+  const api = createApi()
+  api.getUrl.mockResolvedValue(progressivePreview)
+  api.getFullResolutionUrl.mockResolvedValue(fullResolution)
+  const instance = await createInstanceWithApi({ ...context, uri: '/workspace/image.heic' } as unknown as ViewContext, api)
+
+  const entries = await instance.getMenuEntries('mediaPreview.image')
+
+  expect(api.getFullResolutionUrl).toHaveBeenCalledWith('/workspace/image.heic')
+  expect(entries).toContainEqual({
+    args: ['blob:https://example.com/full-id'],
+    command: 'ClipBoard.writeImageUrl',
+    id: 'copyImage',
+    label: 'Copy Image',
+  })
+  await instance.getMenuEntries('mediaPreview.image')
+  expect(api.getFullResolutionUrl).toHaveBeenCalledTimes(1)
+  await instance.dispose?.()
+  expect(api.revokeUrl).toHaveBeenCalledWith('blob:https://example.com/full-id')
+})
+
+test('falls back to the displayed preview when full-resolution copy conversion fails', async () => {
+  const api = createApi()
+  api.getUrl.mockResolvedValue(progressivePreview)
+  api.getFullResolutionUrl.mockRejectedValue(new Error('conversion failed'))
+  const instance = await createInstanceWithApi({ ...context, uri: '/workspace/image.heic' } as unknown as ViewContext, api)
+
+  const entries = await instance.getMenuEntries('mediaPreview.image')
+
+  expect(entries).toContainEqual({
+    args: ['blob:https://example.com/preview-id'],
+    command: 'ClipBoard.writeImageUrl',
+    id: 'copyImage',
+    label: 'Copy Image',
+  })
+})
+
+test('revokes the displayed object URL on disposal', async () => {
+  const api = createApi()
+  const instance = await createInstanceWithApi(context, api)
+
+  await instance.dispose?.()
+
+  expect(api.revokeUrl).toHaveBeenCalledWith('blob:https://example.com/image-id')
+})
+
+test('uses the displayed URL directly for an already-full image', async () => {
+  const api = createApi()
+  const instance = await createInstanceWithApi(context, api)
+
+  const entries = await instance.getMenuEntries('mediaPreview.image')
+
+  expect(api.getFullResolutionUrl).not.toHaveBeenCalled()
+  expect(entries).toContainEqual({
+    args: ['blob:https://example.com/image-id'],
+    command: 'ClipBoard.writeImageUrl',
+    id: 'copyImage',
+    label: 'Copy Image',
+  })
+})
+
+test('rejects an invalid full-tier upgrade and does not retry it', async () => {
+  const api = createApi()
+  api.getUrl.mockResolvedValue(progressivePreview)
+  api.getFullResolutionUrl.mockResolvedValue(source('', { isFullResolution: false, tier: 'preview' }))
+  api.handleWheel.mockReturnValue({ ...initialState, scale: 2 })
+  const instance = await createInstanceWithApi({ ...context, uri: '/workspace/image.heic' } as unknown as ViewContext, api)
+
+  instance.handleMediaPreviewWheel(-70, 0, 1024, 768, 1)
+  await Promise.resolve()
+  await Promise.resolve()
+  instance.handleMediaPreviewWheel(-70, 0, 1024, 768, 1)
+
+  expect(api.getFullResolutionUrl).toHaveBeenCalledTimes(1)
+  expect(instance.render().some((node) => node.src === 'blob:https://example.com/preview-id')).toBe(true)
+})
+
+test('ignores stale load and error events from replaced sources', async () => {
+  const api = createApi()
+  const instance = await createInstanceWithApi(context, api)
+
+  instance.handleMediaPreviewImageLoad('blob:stale', 1, 1)
+  await instance.handleMediaPreviewImageError('blob:stale')
+
+  expect(api.handleError).not.toHaveBeenCalled()
+  expect(instance.renderStatusBarItems()[0]?.text).toBe('— × —')
+})
+
+test('revokes both preview and pending full URLs when disposed during replacement', async () => {
+  const api = createApi()
+  api.getUrl.mockResolvedValue(progressivePreview)
+  api.getFullResolutionUrl.mockResolvedValue(fullResolution)
+  api.handleWheel.mockReturnValue({ ...initialState, scale: 2 })
+  const instance = await createInstanceWithApi({ ...context, uri: '/workspace/image.heic' } as unknown as ViewContext, api)
+
+  instance.handleMediaPreviewWheel(-70, 0, 1024, 768, 1)
+  await Promise.resolve()
+  await Promise.resolve()
+  await instance.dispose?.()
+
+  expect(api.revokeUrl).toHaveBeenCalledWith('blob:https://example.com/preview-id')
+  expect(api.revokeUrl).toHaveBeenCalledWith('blob:https://example.com/full-id')
+})
+
+test('does not replace known original dimensions with decoded preview dimensions', async () => {
+  const api = createApi()
+  api.getUrl.mockResolvedValue(progressivePreview)
+  const instance = await createInstanceWithApi({ ...context, uri: '/workspace/image.heic' } as unknown as ViewContext, api)
+
+  instance.handleMediaPreviewImageLoad('blob:https://example.com/preview-id', 2048, 1536)
+
+  expect(instance.renderStatusBarItems()[0]?.text).toBe('4096 × 3072')
 })

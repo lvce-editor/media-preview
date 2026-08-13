@@ -1,4 +1,5 @@
 import { expect, jest, test } from '@jest/globals'
+import type { EncodedImage, ImageTier } from '../src/parts/EncodeImageToPreview/EncodeImageToPreview.ts'
 import { convertHeicToPreviewWithDependencies } from '../src/parts/ConvertHeicToPreview/ConvertHeicToPreview.ts'
 
 const decode =
@@ -11,7 +12,8 @@ const encodePreview =
   jest.fn<
     (
       image: Readonly<{ readonly data: Readonly<ArrayLike<number>>; readonly height: number; readonly width: number }>,
-    ) => Promise<Blob>
+      tier: ImageTier,
+    ) => Promise<EncodedImage>
   >()
 
 test('decodes a HEIC image and encodes the decoded RGBA as a preview', async () => {
@@ -21,12 +23,18 @@ test('decodes a HEIC image and encodes the decoded RGBA as a preview', async () 
     height: 1,
     width: 1,
   }
-  const preview = new Blob(['preview'], { type: 'image/webp' })
+  const preview = {
+    blob: new Blob(['preview'], { type: 'image/webp' }),
+    height: 1,
+    originalHeight: 1,
+    originalWidth: 1,
+    width: 1,
+  }
   decode.mockResolvedValue(decoded)
   encodePreview.mockResolvedValue(preview)
 
-  await expect(convertHeicToPreviewWithDependencies(heic, decode, encodePreview)).resolves.toBe(preview)
+  await expect(convertHeicToPreviewWithDependencies(heic, 'preview', decode, encodePreview)).resolves.toBe(preview)
 
   expect(decode).toHaveBeenCalledWith({ buffer: new Uint8Array([104, 101, 105, 99]) })
-  expect(encodePreview).toHaveBeenCalledWith(decoded)
+  expect(encodePreview).toHaveBeenCalledWith(decoded, 'preview')
 })
