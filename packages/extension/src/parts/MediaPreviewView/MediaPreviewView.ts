@@ -10,13 +10,13 @@ export const view: View<MediaPreviewViewInstance> = {
   eventListeners: [
     {
       name: 'handleMediaPreviewImageError',
-      params: ['handleMediaPreviewImageError', 'event.currentTarget.src'],
+      params: ['handleMediaPreviewImageError', 'event.currentTarget.dataset.sourceUrl'],
     },
     {
       name: 'handleMediaPreviewImageLoad',
       params: [
         'handleMediaPreviewImageLoad',
-        'event.currentTarget.src',
+        'event.currentTarget.dataset.sourceUrl',
         'event.currentTarget.naturalWidth',
         'event.currentTarget.naturalHeight',
       ],

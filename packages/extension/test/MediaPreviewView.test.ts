@@ -7,7 +7,7 @@ test('contributes a virtual dom media preview view', () => {
   expect(view.create).toBeDefined()
   expect(view.eventListeners?.find((listener) => listener.name === 'handleMediaPreviewImageLoad')?.params).toEqual([
     'handleMediaPreviewImageLoad',
-    'event.currentTarget.src',
+    'event.currentTarget.dataset.sourceUrl',
     'event.currentTarget.naturalWidth',
     'event.currentTarget.naturalHeight',
   ])
@@ -23,7 +23,7 @@ test('contributes a virtual dom media preview view', () => {
   ])
   expect(view.eventListeners?.find((listener) => listener.name === 'handleMediaPreviewImageError')?.params).toEqual([
     'handleMediaPreviewImageError',
-    'event.currentTarget.src',
+    'event.currentTarget.dataset.sourceUrl',
   ])
   expect(view.eventListeners?.find((listener) => listener.name === 'handleMediaPreviewWheel')?.params).toEqual([
     'handleMediaPreviewWheel',
