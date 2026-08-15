@@ -2,6 +2,7 @@
   "files": [],
   "include": [],
   "references": [
+    { "path": "./packages/dom-matrix" },
     { "path": "./packages/extension" },
     { "path": "./packages/image-conversion-worker" },
     { "path": "./packages/e2e" },

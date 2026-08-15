@@ -1,5 +1,5 @@
+import * as DomMatrix from '@lvce-editor/dom-matrix'
 import type { WebView } from '../WebView/WebView.ts'
-import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
 import * as WebViewStates from '../WebViewStates/WebViewStates.ts'
 
 export const handlePointerMove = (id: number, x: number, y: number): WebView => {
