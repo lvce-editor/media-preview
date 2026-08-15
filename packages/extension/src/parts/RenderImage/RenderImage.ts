@@ -27,6 +27,7 @@ export const renderImage = (state: Readonly<MediaPreviewState>): readonly Virtua
       alt: '',
       childCount: 0,
       className: 'MediaPreviewImage',
+      'data-source-url': url,
       decoding: 'async',
       draggable: false,
       ...dimensions,

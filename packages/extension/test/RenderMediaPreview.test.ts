@@ -46,6 +46,7 @@ test('renders the image inside a wrapper', () => {
       alt: '',
       childCount: 0,
       className: 'MediaPreviewImage',
+      'data-source-url': '/remote/image.png',
       decoding: 'async',
       draggable: false,
       height: 1,
