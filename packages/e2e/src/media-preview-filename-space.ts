@@ -16,7 +16,7 @@ const waitForExpectation = async (assertion: () => Promise<void>): Promise<void>
 
 export const test: Test = async ({ expect, FileSystem, Locator, Main, Settings }) => {
   await Settings.update({ 'statusBar.itemsVisible': true })
-  const tmpDir = await FileSystem.getTmpDir()
+  const tmpDir = await FileSystem.getTmpDir({ scheme: 'file' })
   const uri = tmpDir + '/image with space.svg'
   const content = '<svg width="8" height="8" xmlns="http://www.w3.org/2000/svg"><rect width="8" height="8"/></svg>'
   await FileSystem.writeFile(uri, content)

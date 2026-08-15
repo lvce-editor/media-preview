@@ -1,28 +1,10 @@
-import { readAsObjectUrl, type ReadAsObjectUrlResult } from '@lvce-editor/api'
+import { readFileAsBlob } from '@lvce-editor/api'
 
-type ReadAsObjectUrl = (uri: string) => Promise<ReadAsObjectUrlResult>
-type Fetch = (url: string) => Promise<Response>
+type ReadFileAsBlob = (uri: string) => Promise<Blob>
 
-const resolveUrl = (url: string, origin: string): string => {
-  return url.startsWith('/') ? `${origin}${url}` : url
-}
-
-export const getFileSizeWithDependencies = async (
-  uri: string,
-  read: ReadAsObjectUrl,
-  fetchFn: Fetch,
-  origin: string,
-): Promise<number> => {
+export const getFileSizeWithDependency = async (uri: string, readBlob: ReadFileAsBlob): Promise<number> => {
   try {
-    const result = await read(uri)
-    if (!result.wasFound) {
-      return 0
-    }
-    const response = await fetchFn(resolveUrl(result.objectUrl, origin))
-    if (!response.ok) {
-      return 0
-    }
-    const blob = await response.blob()
+    const blob = await readBlob(uri)
     return blob.size
   } catch {
     return 0
@@ -30,5 +12,5 @@ export const getFileSizeWithDependencies = async (
 }
 
 export const getFileSize = (uri: string): Promise<number> => {
-  return getFileSizeWithDependencies(uri, readAsObjectUrl, fetch, location.origin)
+  return getFileSizeWithDependency(uri, readFileAsBlob)
 }
