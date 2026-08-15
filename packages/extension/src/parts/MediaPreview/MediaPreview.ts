@@ -1,6 +1,6 @@
+import * as DomMatrix from '@lvce-editor/dom-matrix'
 import type { WebView } from '../WebView/WebView.ts'
 import * as Create from '../Create/Create.ts'
-import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
 import * as GetState from '../GetState/GetState.ts'
 import * as HandleError from '../HandleError/HandleError.ts'
 import * as HandlePointerDown from '../HandlePointerDown/HandlePointerDown.ts'

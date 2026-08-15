@@ -1,5 +1,5 @@
 import { beforeAll, expect, test } from '@jest/globals'
-import * as ParseDomMatrix from '../src/parts/ParseDomMatrix/ParseDomMatrix.js'
+import * as DomMatrix from '../src/index.js'
 
 beforeAll(() => {
   // workaround for jsdom not supporting DOMMatrixReadonly
@@ -79,7 +79,7 @@ beforeAll(() => {
 
 test('parseDomMatrix - prefix mismatch', () => {
   const domMatrixString = ' matrix(1, 0, 0, 1, 154, 160)'
-  const parsed = ParseDomMatrix.parseDomMatrix(domMatrixString)
+  const parsed = DomMatrix.parseDomMatrix(domMatrixString)
   expect(parsed.a).toBe(1)
   expect(parsed.b).toBe(0)
   expect(parsed.c).toBe(0)
@@ -90,7 +90,7 @@ test('parseDomMatrix - prefix mismatch', () => {
 
 test('parseDomMatrix - postfix mismatch', () => {
   const domMatrixString = 'matrix(1, 0, 0, 1, 154, 160) '
-  const parsed = ParseDomMatrix.parseDomMatrix(domMatrixString)
+  const parsed = DomMatrix.parseDomMatrix(domMatrixString)
   expect(parsed.a).toBe(1)
   expect(parsed.b).toBe(0)
   expect(parsed.c).toBe(0)
@@ -101,7 +101,7 @@ test('parseDomMatrix - postfix mismatch', () => {
 
 test('parseDomMatrix - inner number count mismatch', () => {
   const domMatrixString = 'matrix(1, 0, 0, 1, 154)'
-  const parsed = ParseDomMatrix.parseDomMatrix(domMatrixString)
+  const parsed = DomMatrix.parseDomMatrix(domMatrixString)
   expect(parsed.a).toBe(1)
   expect(parsed.b).toBe(0)
   expect(parsed.c).toBe(0)
@@ -112,7 +112,7 @@ test('parseDomMatrix - inner number count mismatch', () => {
 
 test('parseDomMatrix - NaN', () => {
   const domMatrixString = 'matrix(NaN, NaN, NaN, NaN, NaN, NaN)'
-  const parsed = ParseDomMatrix.parseDomMatrix(domMatrixString)
+  const parsed = DomMatrix.parseDomMatrix(domMatrixString)
   expect(parsed.a).toBe(1)
   expect(parsed.b).toBe(0)
   expect(parsed.c).toBe(0)
@@ -123,7 +123,7 @@ test('parseDomMatrix - NaN', () => {
 
 test('parseDomMatrix', () => {
   const domMatrixString = 'matrix(1, 0, 0, 1, 154, 160)'
-  const parsed = ParseDomMatrix.parseDomMatrix(domMatrixString)
+  const parsed = DomMatrix.parseDomMatrix(domMatrixString)
   expect(parsed.a).toBe(1)
   expect(parsed.b).toBe(0)
   expect(parsed.c).toBe(0)
