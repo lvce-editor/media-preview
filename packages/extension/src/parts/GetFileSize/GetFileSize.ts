@@ -2,9 +2,21 @@ import { readFileAsBlob } from '@lvce-editor/api'
 
 type ReadFileAsBlob = (uri: string) => Promise<Blob>
 
+const windowsAbsolutePathPattern = /^[a-z]:[\\/]/i
+
+const toFileUri = (uri: string): string => {
+  if (uri.startsWith('/')) {
+    return `file://${uri}`
+  }
+  if (windowsAbsolutePathPattern.test(uri)) {
+    return `file:///${uri.replaceAll('\\', '/')}`
+  }
+  return uri
+}
+
 export const getFileSizeWithDependency = async (uri: string, readBlob: ReadFileAsBlob): Promise<number> => {
   try {
-    const blob = await readBlob(uri)
+    const blob = await readBlob(toFileUri(uri))
     return blob.size
   } catch {
     return 0

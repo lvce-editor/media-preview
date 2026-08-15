@@ -14,6 +14,20 @@ test('returns the blob byte size', async () => {
   expect(readFileAsBlob).toHaveBeenCalledWith('file:///workspace/image.png')
 })
 
+test('returns the blob byte size for an absolute disk path', async () => {
+  readFileAsBlob.mockResolvedValue(new Blob(['hello']))
+
+  await expect(getFileSizeWithDependency('/workspace/image.png', readFileAsBlob)).resolves.toBe(5)
+  expect(readFileAsBlob).toHaveBeenCalledWith('file:///workspace/image.png')
+})
+
+test('returns the blob byte size for an absolute Windows disk path', async () => {
+  readFileAsBlob.mockResolvedValue(new Blob(['hello']))
+
+  await expect(getFileSizeWithDependency('C:\\workspace\\image.png', readFileAsBlob)).resolves.toBe(5)
+  expect(readFileAsBlob).toHaveBeenCalledWith('file:///C:/workspace/image.png')
+})
+
 test('returns zero when the image cannot be read', async () => {
   readFileAsBlob.mockRejectedValue(new Error('File not found'))
 
