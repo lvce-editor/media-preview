@@ -1,5 +1,5 @@
 import { beforeAll, expect, test } from '@jest/globals'
-import * as DomMatrix from '../src/parts/DomMatrix/DomMatrix.js'
+import * as DomMatrix from '../src/index.js'
 
 beforeAll(() => {
   // workaround for jsdom not supporting DOMMatrixReadonly

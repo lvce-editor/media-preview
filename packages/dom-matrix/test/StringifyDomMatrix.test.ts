@@ -1,5 +1,5 @@
 import { beforeAll, expect, test } from '@jest/globals'
-import * as StringifyDomMatrix from '../src/parts/StringifyDomMatrix/StringifyDomMatrix.js'
+import * as DomMatrix from '../src/index.js'
 
 beforeAll(() => {
   // @ts-ignore
@@ -56,6 +56,6 @@ beforeAll(() => {
 
 test('stringifyDomMatrix', () => {
   const domMatrix = new DOMMatrix([1, 0, 0, 1, 0, 0])
-  const domMatrixString = StringifyDomMatrix.stringifyDomMatrix(domMatrix)
+  const domMatrixString = DomMatrix.stringifyDomMatrix(domMatrix)
   expect(domMatrixString).toBe('matrix(1, 0, 0, 1, 0, 0)')
 })

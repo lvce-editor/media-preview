@@ -1,12 +1,11 @@
 {
-  "name": "builtin.media-preview",
+  "name": "@lvce-editor/dom-matrix",
   "version": "0.0.0-dev",
   "license": "MIT",
   "type": "module",
-  "main": "dist/mediaPreviewMain.js",
+  "main": "src/index.ts",
   "scripts": {
-    "test": "node --unhandled-rejections=warn --experimental-vm-modules ../../node_modules/jest/bin/jest.js --detectOpenHandles --forceExit",
-    "test:watch": "node --unhandled-rejections=warn --experimental-vm-modules ../../node_modules/jest/bin/jest.js --watch"
+    "test": "node --unhandled-rejections=warn --experimental-vm-modules ../../node_modules/jest/bin/jest.js --detectOpenHandles --forceExit"
   },
   "jest": {
     "injectGlobals": false,
@@ -32,9 +31,6 @@
     }
   },
   "devDependencies": {
-    "@jest/globals": "^30.4.1",
-    "@lvce-editor/api": "^9.16.2",
-    "@lvce-editor/dom-matrix": "0.0.0-dev",
-    "@lvce-editor/virtual-dom-worker": "^11.12.2"
+    "@jest/globals": "^30.4.1"
   }
 }

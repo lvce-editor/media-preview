@@ -1,5 +1,5 @@
+import * as DomMatrix from '@lvce-editor/dom-matrix'
 import type { WebView } from '../WebView/WebView.ts'
-import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
 import * as PreviewStates from '../WebViewStates/WebViewStates.ts'
 
 export const create = (id: number): WebView => {
