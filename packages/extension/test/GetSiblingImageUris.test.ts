@@ -17,7 +17,7 @@ test('returns naturally sorted image siblings for a path', async () => {
     '/workspace/image2.JPG',
     '/workspace/image10.png',
   ])
-  expect(readDirectory).toHaveBeenCalledWith('/workspace/')
+  expect(readDirectory).toHaveBeenCalledWith('file:///workspace/')
 })
 
 test('preserves encoded file uris', async () => {
@@ -37,7 +37,7 @@ test('supports windows paths', async () => {
     'C:\\pictures\\a.png',
     'C:\\pictures\\b.gif',
   ])
-  expect(readDirectory).toHaveBeenCalledWith('C:\\pictures\\')
+  expect(readDirectory).toHaveBeenCalledWith('file:///C:/pictures/')
 })
 
 test('returns no siblings when the uri has no parent', async () => {
