@@ -1,4 +1,5 @@
 import { readDirWithFileTypes, type FileSystemDirent } from '@lvce-editor/api'
+import { toFileUri } from '../ToFileUri/ToFileUri.ts'
 
 // cspell:ignore apng jfif
 
@@ -97,7 +98,7 @@ export const getSiblingImageUrisWithDependency = async (
   if (!parts) {
     return []
   }
-  const entries = await readDirectory(parts.parentUri)
+  const entries = await readDirectory(toFileUri(parts.parentUri))
   const imageNames = entries
     .map((entry) => entry.name)
     .filter(isImage)
