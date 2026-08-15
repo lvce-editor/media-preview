@@ -1,35 +1,39 @@
 import { beforeEach, expect, jest, test } from '@jest/globals'
-import { getFileSizeWithDependency } from '../src/parts/GetFileSize/GetFileSize.ts'
+import { getFileSizeWithDependencies } from '../src/parts/GetFileSize/GetFileSize.ts'
 
-const readFileAsBlob = jest.fn<(uri: string) => Promise<Blob>>()
+const readAsObjectUrl = jest.fn<(uri: string) => Promise<{ error: string; objectUrl: string; wasFound: boolean }>>()
+const fetch = jest.fn<(url: string) => Promise<Response>>()
 
 beforeEach(() => {
   jest.resetAllMocks()
 })
 
-test('returns the blob byte size', async () => {
-  readFileAsBlob.mockResolvedValue(new Blob(['hello']))
+test('returns the resolved image byte size', async () => {
+  readAsObjectUrl.mockResolvedValue({ error: '', objectUrl: '/remote/workspace/Pasted image.png', wasFound: true })
+  fetch.mockResolvedValue(new Response('hello'))
 
-  await expect(getFileSizeWithDependency('file:///workspace/image.png', readFileAsBlob)).resolves.toBe(5)
-  expect(readFileAsBlob).toHaveBeenCalledWith('file:///workspace/image.png')
+  await expect(getFileSizeWithDependencies('/workspace/Pasted image.png', readAsObjectUrl, fetch)).resolves.toBe(5)
+  expect(readAsObjectUrl).toHaveBeenCalledWith('/workspace/Pasted image.png')
+  expect(fetch).toHaveBeenCalledWith('/remote/workspace/Pasted image.png')
 })
 
-test('converts an absolute path to a file URI', async () => {
-  readFileAsBlob.mockResolvedValue(new Blob(['hello']))
+test('returns zero when the image URL cannot be resolved', async () => {
+  readAsObjectUrl.mockResolvedValue({ error: 'File not found', objectUrl: '', wasFound: false })
 
-  await expect(getFileSizeWithDependency('/workspace/Pasted image.png', readFileAsBlob)).resolves.toBe(5)
-  expect(readFileAsBlob).toHaveBeenCalledWith('file:///workspace/Pasted image.png')
+  await expect(getFileSizeWithDependencies('/workspace/missing.png', readAsObjectUrl, fetch)).resolves.toBe(0)
+  expect(fetch).not.toHaveBeenCalled()
 })
 
-test('converts an absolute Windows path to a file URI', async () => {
-  readFileAsBlob.mockResolvedValue(new Blob(['hello']))
+test('returns zero when the image response is not ok', async () => {
+  readAsObjectUrl.mockResolvedValue({ error: '', objectUrl: '/remote/workspace/missing.png', wasFound: true })
+  fetch.mockResolvedValue(new Response('', { status: 404 }))
 
-  await expect(getFileSizeWithDependency('C:\\workspace\\Pasted image.png', readFileAsBlob)).resolves.toBe(5)
-  expect(readFileAsBlob).toHaveBeenCalledWith('file:///C:/workspace/Pasted image.png')
+  await expect(getFileSizeWithDependencies('/workspace/missing.png', readAsObjectUrl, fetch)).resolves.toBe(0)
 })
 
-test('returns zero when the image cannot be read', async () => {
-  readFileAsBlob.mockRejectedValue(new Error('File not found'))
+test('returns zero when the image response cannot be read', async () => {
+  readAsObjectUrl.mockResolvedValue({ error: '', objectUrl: '/remote/workspace/missing.png', wasFound: true })
+  fetch.mockRejectedValue(new Error('File not found'))
 
-  await expect(getFileSizeWithDependency('file:///workspace/missing.png', readFileAsBlob)).resolves.toBe(0)
+  await expect(getFileSizeWithDependencies('/workspace/missing.png', readAsObjectUrl, fetch)).resolves.toBe(0)
 })
