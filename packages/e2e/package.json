@@ -5,10 +5,10 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "e2e": "node ../../node_modules/@lvce-editor/test-with-playwright/bin/test-with-playwright.js --only-extension=../../dist --test-path=.",
-    "e2e:headless": "node ../../node_modules/@lvce-editor/test-with-playwright/bin/test-with-playwright.js  --only-extension=../../dist --test-path=. --headless"
+    "e2e": "test-with-playwright --only-extension=../../dist --test-path=.",
+    "e2e:headless": "test-with-playwright --only-extension=../../dist --test-path=. --headless"
   },
   "devDependencies": {
-    "@lvce-editor/test-with-playwright": "^22.22.0"
+    "@lvce-editor/test-with-playwright": "^22.23.0"
   }
 }
