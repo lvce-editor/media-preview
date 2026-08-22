@@ -25,7 +25,8 @@ test('contributes a virtual dom media preview view', () => {
     'handleMediaPreviewImageError',
     'event.currentTarget.dataset.sourceUrl',
   ])
-  expect(view.eventListeners?.find((listener) => listener.name === 'handleMediaPreviewWheel')?.params).toEqual([
+  const wheelListener = view.eventListeners?.find((listener) => listener.name === 'handleMediaPreviewWheel')
+  expect(wheelListener?.params).toEqual([
     'handleMediaPreviewWheel',
     'event.deltaY',
     'event.deltaMode',
@@ -33,6 +34,8 @@ test('contributes a virtual dom media preview view', () => {
     'event.currentTarget.clientHeight',
     'event.currentTarget.ownerDocument.defaultView.devicePixelRatio',
   ])
+  expect(wheelListener?.passive).toBe(true)
+  expect(wheelListener?.preventDefault).toBeUndefined()
   expect(view.eventListeners?.find((listener) => listener.name === 'handleMediaPreviewKeyDown')?.params).toEqual([
     'handleMediaPreviewKeyDown',
     'event.key',
