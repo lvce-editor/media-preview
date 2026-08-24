@@ -13,6 +13,7 @@ import * as MediaPreview from '../MediaPreview/MediaPreview.ts'
 import { render } from '../RenderMediaPreview/RenderMediaPreview.ts'
 import { renderStatusBarItems } from '../RenderStatusBarItems/RenderStatusBarItems.ts'
 import { shouldUpgradeImage } from '../ShouldUpgradeImage/ShouldUpgradeImage.ts'
+import { toFileUri } from '../ToFileUri/ToFileUri.ts'
 
 export interface MediaPreviewState {
   readonly canOpenAsText: boolean
@@ -124,7 +125,7 @@ const getImageErrorMessage = async (uri: string, exists: MediaPreviewApi['exists
     return imageCouldNotBeLoaded
   }
   try {
-    return (await exists(uri)) ? imageCouldNotBeLoaded : imageCouldNotBeFound
+    return (await exists(toFileUri(uri))) ? imageCouldNotBeLoaded : imageCouldNotBeFound
   } catch {
     return imageCouldNotBeLoaded
   }
