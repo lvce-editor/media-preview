@@ -41,24 +41,23 @@ const decodePathSegment = (value: string): string => {
 }
 
 const getUrlParts = (uri: string): UriParts | undefined => {
-  try {
-    const url = new URL(uri)
-    const slashIndex = url.pathname.lastIndexOf('/')
-    if (slashIndex === -1) {
-      return undefined
-    }
-    const baseName = decodePathSegment(url.pathname.slice(slashIndex + 1))
-    url.pathname = url.pathname.slice(0, slashIndex + 1)
-    url.hash = ''
-    url.search = ''
-    const parentUri = url.href
-    return {
-      baseName,
-      join: (name: string): string => new URL(encodeURIComponent(name), parentUri).href,
-      parentUri,
-    }
-  } catch {
+  if (!URL.canParse(uri)) {
     return undefined
+  }
+  const url = new URL(uri)
+  const slashIndex = url.pathname.lastIndexOf('/')
+  if (slashIndex === -1) {
+    return undefined
+  }
+  const baseName = decodePathSegment(url.pathname.slice(slashIndex + 1))
+  url.pathname = url.pathname.slice(0, slashIndex + 1)
+  url.hash = ''
+  url.search = ''
+  const parentUri = url.href
+  return {
+    baseName,
+    join: (name: string): string => `${parentUri}${encodeURIComponent(name)}`,
+    parentUri,
   }
 }
 
