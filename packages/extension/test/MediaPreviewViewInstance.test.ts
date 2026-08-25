@@ -141,7 +141,7 @@ test('renders a load error when the image URL cannot be read but the file exists
 
   const instance = await createInstanceWithApi(context, api)
 
-  expect(api.exists).toHaveBeenCalledWith('/workspace/image.png')
+  expect(api.exists).toHaveBeenCalledWith('file:///workspace/image.png')
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
 })
 
@@ -228,7 +228,7 @@ test('forwards pointer and image events to the media preview api', async () => {
 
   await instance.handleMediaPreviewImageError('')
   expect(api.handleError).toHaveBeenCalledWith(7)
-  expect(api.exists).toHaveBeenCalledWith('/workspace/image.png')
+  expect(api.exists).toHaveBeenCalledWith('file:///workspace/image.png')
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
 })
 

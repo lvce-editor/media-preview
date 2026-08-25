@@ -59,7 +59,7 @@ export const view: View<MediaPreviewViewInstance> = {
         'event.currentTarget.clientHeight',
         'event.currentTarget.ownerDocument.defaultView.devicePixelRatio',
       ],
-      preventDefault: true,
+      passive: true,
     },
   ],
   id: viewId,
