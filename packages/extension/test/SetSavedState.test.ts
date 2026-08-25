@@ -27,6 +27,7 @@ beforeAll(() => {
 const createState = (): WebView => ({
   domMatrix: {} as DOMMatrixReadOnly,
   error: false,
+  isFirefox: false,
   maxZoom: 2 ** 15,
   minZoom: 0.1,
   pointerDown: false,
