@@ -29,6 +29,7 @@ test('resets zoom, drag offset, and pointer state', () => {
   const state: WebView = {
     domMatrix: { a: 2, b: 0, c: 0, d: 2, e: 10, f: 20 } as DOMMatrixReadOnly,
     error: false,
+    isFirefox: false,
     maxZoom: 2 ** 15,
     minZoom: 0.1,
     pointerDown: true,

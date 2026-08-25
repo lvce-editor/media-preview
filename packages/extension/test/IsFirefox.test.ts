@@ -1,4 +1,5 @@
-import { afterEach, expect, jest, test } from '@jest/globals'
+import { afterEach, expect, test } from '@jest/globals'
+import * as IsFirefox from '../src/parts/IsFirefox/IsFirefox.ts'
 
 const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator')
 
@@ -9,12 +10,6 @@ const setNavigator = (navigator: unknown): void => {
   })
 }
 
-const loadIsFirefox = async (): Promise<boolean> => {
-  jest.resetModules()
-  const module = await import('../src/parts/IsFirefox/IsFirefox.ts')
-  return module.isFirefox
-}
-
 afterEach(() => {
   if (originalNavigator) {
     Object.defineProperty(globalThis, 'navigator', originalNavigator)
@@ -23,20 +18,20 @@ afterEach(() => {
   }
 })
 
-test('returns false when navigator is unavailable', async () => {
+test('returns false when navigator is unavailable', () => {
   setNavigator(undefined)
 
-  await expect(loadIsFirefox()).resolves.toBe(false)
+  expect(IsFirefox.getIsFirefox()).toBe(false)
 })
 
-test('uses user agent brands when available', async () => {
+test('uses user agent brands when available', () => {
   setNavigator({ userAgentData: { brands: ['Firefox'] } })
 
-  await expect(loadIsFirefox()).resolves.toBe(true)
+  expect(IsFirefox.getIsFirefox()).toBe(true)
 })
 
-test('falls back to the user agent when brands are unavailable', async () => {
+test('falls back to the user agent when brands are unavailable', () => {
   setNavigator({ userAgent: 'Mozilla Firefox', userAgentData: {} })
 
-  await expect(loadIsFirefox()).resolves.toBe(true)
+  expect(IsFirefox.getIsFirefox()).toBe(true)
 })
