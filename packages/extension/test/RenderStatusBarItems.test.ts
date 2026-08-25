@@ -10,6 +10,7 @@ test('renders image metadata as two status bar items', () => {
       errorMessage: '',
       fileSize: 873,
       height: 480,
+      imageExtensions: [],
       isFullResolution: true,
       pointerDown: false,
       scale: 1,
