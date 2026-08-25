@@ -18,6 +18,8 @@ const waitForExpectation = async (assertion: () => Promise<void>): Promise<void>
 export const test: Test = async ({ Command, ContextMenu, expect, Locator, Main }) => {
   const imageUri = import.meta.resolve('../files/file.png')
   await Main.openUri(imageUri)
+  const image = Locator('.MediaPreviewImage')
+  await waitForExpectation(() => expect(image).toHaveJSProperty('naturalWidth', 256))
   const states = await Command.execute('Viewlet.getAllStates')
   const mediaPreview = Object.values(states).find(({ viewId }: any) => viewId === 'builtin.media-preview') as any
   await Command.execute(
