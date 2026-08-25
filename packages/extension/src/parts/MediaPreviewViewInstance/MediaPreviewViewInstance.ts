@@ -15,6 +15,8 @@ import { renderStatusBarItems } from '../RenderStatusBarItems/RenderStatusBarIte
 import { shouldUpgradeImage } from '../ShouldUpgradeImage/ShouldUpgradeImage.ts'
 import { toFileUri } from '../ToFileUri/ToFileUri.ts'
 
+// cspell:ignore apng jfif
+
 export interface MediaPreviewState {
   readonly canOpenAsText: boolean
   readonly domMatrixString: string
@@ -22,6 +24,7 @@ export interface MediaPreviewState {
   readonly errorMessage: string
   readonly fileSize: number
   readonly height: number
+  readonly imageExtensions: readonly string[]
   readonly isFullResolution: boolean
   readonly pointerDown: boolean
   readonly scale: number
@@ -64,7 +67,7 @@ interface MediaPreviewApi {
   readonly exists: (uri: string) => Promise<boolean>
   readonly getFileSize: (uri: string) => Promise<number>
   readonly getFullResolutionUrl: (uri: string) => Promise<ImageSource>
-  readonly getSiblingImageUris: (uri: string) => Promise<readonly string[]>
+  readonly getSiblingImageUris: (uri: string, imageExtensions: readonly string[]) => Promise<readonly string[]>
   readonly getState: (id: number) => Pick<MediaPreviewState, 'domMatrixString' | 'error' | 'pointerDown' | 'scale'>
   readonly getUrl: (uri: string) => Promise<ImageSource>
   readonly handleError: (id: number) => Partial<MediaPreviewState>
@@ -166,6 +169,24 @@ export const createInstanceWithApi = async (
     error,
     errorMessage,
     fileSize,
+    imageExtensions: [
+      '.apng',
+      '.avif',
+      '.bmp',
+      '.gif',
+      '.heic',
+      '.heif',
+      '.ico',
+      '.jpe',
+      '.jfif',
+      '.jpeg',
+      '.jpg',
+      '.png',
+      '.svg',
+      '.tif',
+      '.tiff',
+      '.webp',
+    ],
   }
   let disposed = false
   let generation = 0
@@ -293,8 +314,9 @@ export const createInstanceWithApi = async (
   }
 
   const loadSiblingImageUris = async (): Promise<readonly string[]> => {
+    const { imageExtensions } = state
     try {
-      return await api.getSiblingImageUris(uri)
+      return await api.getSiblingImageUris(uri, imageExtensions)
     } catch {
       return []
     }

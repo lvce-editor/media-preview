@@ -35,7 +35,7 @@ const createApi = (): MockMediaPreviewApi => {
     exists: jest.fn(async (_uri: string) => true),
     getFileSize: jest.fn(async (_uri: string) => 512_596),
     getFullResolutionUrl: jest.fn(async (_uri: string) => source('blob:https://example.com/full-id')),
-    getSiblingImageUris: jest.fn(async (uri: string) => [uri]),
+    getSiblingImageUris: jest.fn(async (uri: string, _imageExtensions: readonly string[]) => [uri]),
     getState: jest.fn((_id: number) => initialState),
     getUrl: jest.fn(async (_uri: string) => source('blob:https://example.com/image-id')),
     handleError: jest.fn((_id: number) => ({ ...initialState, error: true })),
@@ -91,7 +91,7 @@ test('navigates to the next and previous image and resets the preview state', as
   await instance.handleMediaPreviewKeyDown('ArrowRight')
 
   expect(api.getSiblingImageUris).toHaveBeenCalledTimes(1)
-  expect(api.getSiblingImageUris).toHaveBeenCalledWith('/workspace/image2.png')
+  expect(api.getSiblingImageUris).toHaveBeenCalledWith('/workspace/image2.png', expect.arrayContaining(['.png', '.svg', '.webp']))
   expect(api.create).toHaveBeenCalledTimes(2)
   expect(api.getUrl).toHaveBeenLastCalledWith('/workspace/image10.png')
   expect(instance.render().some((node) => node.src === 'blob:/workspace/image10.png')).toBe(true)

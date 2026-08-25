@@ -10,6 +10,7 @@ const state = {
   errorMessage: '',
   fileSize: 873,
   height: 1,
+  imageExtensions: [],
   isFullResolution: true,
   pointerDown: false,
   scale: 1,
