@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.4.1",
-    "@lvce-editor/api": "^9.28.1",
+    "@lvce-editor/api": "^9.28.2",
     "@lvce-editor/dom-matrix": "0.0.0-dev",
     "@lvce-editor/virtual-dom-worker": "^11.14.0"
   }
