@@ -5,6 +5,7 @@ import { convertTiffToPngUrl } from '../ConvertTiffToPngUrl/ConvertTiffToPngUrl.
 
 type ReadAsObjectUrl = (uri: string) => Promise<ReadAsObjectUrlResult>
 type ReadFileAsBlob = (uri: string) => Promise<Blob>
+type CreateObjectUrl = (blob: Blob) => string
 type ConvertHeicToPreviewUrl = (uri: string) => Promise<ImageSource>
 type ConvertTiffToPngUrl = (blob: Blob) => Promise<string>
 
@@ -16,6 +17,14 @@ const isHeicUri = (uri: string): boolean => {
 const isTiffUri = (uri: string): boolean => {
   const normalizedUri = uri.toLowerCase()
   return normalizedUri.endsWith('.tif') || normalizedUri.endsWith('.tiff')
+}
+
+const isRemoteSshUri = (uri: string): boolean => {
+  return uri.startsWith('remote-ssh://')
+}
+
+const createObjectUrl = (blob: Blob): string => {
+  return URL.createObjectURL(blob)
 }
 
 const toSimpleSource = (url: string): ImageSource => {
@@ -35,6 +44,7 @@ export const getUrlWithDependencies = async (
   uri: string,
   read: ReadAsObjectUrl,
   readBlob: ReadFileAsBlob,
+  createUrl: CreateObjectUrl,
   convertHeic: ConvertHeicToPreviewUrl,
   convertTiff: ConvertTiffToPngUrl,
 ): Promise<ImageSource> => {
@@ -53,12 +63,27 @@ export const getUrlWithDependencies = async (
       return toSimpleSource('')
     }
   }
+  if (isRemoteSshUri(uri)) {
+    try {
+      const blob = await readBlob(uri)
+      return toSimpleSource(createUrl(blob))
+    } catch {
+      return toSimpleSource('')
+    }
+  }
   const result = await read(uri)
   return toSimpleSource(result.wasFound ? result.objectUrl : '')
 }
 
 export const getUrl = async (uri: string): Promise<ImageSource> => {
-  return getUrlWithDependencies(uri, readAsObjectUrl, readFileAsBlob, convertHeicToPreviewUrl, convertTiffToPngUrl)
+  return getUrlWithDependencies(
+    uri,
+    readAsObjectUrl,
+    readFileAsBlob,
+    createObjectUrl,
+    convertHeicToPreviewUrl,
+    convertTiffToPngUrl,
+  )
 }
 
 export const getFullResolutionUrl = async (uri: string): Promise<ImageSource> => {
