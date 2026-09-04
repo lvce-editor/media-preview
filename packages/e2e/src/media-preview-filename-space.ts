@@ -3,12 +3,10 @@ import type { Test } from '@lvce-editor/test-with-playwright'
 export const name = 'media-preview-filename-space'
 
 export const test: Test = async ({ expect, FileSystem, Locator, Main }) => {
-  const tmpDir = await FileSystem.getTmpDir()
+  const tmpDir = await FileSystem.getTmpDir({ scheme: 'file' })
   const uri = tmpDir + '/image with space.svg'
-  await FileSystem.writeFile(
-    uri,
-    '<svg width="8" height="8" xmlns="http://www.w3.org/2000/svg"><rect width="8" height="8"/></svg>',
-  )
+  const content = '<svg width="8" height="8" xmlns="http://www.w3.org/2000/svg"><rect width="8" height="8"/></svg>'
+  await FileSystem.writeFile(uri, content)
   await Main.openUri(uri)
 
   const image = Locator('.MediaPreviewImage')

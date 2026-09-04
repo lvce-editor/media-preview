@@ -10,7 +10,12 @@ const state = {
   errorMessage: '',
   fileSize: 873,
   height: 1,
+  imageExtensions: [],
+  isFullResolution: true,
   pointerDown: false,
+  scale: 1,
+  sourceHeight: 1,
+  sourceWidth: 1,
   url: '/remote/image.png',
   width: 1,
 }
@@ -42,13 +47,17 @@ test('renders the image inside a wrapper', () => {
       alt: '',
       childCount: 0,
       className: 'MediaPreviewImage',
+      'data-sourceUrl': '/remote/image.png',
+      decoding: 'async',
       draggable: false,
+      height: 1,
       name: 'image',
       onContextMenu: 'handleContextMenu',
       onError: 'handleMediaPreviewImageError',
       onLoad: 'handleMediaPreviewImageLoad',
       src: '/remote/image.png',
       type: VirtualDomElements.Img,
+      width: 1,
     },
   ])
 })
@@ -84,6 +93,18 @@ test('renders an error without an image', () => {
       type: VirtualDomElements.Text,
     },
   ])
+})
+
+test('omits unknown dimensions until a non-HEIC image loads', () => {
+  const dom = render({
+    ...state,
+    height: 0,
+    width: 0,
+  })
+  const image = dom.at(-1)
+
+  expect(image).not.toHaveProperty('height')
+  expect(image).not.toHaveProperty('width')
 })
 
 test('renders an open in text editor button for text-based images', () => {

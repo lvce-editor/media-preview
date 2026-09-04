@@ -10,11 +10,16 @@ export const view: View<MediaPreviewViewInstance> = {
   eventListeners: [
     {
       name: 'handleMediaPreviewImageError',
-      params: ['handleMediaPreviewImageError'],
+      params: ['handleMediaPreviewImageError', 'event.currentTarget.dataset.sourceUrl'],
     },
     {
       name: 'handleMediaPreviewImageLoad',
-      params: ['handleMediaPreviewImageLoad', 'event.currentTarget.naturalWidth', 'event.currentTarget.naturalHeight'],
+      params: [
+        'handleMediaPreviewImageLoad',
+        'event.currentTarget.dataset.sourceUrl',
+        'event.currentTarget.naturalWidth',
+        'event.currentTarget.naturalHeight',
+      ],
     },
     {
       name: 'handleOpenInTextEditor',
@@ -46,8 +51,15 @@ export const view: View<MediaPreviewViewInstance> = {
     },
     {
       name: 'handleMediaPreviewWheel',
-      params: ['handleMediaPreviewWheel', 'event.deltaY', 'event.deltaMode'],
-      preventDefault: true,
+      params: [
+        'handleMediaPreviewWheel',
+        'event.deltaY',
+        'event.deltaMode',
+        'event.currentTarget.clientWidth',
+        'event.currentTarget.clientHeight',
+        'event.currentTarget.ownerDocument.defaultView.devicePixelRatio',
+      ],
+      passive: true,
     },
   ],
   id: viewId,

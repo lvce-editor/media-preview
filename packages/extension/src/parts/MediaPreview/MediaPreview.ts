@@ -1,6 +1,6 @@
+import * as DomMatrix from '@lvce-editor/dom-matrix'
 import type { WebView } from '../WebView/WebView.ts'
 import * as Create from '../Create/Create.ts'
-import * as DomMatrix from '../DomMatrix/DomMatrix.ts'
 import * as GetState from '../GetState/GetState.ts'
 import * as HandleError from '../HandleError/HandleError.ts'
 import * as HandlePointerDown from '../HandlePointerDown/HandlePointerDown.ts'
@@ -14,6 +14,7 @@ export interface State {
   readonly domMatrixString: string
   readonly error: boolean
   readonly pointerDown: boolean
+  readonly scale: number
 }
 
 const serializeState = (state: WebView): State => {
@@ -22,6 +23,7 @@ const serializeState = (state: WebView): State => {
     domMatrixString: DomMatrix.toString(domMatrix),
     error,
     pointerDown,
+    scale: domMatrix.a,
   }
 }
 
@@ -42,7 +44,7 @@ const wrapCommand = (fn: (id: number, ...params: readonly any[]) => unknown) => 
   }
 }
 
-export { getUrl } from '../GetUrl/GetUrl.ts'
+export { getFullResolutionUrl, getUrl } from '../GetUrl/GetUrl.ts'
 export { getFileSize } from '../GetFileSize/GetFileSize.ts'
 export { getSiblingImageUris } from '../GetSiblingImageUris/GetSiblingImageUris.ts'
 export { exists } from '@lvce-editor/api'
@@ -54,3 +56,7 @@ export const handlePointerMove = wrapCommand(HandlePointerMove.handlePointerMove
 export const handlePointerUp = wrapCommand(HandlePointerUp.handlePointerUp)
 export const handleWheel = wrapCommand(HandleWheel.handleWheel)
 export const reset = wrapCommand(Reset.reset)
+
+export const revokeUrl = (url: string): void => {
+  URL.revokeObjectURL(url)
+}
