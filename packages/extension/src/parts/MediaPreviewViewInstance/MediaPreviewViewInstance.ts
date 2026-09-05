@@ -60,7 +60,7 @@ export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
     containerHeight: unknown,
     devicePixelRatio: unknown,
   ) => void
-  readonly handleOpenInTextEditor: () => Promise<unknown>
+  readonly handleOpenInTextEditor: () => void
   readonly handleResetImage: () => void
   readonly render: () => readonly VirtualDomNode[]
   readonly renderStatusBarItems: () => readonly StatusBarItem[]
@@ -542,8 +542,9 @@ export const createInstanceWithApi = async (
         requestUpgrade()
       }
     },
-    handleOpenInTextEditor(): Promise<unknown> {
-      return execute('Main.reopenEditorWith', 'editor')
+    handleOpenInTextEditor(): void {
+      // Reopening disposes this extension worker, so the view event must finish first.
+      void execute('Main.reopenEditorWith', 'editor').catch(console.error)
     },
     handleResetImage(): void {
       updateState(api.reset(id))
