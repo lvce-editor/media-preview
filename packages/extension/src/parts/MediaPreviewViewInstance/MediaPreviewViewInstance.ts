@@ -34,11 +34,17 @@ export interface MediaPreviewState {
   readonly width: number
 }
 
+export interface MediaPreviewComponentState {
+  readonly image: MediaPreview.ComponentState
+  readonly view: MediaPreviewState
+}
+
 interface MediaPreviewViewContext extends ViewContext {
   readonly uri?: string
 }
 
 export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
+  readonly getComponentState: () => MediaPreviewComponentState
   readonly getCss: () => string
   readonly getMenuEntries: (menuId: string) => Promise<readonly MenuEntry[]>
   readonly handleMediaPreviewImageError: (sourceUrl: unknown) => Promise<void>
@@ -54,17 +60,19 @@ export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
     containerHeight: unknown,
     devicePixelRatio: unknown,
   ) => void
-  readonly handleOpenInTextEditor: () => Promise<unknown>
+  readonly handleOpenInTextEditor: () => void
   readonly handleResetImage: () => void
   readonly render: () => readonly VirtualDomNode[]
   readonly renderStatusBarItems: () => readonly StatusBarItem[]
   readonly saveState: () => Promise<unknown>
+  readonly setComponentState: (state: MediaPreviewComponentState) => void
 }
 
 interface MediaPreviewApi {
   readonly create: (id: number) => unknown
   readonly dispose: (id: number) => unknown
   readonly exists: (uri: string) => Promise<boolean>
+  readonly getComponentState: typeof MediaPreview.getComponentState
   readonly getFileSize: (uri: string) => Promise<number>
   readonly getFullResolutionUrl: (uri: string) => Promise<ImageSource>
   readonly getSiblingImageUris: (uri: string, imageExtensions: readonly string[]) => Promise<readonly string[]>
@@ -78,7 +86,30 @@ interface MediaPreviewApi {
   readonly reset: (id: number) => Partial<MediaPreviewState>
   readonly revokeUrl: (url: string) => void
   readonly saveState: (id: number) => unknown
+  readonly setComponentState: typeof MediaPreview.setComponentState
   readonly setSavedState: (id: number, state: unknown) => unknown
+}
+
+const defaultApi: MediaPreviewApi = {
+  create: MediaPreview.create,
+  dispose: MediaPreview.dispose,
+  exists: MediaPreview.exists,
+  getComponentState: MediaPreview.getComponentState,
+  getFileSize: MediaPreview.getFileSize,
+  getFullResolutionUrl: MediaPreview.getFullResolutionUrl,
+  getSiblingImageUris: MediaPreview.getSiblingImageUris,
+  getState: MediaPreview.getState,
+  getUrl: MediaPreview.getUrl,
+  handleError: MediaPreview.handleError,
+  handlePointerDown: MediaPreview.handlePointerDown,
+  handlePointerMove: MediaPreview.handlePointerMove,
+  handlePointerUp: MediaPreview.handlePointerUp,
+  handleWheel: MediaPreview.handleWheel,
+  reset: MediaPreview.reset,
+  revokeUrl: MediaPreview.revokeUrl,
+  saveState: MediaPreview.saveState,
+  setComponentState: MediaPreview.setComponentState,
+  setSavedState: MediaPreview.setSavedState,
 }
 
 type ExecuteCommand = (id: string, ...args: readonly unknown[]) => Promise<unknown>
@@ -376,6 +407,9 @@ export const createInstanceWithApi = async (
       releaseDisplayedSources()
       api.dispose(id)
     },
+    getComponentState(): MediaPreviewComponentState {
+      return { image: api.getComponentState(id), view: state }
+    },
     getCss(): string {
       const { domMatrixString } = state
       return getCss(domMatrixString)
@@ -508,8 +542,9 @@ export const createInstanceWithApi = async (
         requestUpgrade()
       }
     },
-    handleOpenInTextEditor(): Promise<unknown> {
-      return execute('Main.reopenEditorWith', 'editor')
+    handleOpenInTextEditor(): void {
+      // Reopening disposes this extension worker, so the view event must finish first.
+      void execute('Main.reopenEditorWith', 'editor').catch(console.error)
     },
     handleResetImage(): void {
       updateState(api.reset(id))
@@ -527,9 +562,14 @@ export const createInstanceWithApi = async (
         uri,
       }
     },
+    setComponentState(newState: MediaPreviewComponentState): void {
+      api.setComponentState(id, newState.image)
+      const { domMatrixString, pointerDown, scale } = api.getState(id)
+      state = { ...newState.view, domMatrixString, pointerDown, scale }
+    },
   }
 }
 
 export const createInstance = (context?: ViewContext): Promise<MediaPreviewViewInstance> => {
-  return createInstanceWithApi(context, MediaPreview)
+  return createInstanceWithApi(context, defaultApi)
 }

@@ -33,6 +33,17 @@ const createApi = (): MockMediaPreviewApi => {
     create: jest.fn((_id: number) => {}),
     dispose: jest.fn((_id: number) => {}),
     exists: jest.fn(async (_uri: string) => true),
+    getComponentState: jest.fn((_id: number) => ({
+      domMatrix: initialState.domMatrixString,
+      error: false,
+      isFirefox: false,
+      maxZoom: 32768,
+      minZoom: 0.1,
+      pointerDown: false,
+      pointerOffsetX: 0,
+      pointerOffsetY: 0,
+      zoomFactor: 200 as const,
+    })),
     getFileSize: jest.fn(async (_uri: string) => 512_596),
     getFullResolutionUrl: jest.fn(async (_uri: string) => source('blob:https://example.com/full-id')),
     getSiblingImageUris: jest.fn(async (uri: string, _imageExtensions: readonly string[]) => [uri]),
@@ -46,6 +57,7 @@ const createApi = (): MockMediaPreviewApi => {
     reset: jest.fn((_id: number) => initialState),
     revokeUrl: jest.fn((_url: string) => {}),
     saveState: jest.fn((_id: number) => ({ domMatrix: initialState.domMatrixString })),
+    setComponentState: jest.fn((_id: number, _state) => {}),
     setSavedState: jest.fn((_id: number, _state: unknown) => {}),
   }
 }
@@ -176,7 +188,7 @@ test('opens an invalid svg in the text editor', async () => {
   const instance = await createInstanceWithApi(svgContext, api, execute)
 
   expect(instance.render().some((node) => node.text === 'Open in Text Editor')).toBe(true)
-  await instance.handleOpenInTextEditor()
+  expect(instance.handleOpenInTextEditor()).toBeUndefined()
 
   expect(execute).toHaveBeenCalledWith('Main.reopenEditorWith', 'editor')
 })
@@ -612,4 +624,18 @@ test('does not replace known original dimensions with decoded preview dimensions
   instance.handleMediaPreviewImageLoad('blob:https://example.com/preview-id', 2048, 1536)
 
   expect(instance.renderStatusBarItems()[0]?.text).toBe('4096 × 3072')
+})
+
+test('component state edits synchronize presentation from the image owner', async () => {
+  const api = createApi()
+  const instance = await createInstanceWithApi(context, api)
+  const { image: oldImage, view } = instance.getComponentState()
+  const image = { ...oldImage, domMatrix: 'matrix(2, 0, 0, 2, 10, 20)' }
+  api.getState.mockReturnValue({ ...initialState, domMatrixString: image.domMatrix, scale: 2 })
+  instance.setComponentState({ image, view: { ...view, error: true, errorMessage: 'Inspector error' } })
+  expect(api.setComponentState).toHaveBeenCalledWith(7, image)
+  expect(instance.getComponentState().view).toMatchObject({ errorMessage: 'Inspector error', scale: 2 })
+  expect(instance.getCss()).toContain(image.domMatrix)
+  expect(JSON.stringify(instance.render())).toContain('Inspector error')
+  await instance.dispose?.()
 })
