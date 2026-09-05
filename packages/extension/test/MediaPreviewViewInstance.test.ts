@@ -188,7 +188,7 @@ test('opens an invalid svg in the text editor', async () => {
   const instance = await createInstanceWithApi(svgContext, api, execute)
 
   expect(instance.render().some((node) => node.text === 'Open in Text Editor')).toBe(true)
-  await instance.handleOpenInTextEditor()
+  expect(instance.handleOpenInTextEditor()).toBeUndefined()
 
   expect(execute).toHaveBeenCalledWith('Main.reopenEditorWith', 'editor')
 })
