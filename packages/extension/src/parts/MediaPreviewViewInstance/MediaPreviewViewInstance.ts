@@ -34,11 +34,17 @@ export interface MediaPreviewState {
   readonly width: number
 }
 
+export interface MediaPreviewComponentState {
+  readonly image: MediaPreview.ComponentState
+  readonly view: MediaPreviewState
+}
+
 interface MediaPreviewViewContext extends ViewContext {
   readonly uri?: string
 }
 
 export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
+  readonly getComponentState: () => MediaPreviewComponentState
   readonly getCss: () => string
   readonly getMenuEntries: (menuId: string) => Promise<readonly MenuEntry[]>
   readonly handleMediaPreviewImageError: (sourceUrl: unknown) => Promise<void>
@@ -59,12 +65,14 @@ export interface MediaPreviewViewInstance extends VirtualDomViewInstance {
   readonly render: () => readonly VirtualDomNode[]
   readonly renderStatusBarItems: () => readonly StatusBarItem[]
   readonly saveState: () => Promise<unknown>
+  readonly setComponentState: (state: MediaPreviewComponentState) => void
 }
 
 interface MediaPreviewApi {
   readonly create: (id: number) => unknown
   readonly dispose: (id: number) => unknown
   readonly exists: (uri: string) => Promise<boolean>
+  readonly getComponentState: typeof MediaPreview.getComponentState
   readonly getFileSize: (uri: string) => Promise<number>
   readonly getFullResolutionUrl: (uri: string) => Promise<ImageSource>
   readonly getSiblingImageUris: (uri: string, imageExtensions: readonly string[]) => Promise<readonly string[]>
@@ -78,6 +86,7 @@ interface MediaPreviewApi {
   readonly reset: (id: number) => Partial<MediaPreviewState>
   readonly revokeUrl: (url: string) => void
   readonly saveState: (id: number) => unknown
+  readonly setComponentState: typeof MediaPreview.setComponentState
   readonly setSavedState: (id: number, state: unknown) => unknown
 }
 
@@ -376,6 +385,9 @@ export const createInstanceWithApi = async (
       releaseDisplayedSources()
       api.dispose(id)
     },
+    getComponentState(): MediaPreviewComponentState {
+      return { image: api.getComponentState(id), view: state }
+    },
     getCss(): string {
       const { domMatrixString } = state
       return getCss(domMatrixString)
@@ -526,6 +538,11 @@ export const createInstanceWithApi = async (
         ...(savedState as object),
         uri,
       }
+    },
+    setComponentState(newState: MediaPreviewComponentState): void {
+      api.setComponentState(id, newState.image)
+      const { domMatrixString, pointerDown, scale } = api.getState(id)
+      state = { ...newState.view, domMatrixString, pointerDown, scale }
     },
   }
 }

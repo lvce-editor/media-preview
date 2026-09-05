@@ -17,6 +17,21 @@ export interface State {
   readonly scale: number
 }
 
+export interface ComponentState extends Omit<WebView, 'domMatrix'> {
+  readonly domMatrix: string
+}
+
+export const getComponentState = (id: number): ComponentState => {
+  const state = GetState.getState(id)
+  const { domMatrix } = state
+  return { ...state, domMatrix: DomMatrix.toString(domMatrix) }
+}
+
+export const setComponentState = (id: number, state: ComponentState): void => {
+  const { domMatrix } = state
+  WebViewStates.set(id, { ...state, domMatrix: DomMatrix.parseDomMatrix(domMatrix) })
+}
+
 const serializeState = (state: WebView): State => {
   const { domMatrix, error, pointerDown } = state
   return {

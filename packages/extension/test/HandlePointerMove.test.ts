@@ -2,6 +2,7 @@ import { beforeAll, expect, test } from '@jest/globals'
 import * as Create from '../src/parts/Create/Create.ts'
 import * as HandlePointerDown from '../src/parts/HandlePointerDown/HandlePointerDown.ts'
 import * as HandlePointerMove from '../src/parts/HandlePointerMove/HandlePointerMove.ts'
+import * as MediaPreview from '../src/parts/MediaPreview/MediaPreview.ts'
 import * as WebViewStates from '../src/parts/WebViewStates/WebViewStates.ts'
 
 beforeAll(() => {
@@ -109,4 +110,15 @@ test('handlePointerMove - down', () => {
     e: 0,
     f: 1,
   })
+})
+
+test('component state restores the transform used by subsequent pan events', () => {
+  MediaPreview.create(901)
+  const state = MediaPreview.getComponentState(901)
+  MediaPreview.setComponentState(901, { ...state, domMatrix: 'matrix(2, 0, 0, 2, 10, 20)' })
+  MediaPreview.handlePointerDown(901, 10, 20)
+  MediaPreview.handlePointerMove(901, 20, 30)
+  expect(MediaPreview.getState(901).scale).toBe(2)
+  expect(MediaPreview.getComponentState(901).domMatrix).toBe('matrix(2, 0, 0, 2, 20, 30)')
+  MediaPreview.dispose(901)
 })
