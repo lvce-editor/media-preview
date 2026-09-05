@@ -90,6 +90,28 @@ interface MediaPreviewApi {
   readonly setSavedState: (id: number, state: unknown) => unknown
 }
 
+const defaultApi: MediaPreviewApi = {
+  create: MediaPreview.create,
+  dispose: MediaPreview.dispose,
+  exists: MediaPreview.exists,
+  getComponentState: MediaPreview.getComponentState,
+  getFileSize: MediaPreview.getFileSize,
+  getFullResolutionUrl: MediaPreview.getFullResolutionUrl,
+  getSiblingImageUris: MediaPreview.getSiblingImageUris,
+  getState: MediaPreview.getState,
+  getUrl: MediaPreview.getUrl,
+  handleError: MediaPreview.handleError,
+  handlePointerDown: MediaPreview.handlePointerDown,
+  handlePointerMove: MediaPreview.handlePointerMove,
+  handlePointerUp: MediaPreview.handlePointerUp,
+  handleWheel: MediaPreview.handleWheel,
+  reset: MediaPreview.reset,
+  revokeUrl: MediaPreview.revokeUrl,
+  saveState: MediaPreview.saveState,
+  setComponentState: MediaPreview.setComponentState,
+  setSavedState: MediaPreview.setSavedState,
+}
+
 type ExecuteCommand = (id: string, ...args: readonly unknown[]) => Promise<unknown>
 
 interface PendingUpgrade {
@@ -548,5 +570,5 @@ export const createInstanceWithApi = async (
 }
 
 export const createInstance = (context?: ViewContext): Promise<MediaPreviewViewInstance> => {
-  return createInstanceWithApi(context, MediaPreview)
+  return createInstanceWithApi(context, defaultApi)
 }
