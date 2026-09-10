@@ -301,7 +301,8 @@ export const createInstanceWithApi = async (
     }
     const requestGeneration = generation
     const errorMessage = await getImageErrorMessage(uri, api.exists)
-    if (disposed || generation !== requestGeneration || state.url !== url) {
+    const { url: currentUrl } = state
+    if (disposed || generation !== requestGeneration || currentUrl !== url) {
       return
     }
     updateState({
