@@ -283,6 +283,9 @@ export const createInstanceWithApi = async (
   }
 
   const handleImageError = async (sourceUrl: string): Promise<void> => {
+    if (disposed) {
+      return
+    }
     if (pendingUpgrade && sourceUrl === pendingUpgrade.fullSource.url) {
       const { fullSource, previewSource } = pendingUpgrade
       pendingUpgrade = undefined
@@ -296,7 +299,11 @@ export const createInstanceWithApi = async (
     if (sourceUrl && sourceUrl !== url) {
       return
     }
+    const requestGeneration = generation
     const errorMessage = await getImageErrorMessage(uri, api.exists)
+    if (disposed || generation !== requestGeneration || state.url !== url) {
+      return
+    }
     updateState({
       ...api.handleError(id),
       canOpenAsText: canOpenAsText(uri, errorMessage),

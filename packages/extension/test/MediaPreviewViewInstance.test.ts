@@ -639,3 +639,68 @@ test('component state edits synchronize presentation from the image owner', asyn
   expect(JSON.stringify(instance.render())).toContain('Inspector error')
   await instance.dispose?.()
 })
+
+test('ignores a delayed image error after navigating away and back to the same URL', async () => {
+  const api = createApi()
+  const exists = Promise.withResolvers<boolean>()
+  api.exists.mockReturnValue(exists.promise)
+  api.getSiblingImageUris.mockResolvedValue(['/workspace/image.png', '/workspace/next.png'])
+  const instance = await createInstanceWithApi(context, api)
+  const error = instance.handleMediaPreviewImageError('blob:https://example.com/image-id')
+
+  await instance.handleMediaPreviewKeyDown('ArrowRight')
+  await instance.handleMediaPreviewKeyDown('ArrowLeft')
+  exists.resolve(false)
+  await error
+
+  expect(api.handleError).not.toHaveBeenCalled()
+  expect(instance.getComponentState().view.error).toBe(false)
+  expect(instance.render().some((node) => node.src === 'blob:https://example.com/image-id')).toBe(true)
+})
+
+test('ignores a delayed image error after disposal', async () => {
+  const api = createApi()
+  const exists = Promise.withResolvers<boolean>()
+  api.exists.mockReturnValue(exists.promise)
+  const instance = await createInstanceWithApi(context, api)
+  const error = instance.handleMediaPreviewImageError('blob:https://example.com/image-id')
+
+  await instance.dispose?.()
+  exists.resolve(false)
+  await error
+
+  expect(api.handleError).not.toHaveBeenCalled()
+})
+
+test('ignores image errors received after disposal', async () => {
+  const api = createApi()
+  const instance = await createInstanceWithApi(context, api)
+  await instance.dispose?.()
+
+  await instance.handleMediaPreviewImageError('blob:https://example.com/image-id')
+  await instance.handleEvent?.({ type: 'error' })
+
+  expect(api.exists).not.toHaveBeenCalled()
+  expect(api.handleError).not.toHaveBeenCalled()
+})
+
+test('ignores a delayed preview error after upgrading the image source', async () => {
+  const api = createApi()
+  const exists = Promise.withResolvers<boolean>()
+  api.exists.mockReturnValue(exists.promise)
+  api.getUrl.mockResolvedValue(progressivePreview)
+  api.getFullResolutionUrl.mockResolvedValue(fullResolution)
+  api.handleWheel.mockReturnValue({ ...initialState, scale: 2 })
+  const instance = await createInstanceWithApi(context, api)
+  const error = instance.handleMediaPreviewImageError(progressivePreview.url)
+
+  instance.handleMediaPreviewWheel(-70, 0, 1024, 768, 1)
+  await Promise.resolve()
+  await Promise.resolve()
+  instance.handleMediaPreviewImageLoad(fullResolution.url, 4096, 3072)
+  exists.resolve(false)
+  await error
+
+  expect(api.handleError).not.toHaveBeenCalled()
+  expect(instance.render().some((node) => node.src === fullResolution.url)).toBe(true)
+})
