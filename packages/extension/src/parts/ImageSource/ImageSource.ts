@@ -1,5 +1,10 @@
 export type ImageTier = 'full' | 'preview'
 
+export interface ImageConversionOptions {
+  readonly previewMaxDimension: number
+  readonly webpQuality: number
+}
+
 export interface ConvertedImage {
   readonly blob: Blob
   readonly height: number

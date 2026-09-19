@@ -1,12 +1,12 @@
 import { readAsObjectUrl, readFileAsBlob, type ReadAsObjectUrlResult } from '@lvce-editor/api'
-import type { ImageSource } from '../ImageSource/ImageSource.ts'
+import type { ImageConversionOptions, ImageSource } from '../ImageSource/ImageSource.ts'
 import { convertHeicToFullResolutionUrl, convertHeicToPreviewUrl } from '../ConvertHeicToPreviewUrl/ConvertHeicToPreviewUrl.ts'
 import { convertTiffToPngUrl } from '../ConvertTiffToPngUrl/ConvertTiffToPngUrl.ts'
 
 type ReadAsObjectUrl = (uri: string) => Promise<ReadAsObjectUrlResult>
 type ReadFileAsBlob = (uri: string) => Promise<Blob>
 type CreateObjectUrl = (blob: Blob) => string
-type ConvertHeicToPreviewUrl = (uri: string) => Promise<ImageSource>
+type ConvertHeicToPreviewUrl = (uri: string, options: ImageConversionOptions) => Promise<ImageSource>
 type ConvertTiffToPngUrl = (blob: Blob) => Promise<string>
 
 const isHeicUri = (uri: string): boolean => {
@@ -47,10 +47,11 @@ export const getUrlWithDependencies = async (
   createUrl: CreateObjectUrl,
   convertHeic: ConvertHeicToPreviewUrl,
   convertTiff: ConvertTiffToPngUrl,
+  options: ImageConversionOptions,
 ): Promise<ImageSource> => {
   if (isHeicUri(uri)) {
     try {
-      return await convertHeic(uri)
+      return await convertHeic(uri, options)
     } catch {
       return toSimpleSource('')
     }
@@ -75,7 +76,7 @@ export const getUrlWithDependencies = async (
   return toSimpleSource(result.wasFound ? result.objectUrl : '')
 }
 
-export const getUrl = async (uri: string): Promise<ImageSource> => {
+export const getUrl = async (uri: string, options: ImageConversionOptions): Promise<ImageSource> => {
   return getUrlWithDependencies(
     uri,
     readAsObjectUrl,
@@ -83,12 +84,13 @@ export const getUrl = async (uri: string): Promise<ImageSource> => {
     createObjectUrl,
     convertHeicToPreviewUrl,
     convertTiffToPngUrl,
+    options,
   )
 }
 
-export const getFullResolutionUrl = async (uri: string): Promise<ImageSource> => {
+export const getFullResolutionUrl = async (uri: string, options: ImageConversionOptions): Promise<ImageSource> => {
   if (!isHeicUri(uri)) {
-    return getUrl(uri)
+    return getUrl(uri, options)
   }
-  return convertHeicToFullResolutionUrl(uri)
+  return convertHeicToFullResolutionUrl(uri, options)
 }

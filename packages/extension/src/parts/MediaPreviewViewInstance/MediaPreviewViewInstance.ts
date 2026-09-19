@@ -7,7 +7,7 @@ import {
   type ViewEvent,
   type VirtualDomViewInstance,
 } from '@lvce-editor/api'
-import type { ImageSource } from '../ImageSource/ImageSource.ts'
+import type { ImageConversionOptions, ImageSource } from '../ImageSource/ImageSource.ts'
 import { getCss } from '../GetCss/GetCss.ts'
 import * as MediaPreview from '../MediaPreview/MediaPreview.ts'
 import { render } from '../RenderMediaPreview/RenderMediaPreview.ts'
@@ -27,10 +27,12 @@ export interface MediaPreviewState {
   readonly imageExtensions: readonly string[]
   readonly isFullResolution: boolean
   readonly pointerDown: boolean
+  readonly previewMaxDimension: number
   readonly scale: number
   readonly sourceHeight: number
   readonly sourceWidth: number
   readonly url: string
+  readonly webpQuality: number
   readonly width: number
 }
 
@@ -74,10 +76,12 @@ interface MediaPreviewApi {
   readonly exists: (uri: string) => Promise<boolean>
   readonly getComponentState: typeof MediaPreview.getComponentState
   readonly getFileSize: (uri: string) => Promise<number>
-  readonly getFullResolutionUrl: (uri: string) => Promise<ImageSource>
+  readonly getFullResolutionUrl: (uri: string, options: ImageConversionOptions) => Promise<ImageSource>
   readonly getSiblingImageUris: (uri: string, imageExtensions: readonly string[]) => Promise<readonly string[]>
-  readonly getState: (id: number) => Pick<MediaPreviewState, 'domMatrixString' | 'error' | 'pointerDown' | 'scale'>
-  readonly getUrl: (uri: string) => Promise<ImageSource>
+  readonly getState: (
+    id: number,
+  ) => Pick<MediaPreviewState, 'domMatrixString' | 'error' | 'pointerDown' | 'previewMaxDimension' | 'scale' | 'webpQuality'>
+  readonly getUrl: (uri: string, options: ImageConversionOptions) => Promise<ImageSource>
   readonly handleError: (id: number) => Partial<MediaPreviewState>
   readonly handlePointerDown: (id: number, x: number, y: number) => Partial<MediaPreviewState>
   readonly handlePointerMove: (id: number, x: number, y: number) => Partial<MediaPreviewState>
@@ -165,6 +169,14 @@ const getImageErrorMessage = async (uri: string, exists: MediaPreviewApi['exists
   }
 }
 
+const getConversionOptions = (state: Pick<MediaPreviewState, 'previewMaxDimension' | 'webpQuality'>): ImageConversionOptions => {
+  const { previewMaxDimension, webpQuality } = state
+  return {
+    previewMaxDimension,
+    webpQuality,
+  }
+}
+
 const toSourceState = (
   source: Readonly<ImageSource>,
 ): Pick<MediaPreviewState, 'height' | 'isFullResolution' | 'sourceHeight' | 'sourceWidth' | 'url' | 'width'> => {
@@ -189,7 +201,9 @@ export const createInstanceWithApi = async (
   api.create(id)
   api.setSavedState(id, context?.state)
   const previewState = api.getState(id)
-  const [initialSource, fileSize] = uri ? await Promise.all([api.getUrl(uri), api.getFileSize(uri)]) : [emptySource, 0]
+  const [initialSource, fileSize] = uri
+    ? await Promise.all([api.getUrl(uri, getConversionOptions(previewState)), api.getFileSize(uri)])
+    : [emptySource, 0]
   let currentSource = initialSource
   const error = !currentSource.url || previewState.error
   const errorMessage = error ? await getImageErrorMessage(uri, api.exists) : ''
@@ -266,7 +280,7 @@ export const createInstanceWithApi = async (
     const requestGeneration = generation
     const requestUri = uri
     try {
-      const fullSource = await api.getFullResolutionUrl(requestUri)
+      const fullSource = await api.getFullResolutionUrl(requestUri, getConversionOptions(state))
       if (disposed || generation !== requestGeneration || uri !== requestUri) {
         revokeSource(fullSource)
         return currentSource
@@ -321,7 +335,7 @@ export const createInstanceWithApi = async (
     const previewSource = currentSource
     upgradePromise = (async (): Promise<void> => {
       try {
-        const fullSource = await api.getFullResolutionUrl(requestUri)
+        const fullSource = await api.getFullResolutionUrl(requestUri, getConversionOptions(state))
         if (disposed || generation !== requestGeneration || uri !== requestUri || currentSource.url !== previewSource.url) {
           revokeSource(fullSource)
           return
@@ -380,7 +394,7 @@ export const createInstanceWithApi = async (
     upgradePromise = undefined
     api.create(id)
     const previewState = api.getState(id)
-    const [nextSource, fileSize] = await Promise.all([api.getUrl(uri), api.getFileSize(uri)])
+    const [nextSource, fileSize] = await Promise.all([api.getUrl(uri, getConversionOptions(previewState)), api.getFileSize(uri)])
     currentSource = nextSource
     const error = !nextSource.url || previewState.error
     const errorMessage = error ? await getImageErrorMessage(uri, api.exists) : ''

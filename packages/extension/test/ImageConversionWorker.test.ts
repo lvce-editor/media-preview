@@ -3,6 +3,10 @@ import * as ImageConversionWorker from '../src/parts/ImageConversionWorker/Image
 
 const invoke = jest.fn<(method: string, ...params: readonly unknown[]) => Promise<unknown>>()
 const createRpc = jest.fn<(options: { readonly id: string }) => Promise<{ readonly invoke: typeof invoke }>>()
+const options = {
+  previewMaxDimension: 2048,
+  webpQuality: 0.9,
+}
 
 beforeEach(() => {
   jest.resetAllMocks()
@@ -28,8 +32,8 @@ test('lazily creates and reuses the image conversion worker', async () => {
   }
   invoke.mockResolvedValueOnce(converted).mockResolvedValueOnce(converted).mockResolvedValueOnce(png)
 
-  await expect(ImageConversionWorker.convertHeicToPreview(heic, 'preview')).resolves.toBe(converted)
-  await expect(ImageConversionWorker.convertHeicToPreview(heic, 'full')).resolves.toBe(converted)
+  await expect(ImageConversionWorker.convertHeicToPreview(heic, 'preview', options)).resolves.toBe(converted)
+  await expect(ImageConversionWorker.convertHeicToPreview(heic, 'full', options)).resolves.toBe(converted)
   await expect(ImageConversionWorker.convertTiffToPng(tiff)).resolves.toBe(png)
 
   expect(createRpc).toHaveBeenCalledTimes(1)
@@ -37,7 +41,7 @@ test('lazily creates and reuses the image conversion worker', async () => {
     id: 'builtin.media-preview.image-conversion-worker',
   })
   expect(invoke).toHaveBeenCalledTimes(3)
-  expect(invoke).toHaveBeenCalledWith('ImageConversion.convertHeicToPreview', heic, 'preview')
-  expect(invoke).toHaveBeenCalledWith('ImageConversion.convertHeicToPreview', heic, 'full')
+  expect(invoke).toHaveBeenCalledWith('ImageConversion.convertHeicToPreview', heic, 'preview', options)
+  expect(invoke).toHaveBeenCalledWith('ImageConversion.convertHeicToPreview', heic, 'full', options)
   expect(invoke).toHaveBeenCalledWith('ImageConversion.convertTiffToPng', tiff)
 })

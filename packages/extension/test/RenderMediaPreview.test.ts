@@ -13,10 +13,12 @@ const state = {
   imageExtensions: [],
   isFullResolution: true,
   pointerDown: false,
+  previewMaxDimension: 2048,
   scale: 1,
   sourceHeight: 1,
   sourceWidth: 1,
   url: '/remote/image.png',
+  webpQuality: 0.9,
   width: 1,
 }
 

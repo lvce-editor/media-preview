@@ -1,5 +1,5 @@
 import { createRpc } from '@lvce-editor/api'
-import type { ConvertedImage, ImageTier } from '../ImageSource/ImageSource.ts'
+import type { ConvertedImage, ImageConversionOptions, ImageTier } from '../ImageSource/ImageSource.ts'
 
 interface Rpc {
   readonly invoke: (method: string, ...params: readonly unknown[]) => Promise<unknown>
@@ -27,9 +27,13 @@ const getRpc = (): Promise<Rpc> => {
   return newRpcPromise
 }
 
-export const convertHeicToPreview = async (heic: Blob, tier: ImageTier): Promise<ConvertedImage> => {
+export const convertHeicToPreview = async (
+  heic: Blob,
+  tier: ImageTier,
+  options: ImageConversionOptions,
+): Promise<ConvertedImage> => {
   const rpc = await getRpc()
-  return rpc.invoke('ImageConversion.convertHeicToPreview', heic, tier) as Promise<ConvertedImage>
+  return rpc.invoke('ImageConversion.convertHeicToPreview', heic, tier, options) as Promise<ConvertedImage>
 }
 
 export const convertTiffToPng = async (tiff: Blob): Promise<Blob> => {

@@ -5,7 +5,7 @@ type ImageTier = 'full' | 'preview'
 
 const uri = 'file:///workspace/image.heic'
 const hash = 'sha256-image-hash'
-const cacheKeyPrefix = `https://media-preview-cache.invalid/heic-preview/v2/${hash}`
+const cacheKeyPrefix = `https://media-preview-cache.invalid/heic-preview/v3/${hash}`
 const heic = new Blob(['heic'], { type: 'image/heic' })
 const preview = new Blob(['preview'], { type: 'image/webp' })
 const convertedPreview = {
@@ -15,7 +15,12 @@ const convertedPreview = {
   originalWidth: 4096,
   width: 2048,
 }
-const convert = jest.fn<(blob: Blob, tier: ImageTier) => Promise<typeof convertedPreview>>()
+const options = {
+  previewMaxDimension: 2048,
+  webpQuality: 0.9,
+}
+type ConversionOptions = typeof options
+const convert = jest.fn<(blob: Blob, tier: ImageTier, options: Readonly<ConversionOptions>) => Promise<typeof convertedPreview>>()
 const createObjectUrl = jest.fn<(blob: Blob) => string>()
 const getHash = jest.fn<(uri: string) => Promise<string>>()
 const getSetting = jest.fn<(key: string) => Promise<unknown>>()
@@ -69,7 +74,7 @@ const createMemoryCacheStorage = (
       return true
     },
     async open(name: string): Promise<Cache> {
-      expect(name).toBe('builtin.media-preview.heic-preview-v2')
+      expect(name).toBe('builtin.media-preview.heic-preview-v3')
       return cache
     },
   } as unknown as CacheStorage
@@ -89,7 +94,7 @@ test('converts without querying the hash or cache when caching is disabled', asy
   const { cacheStorage, deletedCacheNames, putKeys } = createMemoryCacheStorage()
 
   await expect(
-    convertHeicToPreviewUrlWithDependencies(uri, 'preview', {
+    convertHeicToPreviewUrlWithDependencies(uri, 'preview', options, {
       cacheStorage,
       convert,
       createUrl: createObjectUrl,
@@ -113,13 +118,13 @@ test('converts without querying the hash or cache when caching is disabled', asy
   expect(putKeys).toEqual([])
   expect(deletedCacheNames).toEqual([])
   expect(readFileAsBlob).toHaveBeenCalledWith(uri)
-  expect(convert).toHaveBeenCalledWith(heic, 'preview')
+  expect(convert).toHaveBeenCalledWith(heic, 'preview', options)
   expect(createObjectUrl).toHaveBeenCalledWith(preview)
 })
 
 test.each([
-  ['preview', `${cacheKeyPrefix}/preview-2048.webp`],
-  ['full', `${cacheKeyPrefix}/full.webp`],
+  ['preview', `${cacheKeyPrefix}/preview-2048-quality-0.9.webp`],
+  ['full', `${cacheKeyPrefix}/full-quality-0.9.webp`],
 ] as const)('uses the cached %s tier without decoding the image', async (tier, cacheKey) => {
   getSetting.mockResolvedValue(true)
   const cachedPreview = new Blob(['cached preview'], { type: 'image/webp' })
@@ -131,7 +136,7 @@ test.each([
     [cacheKey]: createCachedResponse(cachedPreview, cachedMetadata),
   })
 
-  const result = await convertHeicToPreviewUrlWithDependencies(uri, tier, {
+  const result = await convertHeicToPreviewUrlWithDependencies(uri, tier, options, {
     cacheStorage,
     convert,
     createUrl: createObjectUrl,
@@ -154,18 +159,18 @@ test.each([
   expect(readFileAsBlob).not.toHaveBeenCalled()
   expect(convert).not.toHaveBeenCalled()
   expect(putKeys).toEqual([])
-  expect(deletedCacheNames).toEqual(['builtin.media-preview.heic-preview-v1'])
+  expect(deletedCacheNames).toEqual(['builtin.media-preview.heic-preview-v1', 'builtin.media-preview.heic-preview-v2'])
   expect(await createObjectUrl.mock.calls[0][0].text()).toBe('cached preview')
 })
 
 test.each([
-  ['preview', `${cacheKeyPrefix}/preview-2048.webp`],
-  ['full', `${cacheKeyPrefix}/full.webp`],
+  ['preview', `${cacheKeyPrefix}/preview-2048-quality-0.9.webp`],
+  ['full', `${cacheKeyPrefix}/full-quality-0.9.webp`],
 ] as const)('converts and caches the %s tier after a cache miss', async (tier, cacheKey) => {
   getSetting.mockResolvedValue(true)
   const { cacheStorage, putKeys, putResponses } = createMemoryCacheStorage()
 
-  await convertHeicToPreviewUrlWithDependencies(uri, tier, {
+  await convertHeicToPreviewUrlWithDependencies(uri, tier, options, {
     cacheStorage,
     convert,
     createUrl: createObjectUrl,
@@ -177,7 +182,7 @@ test.each([
   expect(getHash).toHaveBeenCalledWith(uri)
   expect(readFileAsBlob).toHaveBeenCalledWith(uri)
   expect(getHash.mock.invocationCallOrder[0]).toBeLessThan(readFileAsBlob.mock.invocationCallOrder[0])
-  expect(convert).toHaveBeenCalledWith(heic, tier)
+  expect(convert).toHaveBeenCalledWith(heic, tier, options)
   expect(putKeys).toEqual([cacheKey])
   expect(putResponses).toHaveLength(1)
   expect(putResponses[0].headers.get('Content-Length')).toBe(String(preview.size))
@@ -187,9 +192,29 @@ test.each([
   expect(putResponses[0].headers.get('X-Media-Preview-Height')).toBe('1536')
 })
 
+test('does not reuse a preview cached with different conversion options', async () => {
+  getSetting.mockResolvedValue(true)
+  const customOptions = { previewMaxDimension: 1024, webpQuality: 0.5 }
+  const { cacheStorage, putKeys } = createMemoryCacheStorage({
+    [`${cacheKeyPrefix}/preview-2048-quality-0.9.webp`]: createCachedResponse(preview, convertedPreview),
+  })
+
+  await convertHeicToPreviewUrlWithDependencies(uri, 'preview', customOptions, {
+    cacheStorage,
+    convert,
+    createUrl: createObjectUrl,
+    getHash,
+    getSetting,
+    readBlob: readFileAsBlob,
+  })
+
+  expect(convert).toHaveBeenCalledWith(heic, 'preview', customOptions)
+  expect(putKeys).toEqual([`${cacheKeyPrefix}/preview-1024-quality-0.5.webp`])
+})
+
 test('ignores cached entries with invalid metadata', async () => {
   getSetting.mockResolvedValue(true)
-  const cacheKey = `${cacheKeyPrefix}/preview-2048.webp`
+  const cacheKey = `${cacheKeyPrefix}/preview-2048-quality-0.9.webp`
   const invalidResponse = createCachedResponse(preview, {
     ...convertedPreview,
     width: NaN,
@@ -198,7 +223,7 @@ test('ignores cached entries with invalid metadata', async () => {
     [cacheKey]: invalidResponse,
   })
 
-  await convertHeicToPreviewUrlWithDependencies(uri, 'preview', {
+  await convertHeicToPreviewUrlWithDependencies(uri, 'preview', options, {
     cacheStorage,
     convert,
     createUrl: createObjectUrl,
@@ -208,17 +233,17 @@ test('ignores cached entries with invalid metadata', async () => {
   })
 
   expect(readFileAsBlob).toHaveBeenCalledWith(uri)
-  expect(convert).toHaveBeenCalledWith(heic, 'preview')
+  expect(convert).toHaveBeenCalledWith(heic, 'preview', options)
   expect(putKeys).toEqual([cacheKey])
 })
 
-test('still uses cache v2 when deleting cache v1 fails', async () => {
+test('still uses cache v3 when deleting legacy caches fails', async () => {
   getSetting.mockResolvedValue(true)
   const { cacheStorage } = createMemoryCacheStorage()
   jest.spyOn(cacheStorage, 'delete').mockRejectedValue(new Error('cannot delete cache'))
 
   await expect(
-    convertHeicToPreviewUrlWithDependencies(uri, 'preview', {
+    convertHeicToPreviewUrlWithDependencies(uri, 'preview', options, {
       cacheStorage,
       convert,
       createUrl: createObjectUrl,
@@ -233,7 +258,7 @@ test('falls back to conversion when Cache Storage is unavailable', async () => {
   getSetting.mockResolvedValue(true)
 
   await expect(
-    convertHeicToPreviewUrlWithDependencies(uri, 'preview', {
+    convertHeicToPreviewUrlWithDependencies(uri, 'preview', options, {
       cacheStorage: undefined,
       convert,
       createUrl: createObjectUrl,
@@ -245,7 +270,7 @@ test('falls back to conversion when Cache Storage is unavailable', async () => {
 
   expect(getHash).toHaveBeenCalledWith(uri)
   expect(readFileAsBlob).toHaveBeenCalledWith(uri)
-  expect(convert).toHaveBeenCalledWith(heic, 'preview')
+  expect(convert).toHaveBeenCalledWith(heic, 'preview', options)
 })
 
 test('falls back to uncached conversion when hashing fails', async () => {
@@ -253,7 +278,7 @@ test('falls back to uncached conversion when hashing fails', async () => {
   getHash.mockRejectedValue(new Error('hashing unavailable'))
   const { cacheStorage, putKeys } = createMemoryCacheStorage()
 
-  await convertHeicToPreviewUrlWithDependencies(uri, 'preview', {
+  await convertHeicToPreviewUrlWithDependencies(uri, 'preview', options, {
     cacheStorage,
     convert,
     createUrl: createObjectUrl,
@@ -262,7 +287,7 @@ test('falls back to uncached conversion when hashing fails', async () => {
     readBlob: readFileAsBlob,
   })
 
-  expect(convert).toHaveBeenCalledWith(heic, 'preview')
+  expect(convert).toHaveBeenCalledWith(heic, 'preview', options)
   expect(putKeys).toEqual([])
 })
 
@@ -272,7 +297,7 @@ test('falls back to conversion when opening cache v2 fails', async () => {
   jest.spyOn(cacheStorage, 'open').mockRejectedValue(new Error('cache unavailable'))
 
   await expect(
-    convertHeicToPreviewUrlWithDependencies(uri, 'preview', {
+    convertHeicToPreviewUrlWithDependencies(uri, 'preview', options, {
       cacheStorage,
       convert,
       createUrl: createObjectUrl,
@@ -285,12 +310,12 @@ test('falls back to conversion when opening cache v2 fails', async () => {
 
 test('ignores full-tier cache entries that are not full size', async () => {
   getSetting.mockResolvedValue(true)
-  const cacheKey = `${cacheKeyPrefix}/full.webp`
+  const cacheKey = `${cacheKeyPrefix}/full-quality-0.9.webp`
   const { cacheStorage, putKeys } = createMemoryCacheStorage({
     [cacheKey]: createCachedResponse(preview, convertedPreview),
   })
 
-  await convertHeicToPreviewUrlWithDependencies(uri, 'full', {
+  await convertHeicToPreviewUrlWithDependencies(uri, 'full', options, {
     cacheStorage,
     convert,
     createUrl: createObjectUrl,
@@ -299,18 +324,18 @@ test('ignores full-tier cache entries that are not full size', async () => {
     readBlob: readFileAsBlob,
   })
 
-  expect(convert).toHaveBeenCalledWith(heic, 'full')
+  expect(convert).toHaveBeenCalledWith(heic, 'full', options)
   expect(putKeys).toEqual([cacheKey])
 })
 
 test('ignores cached blobs whose content length does not match', async () => {
   getSetting.mockResolvedValue(true)
-  const cacheKey = `${cacheKeyPrefix}/preview-2048.webp`
+  const cacheKey = `${cacheKeyPrefix}/preview-2048-quality-0.9.webp`
   const response = createCachedResponse(preview, convertedPreview)
   response.headers.set('Content-Length', String(preview.size + 1))
   const { cacheStorage, putKeys } = createMemoryCacheStorage({ [cacheKey]: response })
 
-  await convertHeicToPreviewUrlWithDependencies(uri, 'preview', {
+  await convertHeicToPreviewUrlWithDependencies(uri, 'preview', options, {
     cacheStorage,
     convert,
     createUrl: createObjectUrl,
@@ -333,7 +358,7 @@ test('marks an uncapped preview as already full resolution', async () => {
   })
 
   await expect(
-    convertHeicToPreviewUrlWithDependencies(uri, 'preview', {
+    convertHeicToPreviewUrlWithDependencies(uri, 'preview', options, {
       cacheStorage: undefined,
       convert,
       createUrl: createObjectUrl,

@@ -13,10 +13,12 @@ test('renders image metadata as two status bar items', () => {
       imageExtensions: [],
       isFullResolution: true,
       pointerDown: false,
+      previewMaxDimension: 2048,
       scale: 1,
       sourceHeight: 480,
       sourceWidth: 640,
       url: '',
+      webpQuality: 0.9,
       width: 640,
     }),
   ).toEqual([
