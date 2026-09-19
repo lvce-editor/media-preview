@@ -16,7 +16,12 @@ const previewSource: ImageSource = {
   url: 'blob:https://example.com/preview-id',
   width: 2048,
 }
-const convertHeicToPreviewUrl = jest.fn<(uri: string) => Promise<ImageSource>>()
+const options = {
+  previewMaxDimension: 2048,
+  webpQuality: 0.9,
+}
+type ConversionOptions = typeof options
+const convertHeicToPreviewUrl = jest.fn<(uri: string, options: Readonly<ConversionOptions>) => Promise<ImageSource>>()
 const convertTiffToPngUrl = jest.fn<(blob: Blob) => Promise<string>>()
 
 const simpleSource = (url: string): ImageSource => ({
@@ -47,6 +52,7 @@ test('reads a remote image as a blob through its file system provider', async ()
       createObjectUrl,
       convertHeicToPreviewUrl,
       convertTiffToPngUrl,
+      options,
     ),
   ).resolves.toEqual(simpleSource('blob:https://example.com/image-id'))
   expect(readFileAsBlob).toHaveBeenCalledWith('remote-ssh:///workspace/image.png')
@@ -67,6 +73,7 @@ test('returns an empty source when a remote file could not be read', async () =>
       createObjectUrl,
       convertHeicToPreviewUrl,
       convertTiffToPngUrl,
+      options,
     ),
   ).resolves.toEqual(simpleSource(''))
   expect(createObjectUrl).not.toHaveBeenCalled()
@@ -88,6 +95,7 @@ test('keeps the existing object URL path for non-remote images', async () => {
       createObjectUrl,
       convertHeicToPreviewUrl,
       convertTiffToPngUrl,
+      options,
     ),
   ).resolves.toEqual(simpleSource('https://example.com/image.png'))
   expect(readAsObjectUrl).toHaveBeenCalledWith('html:///workspace/image.png')
@@ -102,11 +110,19 @@ test.each(['image.heic', 'image.HEIC', 'image.HEIF'])(
     const uri = `html:///workspace/${fileName}`
 
     await expect(
-      getUrlWithDependencies(uri, readAsObjectUrl, readFileAsBlob, createObjectUrl, convertHeicToPreviewUrl, convertTiffToPngUrl),
+      getUrlWithDependencies(
+        uri,
+        readAsObjectUrl,
+        readFileAsBlob,
+        createObjectUrl,
+        convertHeicToPreviewUrl,
+        convertTiffToPngUrl,
+        options,
+      ),
     ).resolves.toBe(previewSource)
     expect(readFileAsBlob).not.toHaveBeenCalled()
     expect(createObjectUrl).not.toHaveBeenCalled()
-    expect(convertHeicToPreviewUrl).toHaveBeenCalledWith(uri)
+    expect(convertHeicToPreviewUrl).toHaveBeenCalledWith(uri, options)
   },
 )
 
@@ -121,6 +137,7 @@ test('returns an empty source when a HEIC image cannot be read', async () => {
       createObjectUrl,
       convertHeicToPreviewUrl,
       convertTiffToPngUrl,
+      options,
     ),
   ).resolves.toEqual(simpleSource(''))
 })
@@ -132,7 +149,15 @@ test.each(['image.tif', 'image.TIFF'])('converts TIFF images to an owned PNG sou
   const uri = `html:///workspace/${fileName}`
 
   await expect(
-    getUrlWithDependencies(uri, readAsObjectUrl, readFileAsBlob, createObjectUrl, convertHeicToPreviewUrl, convertTiffToPngUrl),
+    getUrlWithDependencies(
+      uri,
+      readAsObjectUrl,
+      readFileAsBlob,
+      createObjectUrl,
+      convertHeicToPreviewUrl,
+      convertTiffToPngUrl,
+      options,
+    ),
   ).resolves.toEqual(simpleSource('blob:https://example.com/png-id'))
   expect(readFileAsBlob).toHaveBeenCalledWith(uri)
   expect(createObjectUrl).not.toHaveBeenCalled()
@@ -151,6 +176,7 @@ test('returns an empty source when a TIFF image cannot be converted', async () =
       createObjectUrl,
       convertHeicToPreviewUrl,
       convertTiffToPngUrl,
+      options,
     ),
   ).resolves.toEqual(simpleSource(''))
 })

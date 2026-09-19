@@ -33,6 +33,8 @@ const createState = (): WebView => ({
   pointerDown: false,
   pointerOffsetX: 0,
   pointerOffsetY: 0,
+  previewMaxDimension: 2048,
+  webpQuality: 0.9,
   zoomFactor: 200 as const,
 })
 

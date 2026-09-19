@@ -14,13 +14,16 @@ export interface EncodedImage {
 
 export type ImageTier = 'full' | 'preview'
 
+export interface ImageConversionOptions {
+  readonly previewMaxDimension: number
+  readonly webpQuality: number
+}
+
 type CreateCanvas = (width: number, height: number) => OffscreenCanvas
 type CreateImageData = (data: Readonly<ArrayLike<number>>, width: number, height: number) => ImageData
 
 const PngMimeType = 'image/png'
 const WebpMimeType = 'image/webp'
-const WebpQuality = 0.9
-const PreviewMaxDimension = 2048
 
 const createCanvas = (width: number, height: number): OffscreenCanvas => {
   return new OffscreenCanvas(width, height)
@@ -37,11 +40,12 @@ const encodePng = (canvas: Readonly<OffscreenCanvas>): Promise<Blob> => {
 const getTargetDimensions = (
   image: Readonly<DecodedImage>,
   tier: ImageTier,
+  previewMaxDimension: number,
 ): { readonly height: number; readonly width: number } => {
   if (tier === 'full') {
     return { height: image.height, width: image.width }
   }
-  const scale = Math.min(1, PreviewMaxDimension / Math.max(image.width, image.height))
+  const scale = Math.min(1, previewMaxDimension / Math.max(image.width, image.height))
   return {
     height: Math.max(1, Math.round(image.height * scale)),
     width: Math.max(1, Math.round(image.width * scale)),
@@ -51,6 +55,7 @@ const getTargetDimensions = (
 export const encodeImageToPreviewWithDependencies = async (
   image: Readonly<DecodedImage>,
   tier: ImageTier,
+  options: ImageConversionOptions,
   createCanvasFn: CreateCanvas,
   createImageDataFn: CreateImageData,
 ): Promise<EncodedImage> => {
@@ -61,7 +66,7 @@ export const encodeImageToPreviewWithDependencies = async (
   }
   const imageData = createImageDataFn(image.data, image.width, image.height)
   sourceContext.putImageData(imageData, 0, 0)
-  const { height, width } = getTargetDimensions(image, tier)
+  const { height, width } = getTargetDimensions(image, tier, options.previewMaxDimension)
   let outputCanvas = sourceCanvas
   if (width !== image.width || height !== image.height) {
     outputCanvas = createCanvasFn(width, height)
@@ -75,7 +80,7 @@ export const encodeImageToPreviewWithDependencies = async (
   let blob: Blob
   try {
     const preview = await outputCanvas.convertToBlob({
-      quality: WebpQuality,
+      quality: options.webpQuality,
       type: WebpMimeType,
     })
     if (preview.type === WebpMimeType || preview.type === PngMimeType) {
@@ -96,6 +101,10 @@ export const encodeImageToPreviewWithDependencies = async (
   }
 }
 
-export const encodeImageToPreview = async (image: Readonly<DecodedImage>, tier: ImageTier): Promise<EncodedImage> => {
-  return encodeImageToPreviewWithDependencies(image, tier, createCanvas, createImageData)
+export const encodeImageToPreview = async (
+  image: Readonly<DecodedImage>,
+  tier: ImageTier,
+  options: ImageConversionOptions,
+): Promise<EncodedImage> => {
+  return encodeImageToPreviewWithDependencies(image, tier, options, createCanvas, createImageData)
 }

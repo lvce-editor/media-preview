@@ -6,6 +6,10 @@ const image = {
   height: 1,
   width: 1,
 }
+const options = {
+  previewMaxDimension: 2048,
+  webpQuality: 0.9,
+}
 const imageData = { data: image.data, height: 1, width: 1 } as ImageData
 const putImageData = jest.fn()
 const getContext = jest.fn().mockReturnValue({ putImageData })
@@ -25,7 +29,7 @@ test('draws the decoded RGBA pixels and encodes a full-size WebP preview', async
   const webp = new Blob(['webp'], { type: 'image/webp' })
   convertToBlob.mockResolvedValue(webp)
 
-  await expect(encodeImageToPreviewWithDependencies(image, 'preview', createCanvas, createImageData)).resolves.toEqual({
+  await expect(encodeImageToPreviewWithDependencies(image, 'preview', options, createCanvas, createImageData)).resolves.toEqual({
     blob: webp,
     height: 1,
     originalHeight: 1,
@@ -44,7 +48,7 @@ test('accepts a browser-native PNG fallback', async () => {
   const png = new Blob(['png'], { type: 'image/png' })
   convertToBlob.mockResolvedValue(png)
 
-  await expect(encodeImageToPreviewWithDependencies(image, 'preview', createCanvas, createImageData)).resolves.toEqual({
+  await expect(encodeImageToPreviewWithDependencies(image, 'preview', options, createCanvas, createImageData)).resolves.toEqual({
     blob: png,
     height: 1,
     originalHeight: 1,
@@ -59,7 +63,7 @@ test('explicitly encodes PNG when WebP encoding fails', async () => {
   const png = new Blob(['png'], { type: 'image/png' })
   convertToBlob.mockRejectedValueOnce(new Error('WebP is unavailable')).mockResolvedValueOnce(png)
 
-  await expect(encodeImageToPreviewWithDependencies(image, 'preview', createCanvas, createImageData)).resolves.toEqual({
+  await expect(encodeImageToPreviewWithDependencies(image, 'preview', options, createCanvas, createImageData)).resolves.toEqual({
     blob: png,
     height: 1,
     originalHeight: 1,
@@ -76,7 +80,7 @@ test('explicitly encodes PNG when WebP returns an unsupported format', async () 
   const png = new Blob(['png'], { type: 'image/png' })
   convertToBlob.mockResolvedValueOnce(jpeg).mockResolvedValueOnce(png)
 
-  await expect(encodeImageToPreviewWithDependencies(image, 'preview', createCanvas, createImageData)).resolves.toEqual({
+  await expect(encodeImageToPreviewWithDependencies(image, 'preview', options, createCanvas, createImageData)).resolves.toEqual({
     blob: png,
     height: 1,
     originalHeight: 1,
@@ -90,7 +94,7 @@ test('explicitly encodes PNG when WebP returns an unsupported format', async () 
 test('throws when a 2D canvas context is unavailable', async () => {
   getContext.mockReturnValue(undefined)
 
-  await expect(encodeImageToPreviewWithDependencies(image, 'preview', createCanvas, createImageData)).rejects.toThrow(
+  await expect(encodeImageToPreviewWithDependencies(image, 'preview', options, createCanvas, createImageData)).rejects.toThrow(
     'Failed to create 2D canvas context',
   )
 
@@ -121,7 +125,9 @@ test('caps a large preview at 2048 pixels without changing its aspect ratio', as
   const webp = new Blob(['webp'], { type: 'image/webp' })
   convertToBlob.mockResolvedValue(webp)
 
-  await expect(encodeImageToPreviewWithDependencies(largeImage, 'preview', createLargeCanvas, createImageData)).resolves.toEqual({
+  await expect(
+    encodeImageToPreviewWithDependencies(largeImage, 'preview', options, createLargeCanvas, createImageData),
+  ).resolves.toEqual({
     blob: webp,
     height: 1536,
     originalHeight: 3072,
@@ -135,6 +141,41 @@ test('caps a large preview at 2048 pixels without changing its aspect ratio', as
   expect(previewCanvas.convertToBlob).toHaveBeenCalledWith({ quality: 0.9, type: 'image/webp' })
 })
 
+test('uses the supplied preview dimension and WebP quality', async () => {
+  const sourceCanvas = {
+    convertToBlob,
+    getContext: jest.fn().mockReturnValue({ putImageData: jest.fn() }),
+  } as unknown as OffscreenCanvas
+  const previewCanvas = {
+    convertToBlob,
+    getContext: jest.fn().mockReturnValue({ drawImage: jest.fn() }),
+  } as unknown as OffscreenCanvas
+  const createCustomCanvas = jest
+    .fn<(width: number, height: number) => OffscreenCanvas>()
+    .mockReturnValueOnce(sourceCanvas)
+    .mockReturnValueOnce(previewCanvas)
+  const largeImage = {
+    data: new Uint8ClampedArray(4096 * 3072 * 4),
+    height: 3072,
+    width: 4096,
+  }
+  const webp = new Blob(['webp'], { type: 'image/webp' })
+  convertToBlob.mockResolvedValue(webp)
+
+  await expect(
+    encodeImageToPreviewWithDependencies(
+      largeImage,
+      'preview',
+      { previewMaxDimension: 1024, webpQuality: 0.5 },
+      createCustomCanvas,
+      createImageData,
+    ),
+  ).resolves.toMatchObject({ height: 768, width: 1024 })
+
+  expect(createCustomCanvas).toHaveBeenNthCalledWith(2, 1024, 768)
+  expect(previewCanvas.convertToBlob).toHaveBeenCalledWith({ quality: 0.5, type: 'image/webp' })
+})
+
 test('keeps the original dimensions for the full tier', async () => {
   const largeImage = {
     data: new Uint8ClampedArray(4096 * 3072 * 4),
@@ -144,11 +185,13 @@ test('keeps the original dimensions for the full tier', async () => {
   const webp = new Blob(['webp'], { type: 'image/webp' })
   convertToBlob.mockResolvedValue(webp)
 
-  await expect(encodeImageToPreviewWithDependencies(largeImage, 'full', createCanvas, createImageData)).resolves.toEqual({
-    blob: webp,
-    height: 3072,
-    originalHeight: 3072,
-    originalWidth: 4096,
-    width: 4096,
-  })
+  await expect(encodeImageToPreviewWithDependencies(largeImage, 'full', options, createCanvas, createImageData)).resolves.toEqual(
+    {
+      blob: webp,
+      height: 3072,
+      originalHeight: 3072,
+      originalWidth: 4096,
+      width: 4096,
+    },
+  )
 })

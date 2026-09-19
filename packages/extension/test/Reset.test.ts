@@ -35,6 +35,8 @@ test('resets zoom, drag offset, and pointer state', () => {
     pointerDown: true,
     pointerOffsetX: 30,
     pointerOffsetY: 40,
+    previewMaxDimension: 2048,
+    webpQuality: 0.9,
     zoomFactor: 200,
   }
   WebViewStates.set(id, state)

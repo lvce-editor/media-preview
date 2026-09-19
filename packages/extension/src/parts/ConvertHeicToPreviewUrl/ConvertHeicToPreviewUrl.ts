@@ -1,8 +1,8 @@
 import { getFileHash, getPreference, readFileAsBlob } from '@lvce-editor/api'
-import type { ConvertedImage, ImageSource, ImageTier } from '../ImageSource/ImageSource.ts'
+import type { ConvertedImage, ImageConversionOptions, ImageSource, ImageTier } from '../ImageSource/ImageSource.ts'
 import * as ImageConversionWorker from '../ImageConversionWorker/ImageConversionWorker.ts'
 
-type ConvertHeicToPreview = (heic: Blob, tier: ImageTier) => Promise<ConvertedImage>
+type ConvertHeicToPreview = (heic: Blob, tier: ImageTier, options: ImageConversionOptions) => Promise<ConvertedImage>
 type CreateObjectUrl = (blob: Blob) => string
 type GetFileHash = (uri: string) => Promise<string>
 type GetPreference = (key: string) => Promise<unknown>
@@ -21,9 +21,9 @@ interface ReadonlyHeaders {
   readonly get: (name: string) => string | null
 }
 
-const CacheName = 'builtin.media-preview.heic-preview-v2'
-const LegacyCacheName = 'builtin.media-preview.heic-preview-v1'
-const CacheKeyPrefix = 'https://media-preview-cache.invalid/heic-preview/v2/'
+const CacheName = 'builtin.media-preview.heic-preview-v3'
+const LegacyCacheNames = ['builtin.media-preview.heic-preview-v1', 'builtin.media-preview.heic-preview-v2']
+const CacheKeyPrefix = 'https://media-preview-cache.invalid/heic-preview/v3/'
 const CachingEnabledSetting = 'mediaPreview.cachingEnabled'
 const ContentLengthHeader = 'Content-Length'
 const HeightHeader = 'X-Media-Preview-Height'
@@ -41,16 +41,18 @@ const getCache = async (cacheStorage: Readonly<CacheStorage> | undefined): Promi
   }
   try {
     const cache = await cacheStorage.open(CacheName)
-    void cacheStorage.delete(LegacyCacheName).catch(() => {})
+    for (const legacyCacheName of LegacyCacheNames) {
+      void cacheStorage.delete(legacyCacheName).catch(() => {})
+    }
     return cache
   } catch {
     return undefined
   }
 }
 
-const getCacheKey = (hash: string, tier: ImageTier): string => {
-  const tierName = tier === 'preview' ? 'preview-2048' : 'full'
-  return `${CacheKeyPrefix}${encodeURIComponent(hash)}/${tierName}.webp`
+const getCacheKey = (hash: string, tier: ImageTier, options: ImageConversionOptions): string => {
+  const tierName = tier === 'preview' ? `preview-${options.previewMaxDimension}` : 'full'
+  return `${CacheKeyPrefix}${encodeURIComponent(hash)}/${tierName}-quality-${options.webpQuality}.webp`
 }
 
 const parsePositiveInteger = (value: string | null): number => {
@@ -150,34 +152,35 @@ const toImageSource = (image: Readonly<ConvertedImage>, tier: ImageTier, createU
 export const convertHeicToPreviewUrlWithDependencies = async (
   uri: string,
   tier: ImageTier,
+  options: ImageConversionOptions,
   dependencies: ConvertHeicToPreviewUrlDependencies,
 ): Promise<ImageSource> => {
   const { cacheStorage, convert, createUrl, getHash, getSetting, readBlob } = dependencies
   const cachingEnabled = (await getSetting(CachingEnabledSetting)) === true
   if (!cachingEnabled) {
     const heic = await readBlob(uri)
-    const image = await convert(heic, tier)
+    const image = await convert(heic, tier, options)
     return toImageSource(image, tier, createUrl)
   }
 
   const hash = await getFileHashForCache(uri, getHash)
   const cache = hash ? await getCache(cacheStorage) : undefined
-  const cacheKey = hash ? getCacheKey(hash, tier) : ''
+  const cacheKey = hash ? getCacheKey(hash, tier, options) : ''
   const cachedImage = cacheKey ? await getCachedImage(cache, cacheKey, tier) : undefined
   if (cachedImage) {
     return toImageSource(cachedImage, tier, createUrl)
   }
 
   const heic = await readBlob(uri)
-  const image = await convert(heic, tier)
+  const image = await convert(heic, tier, options)
   if (cacheKey) {
     await putCachedImage(cache, cacheKey, image)
   }
   return toImageSource(image, tier, createUrl)
 }
 
-const convertHeicToUrl = async (uri: string, tier: ImageTier): Promise<ImageSource> => {
-  return convertHeicToPreviewUrlWithDependencies(uri, tier, {
+const convertHeicToUrl = async (uri: string, tier: ImageTier, options: ImageConversionOptions): Promise<ImageSource> => {
+  return convertHeicToPreviewUrlWithDependencies(uri, tier, options, {
     cacheStorage: globalThis.caches,
     convert: ImageConversionWorker.convertHeicToPreview,
     createUrl: createObjectUrl,
@@ -187,10 +190,10 @@ const convertHeicToUrl = async (uri: string, tier: ImageTier): Promise<ImageSour
   })
 }
 
-export const convertHeicToPreviewUrl = async (uri: string): Promise<ImageSource> => {
-  return convertHeicToUrl(uri, 'preview')
+export const convertHeicToPreviewUrl = async (uri: string, options: ImageConversionOptions): Promise<ImageSource> => {
+  return convertHeicToUrl(uri, 'preview', options)
 }
 
-export const convertHeicToFullResolutionUrl = async (uri: string): Promise<ImageSource> => {
-  return convertHeicToUrl(uri, 'full')
+export const convertHeicToFullResolutionUrl = async (uri: string, options: ImageConversionOptions): Promise<ImageSource> => {
+  return convertHeicToUrl(uri, 'full', options)
 }

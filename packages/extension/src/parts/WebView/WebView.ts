@@ -7,5 +7,7 @@ export interface WebView {
   readonly pointerDown: boolean
   readonly pointerOffsetX: number
   readonly pointerOffsetY: number
+  readonly previewMaxDimension: number
+  readonly webpQuality: number
   readonly zoomFactor: 200
 }

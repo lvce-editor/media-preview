@@ -7,7 +7,9 @@ const initialState = {
   domMatrixString: 'matrix(1, 0, 0, 1, 0, 0)',
   error: false,
   pointerDown: false,
+  previewMaxDimension: 2048,
   scale: 1,
+  webpQuality: 0.9,
 }
 
 const source = (url: string, options: Partial<ImageSource> = {}): ImageSource => ({
@@ -42,13 +44,15 @@ const createApi = (): MockMediaPreviewApi => {
       pointerDown: false,
       pointerOffsetX: 0,
       pointerOffsetY: 0,
+      previewMaxDimension: 2048,
+      webpQuality: 0.9,
       zoomFactor: 200 as const,
     })),
     getFileSize: jest.fn(async (_uri: string) => 512_596),
     getFullResolutionUrl: jest.fn(async (_uri: string) => source('blob:https://example.com/full-id')),
     getSiblingImageUris: jest.fn(async (uri: string, _imageExtensions: readonly string[]) => [uri]),
     getState: jest.fn((_id: number) => initialState),
-    getUrl: jest.fn(async (_uri: string) => source('blob:https://example.com/image-id')),
+    getUrl: jest.fn(async (_uri: string, _options) => source('blob:https://example.com/image-id')),
     handleError: jest.fn((_id: number) => ({ ...initialState, error: true })),
     handlePointerDown: jest.fn((_id: number, _x: number, _y: number) => ({ ...initialState, pointerDown: true })),
     handlePointerMove: jest.fn((_id: number, _x: number, _y: number) => initialState),
@@ -77,17 +81,26 @@ test('creates a preview and renders its image', async () => {
   expect(api.setSavedState).toHaveBeenCalledWith(7, undefined)
   expect(api.getState).toHaveBeenCalledWith(7)
   expect(api.getFileSize).toHaveBeenCalledWith('/workspace/image.png')
-  expect(api.getUrl).toHaveBeenCalledWith('/workspace/image.png')
+  expect(api.getUrl).toHaveBeenCalledWith('/workspace/image.png', { previewMaxDimension: 2048, webpQuality: 0.9 })
   expect(instance.render().some((node) => node.src === 'blob:https://example.com/image-id')).toBe(true)
   expect(instance.getCss()).toBe(`.MediaPreview {
   --MediaPreviewTransform: matrix(1, 0, 0, 1, 0, 0);
 }`)
 })
 
+test('passes conversion options from preview state to image loading', async () => {
+  const api = createApi()
+  api.getState.mockReturnValue({ ...initialState, previewMaxDimension: 1024, webpQuality: 0.5 })
+
+  await createInstanceWithApi({ ...context, uri: '/workspace/image.heic' } as unknown as ViewContext, api)
+
+  expect(api.getUrl).toHaveBeenCalledWith('/workspace/image.heic', { previewMaxDimension: 1024, webpQuality: 0.5 })
+})
+
 test('navigates to the next and previous image and resets the preview state', async () => {
   const api = createApi()
   api.getSiblingImageUris.mockResolvedValue(['/workspace/image1.png', '/workspace/image2.png', '/workspace/image10.png'])
-  api.getUrl.mockImplementation(async (uri: string) => source(`blob:${uri}`))
+  api.getUrl.mockImplementation(async (uri: string, _options) => source(`blob:${uri}`))
   api.getFileSize.mockImplementation(async (uri: string) => (uri.endsWith('image2.png') ? 200 : 100))
   api.handleWheel.mockReturnValue({
     ...initialState,
@@ -105,7 +118,7 @@ test('navigates to the next and previous image and resets the preview state', as
   expect(api.getSiblingImageUris).toHaveBeenCalledTimes(1)
   expect(api.getSiblingImageUris).toHaveBeenCalledWith('/workspace/image2.png', expect.arrayContaining(['.png', '.svg', '.webp']))
   expect(api.create).toHaveBeenCalledTimes(2)
-  expect(api.getUrl).toHaveBeenLastCalledWith('/workspace/image10.png')
+  expect(api.getUrl).toHaveBeenLastCalledWith('/workspace/image10.png', { previewMaxDimension: 2048, webpQuality: 0.9 })
   expect(instance.render().some((node) => node.src === 'blob:/workspace/image10.png')).toBe(true)
   expect(instance.getCss()).toBe(`.MediaPreview {
   --MediaPreviewTransform: matrix(1, 0, 0, 1, 0, 0);
@@ -114,7 +127,7 @@ test('navigates to the next and previous image and resets the preview state', as
   await instance.handleMediaPreviewKeyDown('ArrowLeft')
 
   expect(api.getSiblingImageUris).toHaveBeenCalledTimes(1)
-  expect(api.getUrl).toHaveBeenLastCalledWith('/workspace/image2.png')
+  expect(api.getUrl).toHaveBeenLastCalledWith('/workspace/image2.png', { previewMaxDimension: 2048, webpQuality: 0.9 })
   expect(instance.renderStatusBarItems()[1]?.text).toBe('200 B')
 })
 
@@ -205,7 +218,7 @@ test('restores the URI from saved state when there is no current URI', async () 
 
   await createInstanceWithApi(savedContext, api)
 
-  expect(api.getUrl).toHaveBeenCalledWith('/workspace/saved-image.png')
+  expect(api.getUrl).toHaveBeenCalledWith('/workspace/saved-image.png', { previewMaxDimension: 2048, webpQuality: 0.9 })
 })
 
 test('uses defaults when the view context is missing', async () => {
@@ -520,7 +533,7 @@ test('routes HEIC image copy through the full tier', async () => {
 
   const entries = await instance.getMenuEntries('mediaPreview.image')
 
-  expect(api.getFullResolutionUrl).toHaveBeenCalledWith('/workspace/image.heic')
+  expect(api.getFullResolutionUrl).toHaveBeenCalledWith('/workspace/image.heic', { previewMaxDimension: 2048, webpQuality: 0.9 })
   expect(entries).toContainEqual({
     args: ['blob:https://example.com/full-id'],
     command: 'ClipBoard.writeImageUrl',
