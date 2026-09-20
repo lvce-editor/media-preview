@@ -22,12 +22,12 @@
     "printWidth": 130
   },
   "devDependencies": {
-    "@lvce-editor/eslint-config": "^18.7.0",
-    "@types/node": "^26.2.0",
-    "eslint": "^10.9.0",
-    "jest": "^30.4.2",
-    "knip": "^6.32.2",
-    "prettier": "^3.9.6",
+    "@lvce-editor/eslint-config": "^18.14.0",
+    "@types/node": "^26.6.1",
+    "eslint": "^10.10.0",
+    "jest": "^30.5.1",
+    "knip": "^6.37.0",
+    "prettier": "^3.9.8",
     "ts-jest": "^29.4.12",
     "typescript": "^6.0.0"
   }
