@@ -23,6 +23,10 @@ const isRemoteSshUri = (uri: string): boolean => {
   return uri.startsWith('remote-ssh://')
 }
 
+const isSvgUri = (uri: string): boolean => {
+  return uri.toLowerCase().endsWith('.svg')
+}
+
 const createObjectUrl = (blob: Blob): string => {
   return URL.createObjectURL(blob)
 }
@@ -67,7 +71,8 @@ export const getUrlWithDependencies = async (
   if (isRemoteSshUri(uri)) {
     try {
       const blob = await readBlob(uri)
-      return toSimpleSource(createUrl(blob))
+      const imageBlob = !blob.type && isSvgUri(uri) ? new Blob([blob], { type: 'image/svg+xml' }) : blob
+      return toSimpleSource(createUrl(imageBlob))
     } catch {
       return toSimpleSource('')
     }
