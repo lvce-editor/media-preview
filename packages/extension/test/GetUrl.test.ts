@@ -39,10 +39,12 @@ beforeEach(() => {
   jest.resetAllMocks()
 })
 
-test('reads a remote image as a blob through its file system provider', async () => {
-  const blob = new Blob(['image'], { type: 'image/png' })
-  readFileAsBlob.mockResolvedValue(blob)
-  createObjectUrl.mockReturnValue('blob:https://example.com/image-id')
+test('uses the provider object URL for remote images', async () => {
+  readAsObjectUrl.mockResolvedValue({
+    error: '',
+    objectUrl: 'blob:https://example.com/image-id',
+    wasFound: true,
+  })
 
   await expect(
     getUrlWithDependencies(
@@ -55,18 +57,19 @@ test('reads a remote image as a blob through its file system provider', async ()
       options,
     ),
   ).resolves.toEqual(simpleSource('blob:https://example.com/image-id'))
-  expect(readFileAsBlob).toHaveBeenCalledWith('remote-ssh:///workspace/image.png')
-  expect(readAsObjectUrl).not.toHaveBeenCalled()
-  expect(createObjectUrl).toHaveBeenCalledWith(blob)
+  expect(readAsObjectUrl).toHaveBeenCalledWith('remote-ssh:///workspace/image.png')
+  expect(readFileAsBlob).not.toHaveBeenCalled()
+  expect(createObjectUrl).not.toHaveBeenCalled()
   expect(convertHeicToPreviewUrl).not.toHaveBeenCalled()
   expect(convertTiffToPngUrl).not.toHaveBeenCalled()
 })
 
-test('sets the SVG MIME type on an untyped remote provider blob', async () => {
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>'
-  const blob = new Blob([svg])
-  readFileAsBlob.mockResolvedValue(blob)
-  createObjectUrl.mockReturnValue('blob:https://example.com/image-id')
+test('uses the provider object URL for remote SVGs', async () => {
+  readAsObjectUrl.mockResolvedValue({
+    error: '',
+    objectUrl: 'blob:https://example.com/icon-id',
+    wasFound: true,
+  })
 
   await expect(
     getUrlWithDependencies(
@@ -78,34 +81,15 @@ test('sets the SVG MIME type on an untyped remote provider blob', async () => {
       convertTiffToPngUrl,
       options,
     ),
-  ).resolves.toEqual(simpleSource('blob:https://example.com/image-id'))
-
-  const [imageBlob] = createObjectUrl.mock.calls[0]
-  expect(imageBlob).not.toBe(blob)
-  expect(imageBlob.type).toBe('image/svg+xml')
-  await expect(imageBlob.text()).resolves.toBe(svg)
-})
-
-test('preserves a supplied MIME type for remote SVG blobs', async () => {
-  const blob = new Blob(['<svg/>'], { type: 'image/svg+xml;charset=utf-8' })
-  readFileAsBlob.mockResolvedValue(blob)
-  createObjectUrl.mockReturnValue('blob:https://example.com/image-id')
-
-  await getUrlWithDependencies(
-    'remote-ssh:///workspace/icon.svg',
-    readAsObjectUrl,
-    readFileAsBlob,
-    createObjectUrl,
-    convertHeicToPreviewUrl,
-    convertTiffToPngUrl,
-    options,
-  )
-
-  expect(createObjectUrl).toHaveBeenCalledWith(blob)
+  ).resolves.toEqual(simpleSource('blob:https://example.com/icon-id'))
 })
 
 test('returns an empty source when a remote file could not be read', async () => {
-  readFileAsBlob.mockRejectedValue(new Error('File not found'))
+  readAsObjectUrl.mockResolvedValue({
+    error: 'File not found',
+    objectUrl: '',
+    wasFound: false,
+  })
 
   await expect(
     getUrlWithDependencies(
