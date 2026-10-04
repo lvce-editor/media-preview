@@ -15,7 +15,6 @@
     }
   },
   "activation": ["onView:builtin.media-preview"],
-  "languages": [],
   "rpc": [
     {
       "id": "builtin.media-preview.image-conversion-worker",
