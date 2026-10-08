@@ -8,8 +8,10 @@ export const test: Test = async ({ expect, FileSystem, Locator, Main }) => {
   await FileSystem.writeFile(uri, 'not an image')
   await Main.openUri(uri)
 
+  const error = Locator('.MediaPreviewError')
   const image = Locator('.MediaPreviewImage')
   const content = Locator('.MediaPreviewContent')
+  await expect(error).toBeVisible()
   await expect(image).toHaveCount(0)
   await expect(content).toHaveCount(0)
 }

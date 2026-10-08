@@ -14,16 +14,35 @@ export interface State {
   readonly domMatrixString: string
   readonly error: boolean
   readonly pointerDown: boolean
+  readonly previewMaxDimension: number
   readonly scale: number
+  readonly webpQuality: number
+}
+
+export interface ComponentState extends Omit<WebView, 'domMatrix'> {
+  readonly domMatrix: string
+}
+
+export const getComponentState = (id: number): ComponentState => {
+  const state = GetState.getState(id)
+  const { domMatrix } = state
+  return { ...state, domMatrix: DomMatrix.toString(domMatrix) }
+}
+
+export const setComponentState = (id: number, state: ComponentState): void => {
+  const { domMatrix } = state
+  WebViewStates.set(id, { ...state, domMatrix: DomMatrix.parseDomMatrix(domMatrix) })
 }
 
 const serializeState = (state: WebView): State => {
-  const { domMatrix, error, pointerDown } = state
+  const { domMatrix, error, pointerDown, previewMaxDimension, webpQuality } = state
   return {
     domMatrixString: DomMatrix.toString(domMatrix),
     error,
     pointerDown,
+    previewMaxDimension,
     scale: domMatrix.a,
+    webpQuality,
   }
 }
 

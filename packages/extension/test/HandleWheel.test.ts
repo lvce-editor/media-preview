@@ -33,14 +33,17 @@ beforeAll(() => {
   }
 })
 
-const createState = (): WebView => ({
+const createState = (isFirefox = false): WebView => ({
   domMatrix: { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 } as DOMMatrixReadOnly,
   error: false,
+  isFirefox,
   maxZoom: 2 ** 15,
   minZoom: 0.1,
   pointerDown: false,
   pointerOffsetX: 0,
   pointerOffsetY: 0,
+  previewMaxDimension: 2048,
+  webpQuality: 0.9,
   zoomFactor: 200 as const,
 })
 
@@ -61,4 +64,13 @@ test('zooms into the pointer position for vertical wheel events', () => {
   HandleWheel.handleWheel(id, 10, 20, 0, -1)
 
   expect(WebViewStates.get(id).domMatrix.a).toBeGreaterThan(1)
+})
+
+test('normalizes wheel events using the browser stored in state', () => {
+  const id = 103
+  WebViewStates.set(id, createState(true))
+
+  HandleWheel.handleWheel(id, 10, 20, 0, -114)
+
+  expect(WebViewStates.get(id).domMatrix.a).toBe(1.26)
 })

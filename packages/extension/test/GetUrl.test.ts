@@ -5,6 +5,7 @@ import { getUrlWithDependencies } from '../src/parts/GetUrl/GetUrl.ts'
 
 const readAsObjectUrl = jest.fn<(uri: string) => Promise<ReadAsObjectUrlResult>>()
 const readFileAsBlob = jest.fn<(uri: string) => Promise<Blob>>()
+const createObjectUrl = jest.fn<(blob: Blob) => string>()
 const previewSource: ImageSource = {
   height: 1536,
   isFullResolution: false,
@@ -15,7 +16,12 @@ const previewSource: ImageSource = {
   url: 'blob:https://example.com/preview-id',
   width: 2048,
 }
-const convertHeicToPreviewUrl = jest.fn<(uri: string) => Promise<ImageSource>>()
+const options = {
+  previewMaxDimension: 2048,
+  webpQuality: 0.9,
+}
+type ConversionOptions = typeof options
+const convertHeicToPreviewUrl = jest.fn<(uri: string, options: Readonly<ConversionOptions>) => Promise<ImageSource>>()
 const convertTiffToPngUrl = jest.fn<(blob: Blob) => Promise<string>>()
 
 const simpleSource = (url: string): ImageSource => ({
@@ -33,7 +39,7 @@ beforeEach(() => {
   jest.resetAllMocks()
 })
 
-test('returns an owned source when the file was found', async () => {
+test('uses the provider object URL for remote images', async () => {
   readAsObjectUrl.mockResolvedValue({
     error: '',
     objectUrl: 'blob:https://example.com/image-id',
@@ -42,20 +48,43 @@ test('returns an owned source when the file was found', async () => {
 
   await expect(
     getUrlWithDependencies(
-      'html:///workspace/image.png',
+      'remote-ssh:///workspace/image.png',
       readAsObjectUrl,
       readFileAsBlob,
+      createObjectUrl,
       convertHeicToPreviewUrl,
       convertTiffToPngUrl,
+      options,
     ),
   ).resolves.toEqual(simpleSource('blob:https://example.com/image-id'))
-  expect(readAsObjectUrl).toHaveBeenCalledWith('html:///workspace/image.png')
+  expect(readAsObjectUrl).toHaveBeenCalledWith('remote-ssh:///workspace/image.png')
   expect(readFileAsBlob).not.toHaveBeenCalled()
+  expect(createObjectUrl).not.toHaveBeenCalled()
   expect(convertHeicToPreviewUrl).not.toHaveBeenCalled()
   expect(convertTiffToPngUrl).not.toHaveBeenCalled()
 })
 
-test('returns an empty source when the file could not be read', async () => {
+test('uses the provider object URL for remote SVGs', async () => {
+  readAsObjectUrl.mockResolvedValue({
+    error: '',
+    objectUrl: 'blob:https://example.com/icon-id',
+    wasFound: true,
+  })
+
+  await expect(
+    getUrlWithDependencies(
+      'remote-ssh:///workspace/icon.svg',
+      readAsObjectUrl,
+      readFileAsBlob,
+      createObjectUrl,
+      convertHeicToPreviewUrl,
+      convertTiffToPngUrl,
+      options,
+    ),
+  ).resolves.toEqual(simpleSource('blob:https://example.com/icon-id'))
+})
+
+test('returns an empty source when a remote file could not be read', async () => {
   readAsObjectUrl.mockResolvedValue({
     error: 'File not found',
     objectUrl: '',
@@ -64,15 +93,40 @@ test('returns an empty source when the file could not be read', async () => {
 
   await expect(
     getUrlWithDependencies(
-      'html:///workspace/missing.png',
+      'remote-ssh:///workspace/missing.png',
       readAsObjectUrl,
       readFileAsBlob,
+      createObjectUrl,
       convertHeicToPreviewUrl,
       convertTiffToPngUrl,
+      options,
     ),
   ).resolves.toEqual(simpleSource(''))
-  expect(readFileAsBlob).not.toHaveBeenCalled()
+  expect(createObjectUrl).not.toHaveBeenCalled()
   expect(convertHeicToPreviewUrl).not.toHaveBeenCalled()
+})
+
+test('keeps the existing object URL path for non-remote images', async () => {
+  readAsObjectUrl.mockResolvedValue({
+    error: '',
+    objectUrl: 'https://example.com/image.png',
+    wasFound: true,
+  })
+
+  await expect(
+    getUrlWithDependencies(
+      'html:///workspace/image.png',
+      readAsObjectUrl,
+      readFileAsBlob,
+      createObjectUrl,
+      convertHeicToPreviewUrl,
+      convertTiffToPngUrl,
+      options,
+    ),
+  ).resolves.toEqual(simpleSource('https://example.com/image.png'))
+  expect(readAsObjectUrl).toHaveBeenCalledWith('html:///workspace/image.png')
+  expect(readFileAsBlob).not.toHaveBeenCalled()
+  expect(createObjectUrl).not.toHaveBeenCalled()
 })
 
 test.each(['image.heic', 'image.HEIC', 'image.HEIF'])(
@@ -82,11 +136,19 @@ test.each(['image.heic', 'image.HEIC', 'image.HEIF'])(
     const uri = `html:///workspace/${fileName}`
 
     await expect(
-      getUrlWithDependencies(uri, readAsObjectUrl, readFileAsBlob, convertHeicToPreviewUrl, convertTiffToPngUrl),
+      getUrlWithDependencies(
+        uri,
+        readAsObjectUrl,
+        readFileAsBlob,
+        createObjectUrl,
+        convertHeicToPreviewUrl,
+        convertTiffToPngUrl,
+        options,
+      ),
     ).resolves.toBe(previewSource)
-    expect(readAsObjectUrl).not.toHaveBeenCalled()
     expect(readFileAsBlob).not.toHaveBeenCalled()
-    expect(convertHeicToPreviewUrl).toHaveBeenCalledWith(uri)
+    expect(createObjectUrl).not.toHaveBeenCalled()
+    expect(convertHeicToPreviewUrl).toHaveBeenCalledWith(uri, options)
   },
 )
 
@@ -98,8 +160,10 @@ test('returns an empty source when a HEIC image cannot be read', async () => {
       'html:///workspace/missing.heic',
       readAsObjectUrl,
       readFileAsBlob,
+      createObjectUrl,
       convertHeicToPreviewUrl,
       convertTiffToPngUrl,
+      options,
     ),
   ).resolves.toEqual(simpleSource(''))
 })
@@ -111,10 +175,18 @@ test.each(['image.tif', 'image.TIFF'])('converts TIFF images to an owned PNG sou
   const uri = `html:///workspace/${fileName}`
 
   await expect(
-    getUrlWithDependencies(uri, readAsObjectUrl, readFileAsBlob, convertHeicToPreviewUrl, convertTiffToPngUrl),
+    getUrlWithDependencies(
+      uri,
+      readAsObjectUrl,
+      readFileAsBlob,
+      createObjectUrl,
+      convertHeicToPreviewUrl,
+      convertTiffToPngUrl,
+      options,
+    ),
   ).resolves.toEqual(simpleSource('blob:https://example.com/png-id'))
-  expect(readAsObjectUrl).not.toHaveBeenCalled()
   expect(readFileAsBlob).toHaveBeenCalledWith(uri)
+  expect(createObjectUrl).not.toHaveBeenCalled()
   expect(convertTiffToPngUrl).toHaveBeenCalledWith(tiff)
 })
 
@@ -127,8 +199,10 @@ test('returns an empty source when a TIFF image cannot be converted', async () =
       'html:///workspace/invalid.tiff',
       readAsObjectUrl,
       readFileAsBlob,
+      createObjectUrl,
       convertHeicToPreviewUrl,
       convertTiffToPngUrl,
+      options,
     ),
   ).resolves.toEqual(simpleSource(''))
 })

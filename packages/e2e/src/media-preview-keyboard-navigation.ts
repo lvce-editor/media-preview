@@ -14,6 +14,7 @@ const waitForExpectation = async (assertion: () => Promise<void>): Promise<void>
       await assertion()
       return
     } catch {
+      // eslint-disable-next-line e2e/no-timeouts -- The test framework has no observable wait for status bar updates.
       await new Promise((resolve) => setTimeout(resolve, 50))
     }
   }

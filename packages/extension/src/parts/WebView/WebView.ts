@@ -1,10 +1,13 @@
 export interface WebView {
   readonly domMatrix: Readonly<DOMMatrixReadOnly>
   readonly error: boolean
+  readonly isFirefox: boolean
   readonly maxZoom: number
   readonly minZoom: number
   readonly pointerDown: boolean
   readonly pointerOffsetX: number
   readonly pointerOffsetY: number
+  readonly previewMaxDimension: number
+  readonly webpQuality: number
   readonly zoomFactor: 200
 }

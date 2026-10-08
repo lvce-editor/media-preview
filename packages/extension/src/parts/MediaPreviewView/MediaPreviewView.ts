@@ -1,11 +1,12 @@
-import type { View } from '@lvce-editor/api'
+import type { InstanceView } from '@lvce-editor/api'
+import type { MediaPreviewComponentState } from '../MediaPreviewViewInstance/MediaPreviewViewInstance.ts'
 import { createInstance, type MediaPreviewViewInstance } from '../MediaPreviewViewInstance/MediaPreviewViewInstance.ts'
 
 export const viewId = 'builtin.media-preview'
 
 // The coordinate-bearing view command transports both pointer coordinates.
 // The instance distinguishes these synthetic events by name.
-export const view: View<MediaPreviewViewInstance> = {
+export const view: InstanceView<MediaPreviewViewInstance, MediaPreviewComponentState> = {
   create: createInstance,
   eventListeners: [
     {
@@ -59,10 +60,12 @@ export const view: View<MediaPreviewViewInstance> = {
         'event.currentTarget.clientHeight',
         'event.currentTarget.ownerDocument.defaultView.devicePixelRatio',
       ],
-      preventDefault: true,
+      passive: true,
     },
   ],
+  getComponentState: (instance) => instance.getComponentState(),
   id: viewId,
   kind: 'virtualDom',
+  setComponentState: (instance, state) => instance.setComponentState(state),
   title: 'Media Preview',
 }

@@ -27,11 +27,14 @@ beforeAll(() => {
 const createState = (): WebView => ({
   domMatrix: {} as DOMMatrixReadOnly,
   error: false,
+  isFirefox: false,
   maxZoom: 2 ** 15,
   minZoom: 0.1,
   pointerDown: false,
   pointerOffsetX: 0,
   pointerOffsetY: 0,
+  previewMaxDimension: 2048,
+  webpQuality: 0.9,
   zoomFactor: 200 as const,
 })
 

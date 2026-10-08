@@ -13,8 +13,13 @@ const encodePreview =
     (
       image: Readonly<{ readonly data: Readonly<ArrayLike<number>>; readonly height: number; readonly width: number }>,
       tier: ImageTier,
+      options: { readonly previewMaxDimension: number; readonly webpQuality: number },
     ) => Promise<EncodedImage>
   >()
+const options = {
+  previewMaxDimension: 2048,
+  webpQuality: 0.9,
+}
 
 test('decodes a HEIC image and encodes the decoded RGBA as a preview', async () => {
   const heic = new Blob(['heic'], { type: 'image/heic' })
@@ -33,8 +38,8 @@ test('decodes a HEIC image and encodes the decoded RGBA as a preview', async () 
   decode.mockResolvedValue(decoded)
   encodePreview.mockResolvedValue(preview)
 
-  await expect(convertHeicToPreviewWithDependencies(heic, 'preview', decode, encodePreview)).resolves.toBe(preview)
+  await expect(convertHeicToPreviewWithDependencies(heic, 'preview', options, decode, encodePreview)).resolves.toBe(preview)
 
   expect(decode).toHaveBeenCalledWith({ buffer: new Uint8Array([104, 101, 105, 99]) })
-  expect(encodePreview).toHaveBeenCalledWith(decoded, 'preview')
+  expect(encodePreview).toHaveBeenCalledWith(decoded, 'preview', options)
 })

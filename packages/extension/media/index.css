@@ -12,7 +12,6 @@
 .MediaPreviewContent {
   width: 100%;
   height: 100%;
-  contain: strict;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -32,7 +31,6 @@
 .MediaPreviewImageWrapper {
   width: 100%;
   height: 100%;
-  contain: content;
   display: flex;
   align-items: center;
   justify-content: center;

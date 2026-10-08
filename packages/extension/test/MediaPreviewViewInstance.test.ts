@@ -7,7 +7,9 @@ const initialState = {
   domMatrixString: 'matrix(1, 0, 0, 1, 0, 0)',
   error: false,
   pointerDown: false,
+  previewMaxDimension: 2048,
   scale: 1,
+  webpQuality: 0.9,
 }
 
 const source = (url: string, options: Partial<ImageSource> = {}): ImageSource => ({
@@ -33,11 +35,24 @@ const createApi = (): MockMediaPreviewApi => {
     create: jest.fn((_id: number) => {}),
     dispose: jest.fn((_id: number) => {}),
     exists: jest.fn(async (_uri: string) => true),
+    getComponentState: jest.fn((_id: number) => ({
+      domMatrix: initialState.domMatrixString,
+      error: false,
+      isFirefox: false,
+      maxZoom: 32768,
+      minZoom: 0.1,
+      pointerDown: false,
+      pointerOffsetX: 0,
+      pointerOffsetY: 0,
+      previewMaxDimension: 2048,
+      webpQuality: 0.9,
+      zoomFactor: 200 as const,
+    })),
     getFileSize: jest.fn(async (_uri: string) => 512_596),
     getFullResolutionUrl: jest.fn(async (_uri: string) => source('blob:https://example.com/full-id')),
-    getSiblingImageUris: jest.fn(async (uri: string) => [uri]),
+    getSiblingImageUris: jest.fn(async (uri: string, _imageExtensions: readonly string[]) => [uri]),
     getState: jest.fn((_id: number) => initialState),
-    getUrl: jest.fn(async (_uri: string) => source('blob:https://example.com/image-id')),
+    getUrl: jest.fn(async (_uri: string, _options) => source('blob:https://example.com/image-id')),
     handleError: jest.fn((_id: number) => ({ ...initialState, error: true })),
     handlePointerDown: jest.fn((_id: number, _x: number, _y: number) => ({ ...initialState, pointerDown: true })),
     handlePointerMove: jest.fn((_id: number, _x: number, _y: number) => initialState),
@@ -46,6 +61,7 @@ const createApi = (): MockMediaPreviewApi => {
     reset: jest.fn((_id: number) => initialState),
     revokeUrl: jest.fn((_url: string) => {}),
     saveState: jest.fn((_id: number) => ({ domMatrix: initialState.domMatrixString })),
+    setComponentState: jest.fn((_id: number, _state) => {}),
     setSavedState: jest.fn((_id: number, _state: unknown) => {}),
   }
 }
@@ -65,17 +81,26 @@ test('creates a preview and renders its image', async () => {
   expect(api.setSavedState).toHaveBeenCalledWith(7, undefined)
   expect(api.getState).toHaveBeenCalledWith(7)
   expect(api.getFileSize).toHaveBeenCalledWith('/workspace/image.png')
-  expect(api.getUrl).toHaveBeenCalledWith('/workspace/image.png')
+  expect(api.getUrl).toHaveBeenCalledWith('/workspace/image.png', { previewMaxDimension: 2048, webpQuality: 0.9 })
   expect(instance.render().some((node) => node.src === 'blob:https://example.com/image-id')).toBe(true)
   expect(instance.getCss()).toBe(`.MediaPreview {
   --MediaPreviewTransform: matrix(1, 0, 0, 1, 0, 0);
 }`)
 })
 
+test('passes conversion options from preview state to image loading', async () => {
+  const api = createApi()
+  api.getState.mockReturnValue({ ...initialState, previewMaxDimension: 1024, webpQuality: 0.5 })
+
+  await createInstanceWithApi({ ...context, uri: '/workspace/image.heic' } as unknown as ViewContext, api)
+
+  expect(api.getUrl).toHaveBeenCalledWith('/workspace/image.heic', { previewMaxDimension: 1024, webpQuality: 0.5 })
+})
+
 test('navigates to the next and previous image and resets the preview state', async () => {
   const api = createApi()
   api.getSiblingImageUris.mockResolvedValue(['/workspace/image1.png', '/workspace/image2.png', '/workspace/image10.png'])
-  api.getUrl.mockImplementation(async (uri: string) => source(`blob:${uri}`))
+  api.getUrl.mockImplementation(async (uri: string, _options) => source(`blob:${uri}`))
   api.getFileSize.mockImplementation(async (uri: string) => (uri.endsWith('image2.png') ? 200 : 100))
   api.handleWheel.mockReturnValue({
     ...initialState,
@@ -91,9 +116,9 @@ test('navigates to the next and previous image and resets the preview state', as
   await instance.handleMediaPreviewKeyDown('ArrowRight')
 
   expect(api.getSiblingImageUris).toHaveBeenCalledTimes(1)
-  expect(api.getSiblingImageUris).toHaveBeenCalledWith('/workspace/image2.png')
+  expect(api.getSiblingImageUris).toHaveBeenCalledWith('/workspace/image2.png', expect.arrayContaining(['.png', '.svg', '.webp']))
   expect(api.create).toHaveBeenCalledTimes(2)
-  expect(api.getUrl).toHaveBeenLastCalledWith('/workspace/image10.png')
+  expect(api.getUrl).toHaveBeenLastCalledWith('/workspace/image10.png', { previewMaxDimension: 2048, webpQuality: 0.9 })
   expect(instance.render().some((node) => node.src === 'blob:/workspace/image10.png')).toBe(true)
   expect(instance.getCss()).toBe(`.MediaPreview {
   --MediaPreviewTransform: matrix(1, 0, 0, 1, 0, 0);
@@ -102,7 +127,7 @@ test('navigates to the next and previous image and resets the preview state', as
   await instance.handleMediaPreviewKeyDown('ArrowLeft')
 
   expect(api.getSiblingImageUris).toHaveBeenCalledTimes(1)
-  expect(api.getUrl).toHaveBeenLastCalledWith('/workspace/image2.png')
+  expect(api.getUrl).toHaveBeenLastCalledWith('/workspace/image2.png', { previewMaxDimension: 2048, webpQuality: 0.9 })
   expect(instance.renderStatusBarItems()[1]?.text).toBe('200 B')
 })
 
@@ -141,7 +166,7 @@ test('renders a load error when the image URL cannot be read but the file exists
 
   const instance = await createInstanceWithApi(context, api)
 
-  expect(api.exists).toHaveBeenCalledWith('/workspace/image.png')
+  expect(api.exists).toHaveBeenCalledWith('file:///workspace/image.png')
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
 })
 
@@ -176,7 +201,7 @@ test('opens an invalid svg in the text editor', async () => {
   const instance = await createInstanceWithApi(svgContext, api, execute)
 
   expect(instance.render().some((node) => node.text === 'Open in Text Editor')).toBe(true)
-  await instance.handleOpenInTextEditor()
+  expect(instance.handleOpenInTextEditor()).toBeUndefined()
 
   expect(execute).toHaveBeenCalledWith('Main.reopenEditorWith', 'editor')
 })
@@ -193,7 +218,7 @@ test('restores the URI from saved state when there is no current URI', async () 
 
   await createInstanceWithApi(savedContext, api)
 
-  expect(api.getUrl).toHaveBeenCalledWith('/workspace/saved-image.png')
+  expect(api.getUrl).toHaveBeenCalledWith('/workspace/saved-image.png', { previewMaxDimension: 2048, webpQuality: 0.9 })
 })
 
 test('uses defaults when the view context is missing', async () => {
@@ -228,7 +253,7 @@ test('forwards pointer and image events to the media preview api', async () => {
 
   await instance.handleMediaPreviewImageError('')
   expect(api.handleError).toHaveBeenCalledWith(7)
-  expect(api.exists).toHaveBeenCalledWith('/workspace/image.png')
+  expect(api.exists).toHaveBeenCalledWith('file:///workspace/image.png')
   expect(instance.render().some((node) => node.text === 'Image could not be loaded')).toBe(true)
 })
 
@@ -508,7 +533,7 @@ test('routes HEIC image copy through the full tier', async () => {
 
   const entries = await instance.getMenuEntries('mediaPreview.image')
 
-  expect(api.getFullResolutionUrl).toHaveBeenCalledWith('/workspace/image.heic')
+  expect(api.getFullResolutionUrl).toHaveBeenCalledWith('/workspace/image.heic', { previewMaxDimension: 2048, webpQuality: 0.9 })
   expect(entries).toContainEqual({
     args: ['blob:https://example.com/full-id'],
     command: 'ClipBoard.writeImageUrl',
@@ -612,4 +637,83 @@ test('does not replace known original dimensions with decoded preview dimensions
   instance.handleMediaPreviewImageLoad('blob:https://example.com/preview-id', 2048, 1536)
 
   expect(instance.renderStatusBarItems()[0]?.text).toBe('4096 × 3072')
+})
+
+test('component state edits synchronize presentation from the image owner', async () => {
+  const api = createApi()
+  const instance = await createInstanceWithApi(context, api)
+  const { image: oldImage, view } = instance.getComponentState()
+  const image = { ...oldImage, domMatrix: 'matrix(2, 0, 0, 2, 10, 20)' }
+  api.getState.mockReturnValue({ ...initialState, domMatrixString: image.domMatrix, scale: 2 })
+  instance.setComponentState({ image, view: { ...view, error: true, errorMessage: 'Inspector error' } })
+  expect(api.setComponentState).toHaveBeenCalledWith(7, image)
+  expect(instance.getComponentState().view).toMatchObject({ errorMessage: 'Inspector error', scale: 2 })
+  expect(instance.getCss()).toContain(image.domMatrix)
+  expect(JSON.stringify(instance.render())).toContain('Inspector error')
+  await instance.dispose?.()
+})
+
+test('ignores a delayed image error after navigating away and back to the same URL', async () => {
+  const api = createApi()
+  const exists = Promise.withResolvers<boolean>()
+  api.exists.mockReturnValue(exists.promise)
+  api.getSiblingImageUris.mockResolvedValue(['/workspace/image.png', '/workspace/next.png'])
+  const instance = await createInstanceWithApi(context, api)
+  const error = instance.handleMediaPreviewImageError('blob:https://example.com/image-id')
+
+  await instance.handleMediaPreviewKeyDown('ArrowRight')
+  await instance.handleMediaPreviewKeyDown('ArrowLeft')
+  exists.resolve(false)
+  await error
+
+  expect(api.handleError).not.toHaveBeenCalled()
+  expect(instance.getComponentState().view.error).toBe(false)
+  expect(instance.render().some((node) => node.src === 'blob:https://example.com/image-id')).toBe(true)
+})
+
+test('ignores a delayed image error after disposal', async () => {
+  const api = createApi()
+  const exists = Promise.withResolvers<boolean>()
+  api.exists.mockReturnValue(exists.promise)
+  const instance = await createInstanceWithApi(context, api)
+  const error = instance.handleMediaPreviewImageError('blob:https://example.com/image-id')
+
+  await instance.dispose?.()
+  exists.resolve(false)
+  await error
+
+  expect(api.handleError).not.toHaveBeenCalled()
+})
+
+test('ignores image errors received after disposal', async () => {
+  const api = createApi()
+  const instance = await createInstanceWithApi(context, api)
+  await instance.dispose?.()
+
+  await instance.handleMediaPreviewImageError('blob:https://example.com/image-id')
+  await instance.handleEvent?.({ type: 'error' })
+
+  expect(api.exists).not.toHaveBeenCalled()
+  expect(api.handleError).not.toHaveBeenCalled()
+})
+
+test('ignores a delayed preview error after upgrading the image source', async () => {
+  const api = createApi()
+  const exists = Promise.withResolvers<boolean>()
+  api.exists.mockReturnValue(exists.promise)
+  api.getUrl.mockResolvedValue(progressivePreview)
+  api.getFullResolutionUrl.mockResolvedValue(fullResolution)
+  api.handleWheel.mockReturnValue({ ...initialState, scale: 2 })
+  const instance = await createInstanceWithApi(context, api)
+  const error = instance.handleMediaPreviewImageError(progressivePreview.url)
+
+  instance.handleMediaPreviewWheel(-70, 0, 1024, 768, 1)
+  await Promise.resolve()
+  await Promise.resolve()
+  instance.handleMediaPreviewImageLoad(fullResolution.url, 4096, 3072)
+  exists.resolve(false)
+  await error
+
+  expect(api.handleError).not.toHaveBeenCalled()
+  expect(instance.render().some((node) => node.src === fullResolution.url)).toBe(true)
 })

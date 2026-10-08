@@ -14,6 +14,13 @@ test('returns the blob byte size', async () => {
   expect(readFileAsBlob).toHaveBeenCalledWith('file:///workspace/image.png')
 })
 
+test('returns the blob byte size for an html filesystem uri', async () => {
+  readFileAsBlob.mockResolvedValue(new Blob(['hello']))
+
+  await expect(getFileSizeWithDependency('html:///workspace/image.png', readFileAsBlob)).resolves.toBe(5)
+  expect(readFileAsBlob).toHaveBeenCalledWith('html:///workspace/image.png')
+})
+
 test('returns the blob byte size for an absolute disk path', async () => {
   readFileAsBlob.mockResolvedValue(new Blob(['hello']))
 
