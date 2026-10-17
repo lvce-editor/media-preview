@@ -20,12 +20,13 @@ export const test: Test = async ({ Command, expect, FileSystem, Locator, Main, W
   await expect(imageWrapper).toHaveCSS('contain', 'none')
 
   await Command.execute('PointerCapture.mock')
+  const deltaY = -100 * (navigator.userAgent.includes('Firefox') ? 114 / 52 : 1)
   await preview.dispatchEvent('wheel', {
     bubbles: true,
     clientX: 0,
     clientY: 0,
     deltaX: 0,
-    deltaY: -100,
+    deltaY,
   })
   await preview.dispatchEvent('pointerdown', {
     bubbles: true,

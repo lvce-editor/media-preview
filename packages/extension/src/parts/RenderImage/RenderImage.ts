@@ -5,12 +5,6 @@ const handleMediaPreviewImageError = 'handleMediaPreviewImageError'
 const handleMediaPreviewImageLoad = 'handleMediaPreviewImageLoad'
 const handleContextMenu = 'handleContextMenu'
 
-const contentNode: VirtualDomNode = {
-  childCount: 1,
-  className: 'MediaPreviewContent',
-  type: VirtualDomElements.Div,
-}
-
 const imageWrapperNode: VirtualDomNode = {
   childCount: 1,
   className: 'MediaPreviewImageWrapper',
@@ -18,10 +12,16 @@ const imageWrapperNode: VirtualDomNode = {
 }
 
 export const renderImage = (state: Readonly<MediaPreviewState>): readonly VirtualDomNode[] => {
-  const { height, url, width } = state
+  const { domMatrixString, height, url, width } = state
   const dimensions = width > 0 && height > 0 ? { height, width } : {}
   return [
-    contentNode,
+    {
+      childCount: 1,
+      className: 'MediaPreviewContent',
+      // eslint-disable-next-line virtual-dom/no-inline-style -- avoid parsing the preview stylesheet on every pointer move
+      style: `transform: ${domMatrixString};`,
+      type: VirtualDomElements.Div,
+    },
     imageWrapperNode,
     {
       alt: '',
