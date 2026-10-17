@@ -8,7 +8,6 @@ import {
   type VirtualDomViewInstance,
 } from '@lvce-editor/api'
 import type { ImageConversionOptions, ImageSource } from '../ImageSource/ImageSource.ts'
-import { getCss } from '../GetCss/GetCss.ts'
 import * as MediaPreview from '../MediaPreview/MediaPreview.ts'
 import { render } from '../RenderMediaPreview/RenderMediaPreview.ts'
 import { renderStatusBarItems } from '../RenderStatusBarItems/RenderStatusBarItems.ts'
@@ -433,8 +432,7 @@ export const createInstanceWithApi = async (
       return { image: api.getComponentState(id), view: state }
     },
     getCss(): string {
-      const { domMatrixString } = state
-      return getCss(domMatrixString)
+      return ''
     },
     async getMenuEntries(menuId: string): Promise<readonly MenuEntry[]> {
       if (menuId !== imageMenuId) {

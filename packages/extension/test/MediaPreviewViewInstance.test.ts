@@ -83,9 +83,7 @@ test('creates a preview and renders its image', async () => {
   expect(api.getFileSize).toHaveBeenCalledWith('/workspace/image.png')
   expect(api.getUrl).toHaveBeenCalledWith('/workspace/image.png', { previewMaxDimension: 2048, webpQuality: 0.9 })
   expect(instance.render().some((node) => node.src === 'blob:https://example.com/image-id')).toBe(true)
-  expect(instance.getCss()).toBe(`.MediaPreview {
-  --MediaPreviewTransform: matrix(1, 0, 0, 1, 0, 0);
-}`)
+  expect(instance.getCss()).toBe('')
 })
 
 test('passes conversion options from preview state to image loading', async () => {
@@ -120,9 +118,7 @@ test('navigates to the next and previous image and resets the preview state', as
   expect(api.create).toHaveBeenCalledTimes(2)
   expect(api.getUrl).toHaveBeenLastCalledWith('/workspace/image10.png', { previewMaxDimension: 2048, webpQuality: 0.9 })
   expect(instance.render().some((node) => node.src === 'blob:/workspace/image10.png')).toBe(true)
-  expect(instance.getCss()).toBe(`.MediaPreview {
-  --MediaPreviewTransform: matrix(1, 0, 0, 1, 0, 0);
-}`)
+  expect(instance.getCss()).toBe('')
 
   await instance.handleMediaPreviewKeyDown('ArrowLeft')
 
@@ -363,12 +359,10 @@ test('resets image zoom and drag', async () => {
   instance.handleResetImage()
 
   expect(api.reset).toHaveBeenCalledWith(7)
-  expect(instance.getCss()).toBe(`.MediaPreview {
-  --MediaPreviewTransform: matrix(1, 0, 0, 1, 0, 0);
-}`)
+  expect(instance.getCss()).toBe('')
 })
 
-test('updates the transform css without changing the virtual dom', async () => {
+test('updates the inline transform without generating dynamic css', async () => {
   const api = createApi()
   api.handleWheel.mockReturnValue({
     ...initialState,
@@ -378,10 +372,10 @@ test('updates the transform css without changing the virtual dom', async () => {
   const oldDom = instance.render()
   instance.handleMediaPreviewWheel(70, 0, 0, 0, 0)
 
-  expect(instance.render()).toEqual(oldDom)
-  expect(instance.getCss()).toBe(`.MediaPreview {
-  --MediaPreviewTransform: matrix(2, 0, 0, 2, 10, 20);
-}`)
+  const newDom = instance.render()
+  expect(newDom).not.toEqual(oldDom)
+  expect(newDom[1]).toMatchObject({ style: 'transform: matrix(2, 0, 0, 2, 10, 20);' })
+  expect(instance.getCss()).toBe('')
 })
 
 test('saves the URI with preview state and disposes the preview instance', async () => {
@@ -478,7 +472,7 @@ test('loads full resolution once after zoom crosses the preview pixel threshold'
     src: 'blob:https://example.com/full-id',
     width: 4096,
   })
-  expect(instance.getCss()).toContain('matrix(1.8, 0, 0, 1.8, 10, 20)')
+  expect(instance.getCss()).toBe('')
   expect(instance.renderStatusBarItems()[0]?.text).toBe('4096 × 3072')
 
   instance.handleMediaPreviewImageLoad('blob:https://example.com/full-id', 4096, 3072)
@@ -648,7 +642,7 @@ test('component state edits synchronize presentation from the image owner', asyn
   instance.setComponentState({ image, view: { ...view, error: true, errorMessage: 'Inspector error' } })
   expect(api.setComponentState).toHaveBeenCalledWith(7, image)
   expect(instance.getComponentState().view).toMatchObject({ errorMessage: 'Inspector error', scale: 2 })
-  expect(instance.getCss()).toContain(image.domMatrix)
+  expect(instance.getCss()).toBe('')
   expect(JSON.stringify(instance.render())).toContain('Inspector error')
   await instance.dispose?.()
 })
